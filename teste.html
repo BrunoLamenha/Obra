@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Teste - Vistoria com Planta Baixa Interativa</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
+    
+    <style>
+        :root { 
+            --primary: #004a8f; 
+            --primary-dark: #003366;
+            --bg: #f4f6f9; 
+            --border: #cccccc; 
+            --success: #28a745; 
+            --danger: #dc3545; 
+            --warning: #ffc107;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background: var(--bg); padding: 12px; color: #333; }
+        .container { max-width: 680px; margin: 0 auto; }
+        
+        header { 
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
+            color: #fff; 
+            padding: 16px; 
+            border-radius: 10px; 
+            text-align: center; 
+            margin-bottom: 15px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .badge-test {
+            display: inline-block;
+            background: var(--warning);
+            color: #212529;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        
+        .card { 
+            background: #fff; 
+            border-radius: 10px; 
+            padding: 16px; 
+            margin-bottom: 15px; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+        .card h3 { font-size: 1.05rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+
+        /* Container da Planta Baixa e Marcadores */
+        .blueprint-container {
+            position: relative;
+            width: 100%;
+            background: #e9ecef;
+            border: 2px dashed #a0aec0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 10px;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        
+        .blueprint-svg {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #ffffff;
+        }
+
+        /* Pinos Marcadores */
+        .pin {
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            background: var(--danger);
+            color: white;
+            font-weight: bold;
+            font-size: 0.75rem;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg) translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            z-index: 10;
+        }
+        .pin span {
+            transform: rotate(45deg);
+        }
+        .pin.active {
+            background: #ff0000;
+            transform: rotate(-45deg) scale(1.25);
+            z-index: 20;
+            box-shadow: 0 0 10px rgba(220,53,69,0.8);
+        }
+
+        .instructions {
+            background: #eef6ff;
+            border-left: 4px solid var(--primary);
+            padding: 10px 12px;
+            font-size: 0.82rem;
+            color: #2c3e50;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        /* Formulário da Pendência */
+        .nc-card {
+            background: #fff0f0;
+            border: 1px solid #f5c6cb;
+            border-left: 5px solid var(--danger);
+            border-radius: 8px;
+            padding: 14px;
+            margin-top: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--danger);
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #f5c6cb;
+        }
+
+        label { 
+            font-size: 0.8rem; 
+            font-weight: bold; 
+            display: block; 
+            margin-top: 10px; 
+            color: #444; 
+        }
+        input, select, textarea { 
+            width: 100%; 
+            padding: 8px 10px; 
+            margin-top: 3px; 
+            border: 1px solid var(--border); 
+            border-radius: 5px; 
+            font-size: 0.85rem; 
+            background: #fff;
+        }
+        textarea { resize: vertical; min-height: 50px; }
+
+        .btn-delete {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .wall-selector-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <span class="badge-test">Página de Teste Exclusiva</span>
+        <h2>Vistoria com Planta Baixa Interativa</h2>
+        <p style="font-size:0.8rem; opacity:0.9;">Mapeamento de Pendências na Planta do Apartamento</p>
+    </header>
+
+    <!-- Instruções -->
+    <div class="instructions">
+        💡 <strong>Como testar:</strong><br>
+        1. Coloquei uma <strong>Planta Baixa Ilustrativa</strong> abaixo para você testar no celular.<br>
+        2. <strong>Toque com o dedo na parede desejada</strong> no desenho da planta para marcar um ponto de não conformidade (📍).<br>
+        3. O formulário identificará o cômodo/parede e abrirá os campos para foto e observação!
+    </div>
+
+    <!-- CARD DA PLANTA INTERATIVA -->
+    <div class="card">
+        <h3>📍 Mapeamento Visual na Planta</h3>
+        <p style="font-size:0.78rem; color:#666;">Toque na parede exata onde foi encontrada a falha:</p>
+        
+        <div class="blueprint-container" id="blueprint-box" onclick="handlePlantaClick(event)">
+            <!-- SVG Ilustrativo da Planta Baixa -->
+            <svg class="blueprint-svg" viewBox="0 0 600 450" xmlns="http://www.w3.org/2000/svg">
+                <rect width="600" height="450" fill="#fdfdfd"/>
+                <rect x="30" y="30" width="540" height="390" fill="none" stroke="#2c3e50" stroke-width="8"/>
+                <line x1="220" y1="30" x2="220" y2="250" stroke="#2c3e50" stroke-width="6"/>
+                <line x1="30" y1="250" x2="380" y2="250" stroke="#2c3e50" stroke-width="6"/>
+                <line x1="380" y1="30" x2="380" y2="420" stroke="#2c3e50" stroke-width="6"/>
+                <line x1="30" y1="370" x2="380" y2="370" stroke="#2c3e50" stroke-width="4" stroke-dasharray="6,6"/>
+
+                <path d="M 220 180 A 40 40 0 0 1 260 220" fill="none" stroke="#e74c3c" stroke-width="2"/>
+                <path d="M 380 180 A 40 40 0 0 0 340 220" fill="none" stroke="#e74c3c" stroke-width="2"/>
+
+                <text x="120" y="140" font-family="sans-serif" font-size="14" font-weight="bold" fill="#7f8c8d" text-anchor="middle">DORMITÓRIO</text>
+                <text x="300" y="140" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7f8c8d" text-anchor="middle">BANHEIRO</text>
+                <text x="470" y="220" font-family="sans-serif" font-size="14" font-weight="bold" fill="#7f8c8d" text-anchor="middle">SUÍTE</text>
+                <text x="200" y="320" font-family="sans-serif" font-size="14" font-weight="bold" fill="#7f8c8d" text-anchor="middle">SALA DE ESTAR / COZINHA</text>
+                <text x="200" y="400" font-family="sans-serif" font-size="12" font-weight="bold" fill="#27ae60" text-anchor="middle">VARANDA / SACADA</text>
+
+                <rect x="240" y="40" width="30" height="40" rx="5" fill="#bdc3c7"/>
+                <rect x="40" y="260" width="120" height="30" fill="#e0e0e0" stroke="#999"/>
+            </svg>
+
+            <div id="pins-container"></div>
+        </div>
+    </div>
+
+    <!-- LISTA DE PONTOS / NÃO CONFORMIDADES CADASTRADAS -->
+    <div class="card">
+        <h3>📋 Detalhamento dos Pontos Marcados (<span id="pins-count">0</span>)</h3>
+        <div id="nc-forms-container">
+            <p id="empty-msg" style="color: #888; font-size:0.85rem; text-align:center; padding: 15px 0;">
+                Nenhum ponto marcado ainda. Toque na planta acima para adicionar a primeira pendência!
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let pins = [];
+    let pinCounter = 0;
+
+    function handlePlantaClick(event) {
+        if (event.target.closest('.pin')) return;
+
+        const container = document.getElementById('blueprint-box');
+        const rect = container.getBoundingClientRect();
+
+        const xPercent = ((event.clientX - rect.left) / rect.width) * 100;
+        const yPercent = ((event.clientY - rect.top) / rect.height) * 100;
+
+        pinCounter++;
+        const newPin = {
+            id: pinCounter,
+            x: xPercent.toFixed(2),
+            y: yPercent.toFixed(2),
+            wall: guessWall(xPercent, yPercent),
+            category: "Pintura / Emassamento",
+            obs: "",
+            photo: null
+        };
+
+        pins.push(newPin);
+        renderPins();
+        renderForms();
+    }
+
+    function guessWall(x, y) {
+        if (y > 82) return "Varanda / Sacada";
+        if (x < 37 && y < 55) return "Dormitório - Parede";
+        if (x >= 37 && x < 63 && y < 55) return "Banheiro - Parede";
+        if (x >= 63) return "Suíte - Parede";
+        return "Sala / Cozinha - Parede";
+    }
+
+    function renderPins() {
+        const container = document.getElementById('pins-container');
+        container.innerHTML = '';
+
+        pins.forEach(pin => {
+            const pinEl = document.createElement('div');
+            pinEl.className = 'pin';
+            pinEl.style.left = `${pin.x}%`;
+            pinEl.style.top = `${pin.y}%`;
+            pinEl.innerHTML = `<span>${pin.id}</span>`;
+            pinEl.onclick = (e) => {
+                e.stopPropagation();
+                highlightForm(pin.id);
+            };
+            container.appendChild(pinEl);
+        });
+
+        document.getElementById('pins-count').innerText = pins.length;
+    }
+
+    function renderForms() {
+        const container = document.getElementById('nc-forms-container');
+        const emptyMsg = document.getElementById('empty-msg');
+
+        if (pins.length === 0) {
+            container.innerHTML = '';
+            container.appendChild(emptyMsg);
+            emptyMsg.style.display = 'block';
+            return;
+        }
+
+        container.innerHTML = '';
+
+        pins.forEach(pin => {
+            const formDiv = document.createElement('div');
+            formDiv.className = 'nc-card';
+            formDiv.id = `nc-card-${pin.id}`;
+            formDiv.innerHTML = `
+                <div class="nc-header">
+                    <span>📍 PENDÊNCIA #${pin.id} (Pino na Planta)</span>
+                    <button class="btn-delete" onclick="deletePin(${pin.id})">Remover ✕</button>
+                </div>
+
+                <div class="wall-selector-box">
+                    <label style="margin-top:0;">📍 Parede / Localização Identificada:</label>
+                    <select onchange="updatePin(${pin.id}, 'wall', this.value)">
+                        <option value="Dormitório - Parede Frontal" ${pin.wall.includes('Dormitório') ? 'selected' : ''}>Dormitório - Parede Frontal</option>
+                        <option value="Dormitório - Parede Lateral" ${pin.wall.includes('Dormitório') ? 'selected' : ''}>Dormitório - Parede Lateral</option>
+                        <option value="Banheiro - Parede / Revestimento" ${pin.wall.includes('Banheiro') ? 'selected' : ''}>Banheiro - Parede / Revestimento</option>
+                        <option value="Suíte - Parede" ${pin.wall.includes('Suíte') ? 'selected' : ''}>Suíte - Parede</option>
+                        <option value="Sala / Cozinha - Parede" ${pin.wall.includes('Sala') ? 'selected' : ''}>Sala / Cozinha - Parede</option>
+                        <option value="Varanda / Sacada" ${pin.wall.includes('Varanda') ? 'selected' : ''}>Varanda / Sacada</option>
+                        <option value="Teto / Gesso (Geral)">Teto / Gesso (Geral)</option>
+                    </select>
+                </div>
+
+                <label>🛠️ Disciplina / Responsável:</label>
+                <select onchange="updatePin(${pin.id}, 'category', this.value)">
+                    <option value="Pintura / Emassamento">Pintura / Emassamento</option>
+                    <option value="Marmoraria / Granito">Marmoraria / Granito</option>
+                    <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
+                    <option value="Eletricista / Módulos">Eletricista / Módulos</option>
+                    <option value="Marcenaria / Portas">Marcenaria / Portas</option>
+                    <option value="Esquadrias / Vidros">Esquadrias / Vidros</option>
+                    <option value="Piso e Revestimento">Piso e Revestimento</option>
+                </select>
+
+                <label>📸 Anexar Foto do Ponto:</label>
+                <input type="file" accept="image/*" capture="environment">
+
+                <label>📝 Observação / Detalhamento do Defeito:</label>
+                <textarea placeholder="Ex: Fissura na pintura próximo à tomada do lado direito" onchange="updatePin(${pin.id}, 'obs', this.value)">${pin.obs}</textarea>
+            `;
+            container.appendChild(formDiv);
+        });
+    }
+
+    function updatePin(id, field, value) {
+        const pin = pins.find(p => p.id === id);
+        if (pin) {
+            pin[field] = value;
+        }
+    }
+
+    function deletePin(id) {
+        pins = pins.filter(p => p.id !== id);
+        renderPins();
+        renderForms();
+    }
+
+    function highlightForm(id) {
+        const el = document.getElementById(`nc-card-${id}`);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.style.border = '2px solid var(--primary)';
+            setTimeout(() => {
+                el.style.border = '1px solid #f5c6cb';
+                el.style.borderLeft = '5px solid var(--danger)';
+            }, 1500);
+        }
+    }
+</script>
+
+</body>
+</html>
