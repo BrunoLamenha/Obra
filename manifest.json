@@ -8,21 +8,19 @@
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "orientation": "portrait",
+  "categories": ["utilities", "productivity"],
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [
+      "purpose": "any"
+    },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
       "sizes": "512x512",
       "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Tela de Vistoria de Campo"
+      "purpose": "maskable"
     }
   ]
 }
