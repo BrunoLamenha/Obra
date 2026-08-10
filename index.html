@@ -25,7 +25,6 @@
         .btn { padding: 10px; background: #eee; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; }
         .btn.active { outline: 3px solid #000; font-weight: 900; }
         
-        /* Cores dos Apartamentos no Mapa */
         .btn-unit-ok { background: var(--success) !important; color: #fff !important; border-color: #1e7e34 !important; }
         .btn-unit-nok { background: var(--danger) !important; color: #fff !important; border-color: #bd2130 !important; }
         
@@ -138,11 +137,14 @@
         </div>
     </div>
 
-    <!-- 3. Tipo e Etapa (Vistoria vs Revistoria) -->
+    <!-- 3. Tipo e Etapa -->
     <div class="card no-print" id="type-card" style="display:none;">
         <h3>3. Configuração do Acompanhamento</h3>
+
+        <label>Data de Início da Vistoria / Serviço:</label>
+        <input type="date" id="service-start-date">
         
-        <div id="category-selection-container">
+        <div id="category-selection-container" style="margin-top:10px;">
             <label>Tipo de Vistoria:</label>
             <div class="grid-two">
                 <div class="btn-opt" id="btn-cat-padrao" onclick="setCategory('Padrão (Construtora)', this)">🏗️ Padrão</div>
@@ -233,6 +235,10 @@
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseleave', stopDrawing);
+
+        // Define a data de hoje como padrão na data de início
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('service-start-date').value = today;
     };
 
     function getPos(e) {
@@ -432,8 +438,9 @@
             if (prevPendings.length > 0 && selectedStage.includes('Revistoria')) {
                 setTimeout(() => {
                     const btnNok = document.getElementById(`btn-nok-${fullId}`);
-                    btnNok.className = "btn-status btn-nok-active";
-                    document.getElementById(`btn-add-${fullId}`).style.display = 'block';
+                    if(btnNok) btnNok.className = "btn-status btn-nok-active";
+                    const btnAdd = document.getElementById(`btn-add-${fullId}`);
+                    if(btnAdd) btnAdd.style.display = 'block';
 
                     prevPendings.forEach(p => {
                         addNC(fullId, item.id, p);
@@ -467,9 +474,11 @@
     }
 
     function addNC(fullId, itemId, prevData = null) {
-        ncCounters[fullId]++;
+        ncCounters[fullId] = (ncCounters[fullId] || 0) + 1;
         const count = ncCounters[fullId];
         const ncList = document.getElementById(`nc-list-${fullId}`);
+        if(!ncList) return;
+        
         const ncBoxId = `nc-${fullId}-${count}`;
 
         const itemObj = checklist.find(i => i.id === itemId) || { options: ["Falha de Acabamento", "Outros"] };
@@ -543,7 +552,7 @@
     function toggleOtherField(boxId, checkbox, optName) {
         if (optName === 'Outros') {
             const otherDiv = document.getElementById(`other-field-${boxId}`);
-            otherDiv.style.display = checkbox.checked ? 'block' : 'none';
+            if(otherDiv) otherDiv.style.display = checkbox.checked ? 'block' : 'none';
         }
     }
 
@@ -554,12 +563,20 @@
 
     function toggle(id) {
         const el = document.getElementById(id);
-        el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        if(el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    // GERA O RELATÓRIO PDF NATIVO INTERNO EM PAISAGEM COM FOTOS
+    // GERA O RELATÓRIO PDF NATIVO INTERNO EM PAISAGEM COM FOTOS E DATA DE INÍCIO
     function generateTechnicalPDF() {
         const today = new Date().toLocaleDateString('pt-BR');
+        
+        let startDateInput = document.getElementById('service-start-date').value;
+        let startDateFormatted = today;
+        if(startDateInput) {
+            const parts = startDateInput.split('-');
+            if(parts.length === 3) startDateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
         const printContainer = document.getElementById('print-report');
         
         let pendingCount = 0;
@@ -620,6 +637,7 @@
         const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
         existingHistory.push({
             date: today,
+            startDate: startDateFormatted,
             stage: selectedStage,
             category: selectedCategory,
             inspector: inspectorName,
@@ -636,9 +654,9 @@
                     <td colspan="4" class="pdf-header-title">RELATÓRIO TÉCNICO INTERNO DE VISTORIA</td>
                 </tr>
                 <tr>
-                    <td><strong>Data da Vistoria:</strong> ${today}</td>
-                    <td><strong>Pavimento:</strong> ${selectedFloorNum}º Pav</td>
-                    <td><strong>Unidade:</strong> ${selectedUnitNum}</td>
+                    <td><strong>Data Emissão:</strong> ${today}</td>
+                    <td><strong>Data Início Serviço:</strong> ${startDateFormatted}</td>
+                    <td><strong>Pavimento / Unidade:</strong> ${selectedFloorNum}º Pav - Apto ${selectedUnitNum}</td>
                     <td><strong>Etapa/Ciclo:</strong> ${selectedCategory} (${selectedStage})</td>
                 </tr>
                 <tr>
