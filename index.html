@@ -53,6 +53,8 @@
         .photo-area { margin-top: 10px; padding: 8px; background: #fff; border: 1px dashed var(--border); border-radius: 6px; text-align: center; }
         .photo-preview { max-width: 100%; max-height: 150px; margin-top: 8px; border-radius: 4px; display: none; border: 1px solid #ddd; }
 
+        .date-notice { display: none; color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; margin-top: 4px; font-weight: normal; }
+
         .btn-add-nc { background: #007bff; color: white; border: none; padding: 10px 12px; border-radius: 5px; font-weight: bold; font-size: 0.85rem; margin-top: 10px; cursor: pointer; display: none; width: 100%; }
         .btn-export { width: 100%; padding: 15px; background: #17a2b8; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
         .btn-next-unit { width: 100%; padding: 14px; background: #28a745; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: none; }
@@ -141,10 +143,7 @@
     <div class="card no-print" id="type-card" style="display:none;">
         <h3>3. Configuração do Acompanhamento</h3>
 
-        <label>Data de Início da Vistoria / Serviço:</label>
-        <input type="date" id="service-start-date">
-        
-        <div id="category-selection-container" style="margin-top:10px;">
+        <div id="category-selection-container">
             <label>Tipo de Vistoria:</label>
             <div class="grid-two">
                 <div class="btn-opt" id="btn-cat-padrao" onclick="setCategory('Padrão (Construtora)', this)">🏗️ Padrão</div>
@@ -235,10 +234,6 @@
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseleave', stopDrawing);
-
-        // Define a data de hoje como padrão na data de início
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('service-start-date').value = today;
     };
 
     function getPos(e) {
@@ -415,7 +410,7 @@
             if (prevPendings.length > 0) {
                 historyNoticeHTML = prevPendings.map((p, idx) => `
                     <div style="background:#fff3cd; border:1px solid #ffeeba; padding:6px 10px; border-radius:4px; margin-top:6px; font-size:0.78rem; color:#856404;">
-                        ⚠️ <strong>Pendência Anterior #${idx + 1}:</strong> ${p.details.join(', ')} (Prazo: ${p.days} dias | Resp: ${p.resp})
+                        ⚠️ <strong>Pendência Anterior #${idx + 1}:</strong> ${p.details.join(', ')} (Início: ${p.startDate || 'Sem data'} | Prazo: ${p.days} dias | Resp: ${p.resp})
                     </div>
                 `).join('');
             }
@@ -525,8 +520,17 @@
                 <option ${prevData && prevData.resp === 'Gesso / Sancas' ? 'selected' : ''}>Gesso / Sancas</option>
             </select>
             
-            <label>Novo Prazo de Conclusão (Dias Úteis):</label>
-            <input type="number" placeholder="Ex: 3" class="nc-days" value="${prevData ? prevData.days : ''}">
+            <div class="grid-two">
+                <div>
+                    <label>Data de Início do Serviço:</label>
+                    <input type="date" class="nc-start-date" value="${prevData ? prevData.startDateRaw || '' : ''}" onchange="checkDateNotice('${ncBoxId}', this)">
+                    <div class="date-notice" id="notice-${ncBoxId}">⚠️ Sem data definida</div>
+                </div>
+                <div>
+                    <label>Prazo Execução (Dias):</label>
+                    <input type="number" placeholder="Ex: 3" class="nc-days" value="${prevData ? prevData.days : ''}">
+                </div>
+            </div>
 
             <div class="photo-area">
                 <label style="margin-top:0;">📷 Foto da Pendência / Não Conformidade:</label>
@@ -535,6 +539,17 @@
             </div>
         `;
         ncList.appendChild(div);
+
+        // Checa data inicial para aviso
+        const dateInput = div.querySelector('.nc-start-date');
+        checkDateNotice(ncBoxId, dateInput);
+    }
+
+    function checkDateNotice(boxId, input) {
+        const notice = document.getElementById(`notice-${boxId}`);
+        if(notice) {
+            notice.style.display = input.value ? 'none' : 'block';
+        }
     }
 
     function previewPhoto(boxId, input) {
@@ -566,17 +581,9 @@
         if(el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    // GERA O RELATÓRIO PDF NATIVO INTERNO EM PAISAGEM COM FOTOS E DATA DE INÍCIO
+    // GERA O RELATÓRIO PDF NATIVO INTERNO EM PAISAGEM COM FOTOS E DATAS INDIVIDUAIS
     function generateTechnicalPDF() {
         const today = new Date().toLocaleDateString('pt-BR');
-        
-        let startDateInput = document.getElementById('service-start-date').value;
-        let startDateFormatted = today;
-        if(startDateInput) {
-            const parts = startDateInput.split('-');
-            if(parts.length === 3) startDateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-
         const printContainer = document.getElementById('print-report');
         
         let pendingCount = 0;
@@ -607,6 +614,14 @@
                 const respVal = box.querySelector('.nc-resp')?.value || 'Não informado';
                 const daysVal = box.querySelector('.nc-days')?.value || '-';
                 
+                // Formatação da data de início individual
+                const startDateRaw = box.querySelector('.nc-start-date')?.value || '';
+                let startDateFormatted = 'Não definida';
+                if(startDateRaw) {
+                    const parts = startDateRaw.split('-');
+                    if(parts.length === 3) startDateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+
                 const photoSrc = document.getElementById(`img-preview-${boxId}`)?.src || '';
                 const hasPhoto = photoSrc && photoSrc.startsWith('data:image');
 
@@ -617,6 +632,8 @@
                     details: selectedOpts,
                     resp: respVal,
                     days: daysVal,
+                    startDate: startDateFormatted,
+                    startDateRaw: startDateRaw,
                     photo: hasPhoto ? photoSrc : null
                 });
 
@@ -627,7 +644,10 @@
                         <td>${selectedOpts.length > 0 ? selectedOpts.map(o => `• ${o}`).join('<br>') : 'Pendência apontada sem detalhes'}</td>
                         <td style="text-align:center;">${hasPhoto ? `<img src="${photoSrc}" class="pdf-img">` : '<span style="color:#888;">Sem foto</span>'}</td>
                         <td>${respVal}</td>
-                        <td style="text-align:center;">${daysVal} dias</td>
+                        <td style="text-align:center;">
+                            <strong>Início:</strong> ${startDateFormatted}<br>
+                            <strong>Prazo:</strong> ${daysVal} dias
+                        </td>
                     </tr>
                 `;
             });
@@ -637,7 +657,6 @@
         const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
         existingHistory.push({
             date: today,
-            startDate: startDateFormatted,
             stage: selectedStage,
             category: selectedCategory,
             inspector: inspectorName,
@@ -654,10 +673,9 @@
                     <td colspan="4" class="pdf-header-title">RELATÓRIO TÉCNICO INTERNO DE VISTORIA</td>
                 </tr>
                 <tr>
-                    <td><strong>Data Emissão:</strong> ${today}</td>
-                    <td><strong>Data Início Serviço:</strong> ${startDateFormatted}</td>
+                    <td><strong>Data da Vistoria:</strong> ${today}</td>
                     <td><strong>Pavimento / Unidade:</strong> ${selectedFloorNum}º Pav - Apto ${selectedUnitNum}</td>
-                    <td><strong>Etapa/Ciclo:</strong> ${selectedCategory} (${selectedStage})</td>
+                    <td colspan="2"><strong>Etapa/Ciclo:</strong> ${selectedCategory} (${selectedStage})</td>
                 </tr>
                 <tr>
                     <td colspan="2"><strong>Responsável Técnico:</strong> ${inspectorName}</td>
@@ -671,12 +689,12 @@
                 <table class="pdf-nc-table">
                     <thead>
                         <tr>
-                            <th style="width:18%;">Ambiente</th>
-                            <th style="width:22%;">Item / Serviço</th>
+                            <th style="width:16%;">Ambiente</th>
+                            <th style="width:20%;">Item / Serviço</th>
                             <th style="width:28%;">Não Conformidade Identificada</th>
-                            <th style="width:16%;">Foto do Local</th>
+                            <th style="width:14%;">Foto do Local</th>
                             <th style="width:10%;">Responsável</th>
-                            <th style="width:6%;">Prazo</th>
+                            <th style="width:12%;">Início & Prazo</th>
                         </tr>
                     </thead>
                     <tbody>
