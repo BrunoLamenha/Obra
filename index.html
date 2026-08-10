@@ -3,682 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Vistoria de Obra</title>
+    <title>Vistoria Obra</title>
     <style>
-        :root {
-            --primary: #004a8f;
-            --primary-dark: #003366;
-            --bg: #f4f6f9;
-            --card-bg: #ffffff;
-            --text: #333333;
-            --border: #e0e0e0;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        
-        header { background: var(--primary); color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
-        h1 { font-size: 1.5rem; }
-        h2 { font-size: 1.2rem; color: var(--primary); margin-bottom: 10px; }
-
-        .card { background: var(--card-bg); border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
-        .btn { padding: 10px; background: #e9ecef; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; transition: all 0.2s; }
-        .btn:hover { background: #dee2e6; }
-        .btn.active { background: var(--primary); color: white; border-color: var(--primary-dark); }
-        .btn-success { background: var(--success); color: white; border: none; }
-        .btn-danger { background: var(--danger); color: white; border: none; }
-
-        .accordion { cursor: pointer; padding: 12px; width: 100%; text-align: left; border: none; outline: none; background-color: #eef4fa; border-radius: 6px; font-weight: bold; color: var(--primary-dark); display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-        .accordion-content { display: none; padding: 15px 5px; }
-
-        .step-item { border-left: 4px solid var(--primary); padding-left: 15px; margin-bottom: 20px; position: relative; }
-        .step-item.disabled { opacity: 0.5; pointer-events: none; border-left-color: #ccc; }
-        
-        .status-options { display: flex; gap: 10px; margin: 10px 0; }
-        .sub-fields { background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid var(--border); margin-top: 10px; display: none; }
-        
-        label { font-size: 0.85rem; font-weight: bold; display: block; margin-top: 8px; color: #555; }
-        input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid var(--border); border-radius: 4px; }
-        
-        .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
-        .badge-blocked { background: #e2e3e5; color: #383d41; }
-        .badge-ready { background: #cce5ff; color: #004085; }
+        :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ddd; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background: var(--bg); padding: 15px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        header { background: var(--primary); color: #fff; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
+        .card { background: #fff; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+        .btn { padding: 10px; background: #eee; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; }
+        .btn.active { background: var(--primary); color: #fff; }
+        .btn-ok { background: #28a745; color: #fff; border: none; }
+        .btn-nok { background: #dc3545; color: #fff; border: none; }
+        .accordion { width: 100%; padding: 12px; background: #eef4fa; border: none; border-radius: 6px; font-weight: bold; color: var(--primary); text-align: left; margin-top: 10px; }
+        .content { display: none; padding-top: 10px; }
+        .item { border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 15px; }
+        .item.disabled { opacity: 0.4; pointer-events: none; border-left-color: #ccc; }
+        .sub-fields { background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid var(--border); margin-top: 8px; display: none; }
+        label { font-size: 0.8rem; font-weight: bold; display: block; margin-top: 6px; }
+        input, select { width: 100%; padding: 8px; margin-top: 2px; border: 1px solid var(--border); border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>Vistoria Obra — Área Privativa</h1>
-        <p style="font-size: 0.85rem; opacity: 0.9;">Gestão de Qualidade & Cronograma de Ataque</p>
+        <h2>Vistoria de Obra</h2>
+        <p style="font-size:0.8rem;">Área Privativa & Sequência Logica</p>
     </header>
 
-    <!-- Passos de Seleção Inicial -->
     <div class="card">
-        <h2>1. Selecione o Pavimento</h2>
-        <div class="grid" id="floor-select">
-            <div class="btn" onclick="selectFloor(1, this)">1º Pav.</div>
-            <div class="btn" onclick="selectFloor(2, this)">2º Pav.</div>
-            <div class="btn" onclick="selectFloor(3, this)">3º Pav.</div>
-            <div class="btn" onclick="selectFloor(4, this)">4º Pav.</div>
+        <h3>1. Selecione o Pavimento</h3>
+        <div class="grid" id="floors">
+            <div class="btn" onclick="setFloor(1, this)">1º Pav</div>
+            <div class="btn" onclick="setFloor(2, this)">2º Pav</div>
+            <div class="btn" onclick="setFloor(3, this)">3º Pav</div>
+            <div class="btn" onclick="setFloor(4, this)">4º Pav</div>
         </div>
     </div>
 
     <div class="card" id="unit-card" style="display:none;">
-        <h2>2. Selecione a Unidade</h2>
-        <div class="grid" id="unit-select"></div>
+        <h3>2. Selecione a Unidade</h3>
+        <div class="grid" id="units"></div>
     </div>
 
-    <!-- Área de Inspeção -->
     <div id="inspection-area" style="display:none;">
         <div class="card" style="background: var(--primary); color: white;">
-            <h3 id="selected-location-title">Unidade: ---</h3>
+            <h3 id="unit-title">Unidade: ---</h3>
         </div>
 
-        <!-- Cômodo: Dormitório / Cozinha -->
         <div class="card">
-            <button class="accordion" onclick="toggleAccordion('room-dorm-kitchen')">
-                Dormitório / Cozinha <span id="dorm-status">▶</span>
-            </button>
-            <div class="accordion-content" id="room-dorm-kitchen">
-                <div id="checklist-dorm"></div>
-            </div>
+            <button class="accordion" onclick="toggle('room-dorm')">Dormitório / Cozinha</button>
+            <div class="content" id="room-dorm"></div>
         </div>
 
-        <!-- Cômodo: Banheiro -->
         <div class="card">
-            <button class="accordion" onclick="toggleAccordion('room-bathroom')">
-                Banheiro <span id="bath-status">▶</span>
-            </button>
-            <div class="accordion-content" id="room-bathroom">
-                <div id="checklist-bath"></div>
-            </div>
+            <button class="accordion" onclick="toggle('room-bath')">Banheiro</button>
+            <div class="content" id="room-bath"></div>
         </div>
 
-        <!-- Cômodo: Varanda -->
         <div class="card">
-            <button class="accordion" onclick="toggleAccordion('room-balcony')">
-                Varanda <span id="balcony-status">▶</span>
-            </button>
-            <div class="accordion-content" id="room-balcony">
-                <div id="checklist-balcony"></div>
-            </div>
+            <button class="accordion" onclick="toggle('room-balcony')">Varanda</button>
+            <div class="content" id="room-balcony"></div>
         </div>
     </div>
 </div>
 
 <script>
-    let selectedFloor = null;
-    let selectedUnit = null;
-
-    // Modelo de Sequência Predecessora de Obra
-    const baseChecklist = [
-        { id: "bancada", name: "1. Bancadas, Soleiras e Peitoris", type: "base" },
-        { id: "piso", name: "2. Contrapiso, Revestimento e Caimento", type: "base" },
-        { id: "pintura_massa", name: "3. Pintura: Emassamento e Lixamento", type: "base" },
-        { id: "pintura_demao", name: "4. Pintura: Demãos e Acabamento Final", requires: "pintura_massa" },
-        { id: "hidraulica", name: "5. Metais, Louças, Sifão e Registros", requires: "bancada" },
-        { id: "esquadrias", name: "6. Esquadrias, Vidros e Silicone", type: "base" },
-        { id: "eletrica", name: "7. Tomadas, Interruptores e Plafons", requires: "pintura_demao" },
-        { id: "ar_condicionado", name: "8. Infraestrutura/Aparelho Ar-Condicionado", requires: "eletrica", hasAC: true }
+    const checklist = [
+        { id: "bancada", name: "1. Bancadas, Soleiras e Peitoris" },
+        { id: "piso", name: "2. Contrapiso e Revestimentos" },
+        { id: "massa", name: "3. Pintura: Emassamento e Lixamento" },
+        { id: "demao", name: "4. Pintura: Demãos e Acabamento", req: "massa" },
+        { id: "hidra", name: "5. Metais, Louças e Sifão", req: "bancada" },
+        { id: "esquadria", name: "6. Esquadrias e Vedações" },
+        { id: "eletrica", name: "7. Tomadas, Interruptores e Plafons", req: "demao" },
+        { id: "ac", name: "8. Ar-Condicionado", req: "eletrica", hasAC: true }
     ];
 
-    function selectFloor(floor, element) {
-        selectedFloor = floor;
-        document.querySelectorAll('#floor-select .btn').forEach(b => b.classList.remove('active'));
-        element.classList.add('active');
-
-        const unitContainer = document.getElementById('unit-select');
-        unitContainer.innerHTML = '';
-
+    function setFloor(f, el) {
+        document.querySelectorAll('#floors .btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        const u = document.getElementById('units');
+        u.innerHTML = '';
         for (let i = 1; i <= 19; i++) {
-            let unitNum = (floor * 100) + i;
-            unitContainer.innerHTML += `<div class="btn" onclick="selectUnit(${unitNum}, this)">${unitNum}</div>`;
+            let num = (f * 100) + i;
+            u.innerHTML += `<div class="btn" onclick="setUnit(${num}, this)">${num}</div>`;
         }
-
         document.getElementById('unit-card').style.display = 'block';
         document.getElementById('inspection-area').style.display = 'none';
     }
 
-    function selectUnit(unit, element) {
-        selectedUnit = unit;
-        document.querySelectorAll('#unit-select .btn').forEach(b => b.classList.remove('active'));
-        element.classList.add('active');
-
-        document.getElementById('selected-location-title').innerText = `Vistoria da Unidade: ${unit}`;
+    function setUnit(u, el) {
+        document.querySelectorAll('#units .btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('unit-title').innerText = `Unidade: ${u}`;
         document.getElementById('inspection-area').style.display = 'block';
-
-        renderChecklist('checklist-dorm', true);
-        renderChecklist('checklist-bath', false); // Banheiro (Sem Ar-Condicionado)
-        renderChecklist('checklist-balcony', true);
+        
+        render('room-dorm', true);
+        render('room-bath', false); // Sem Ar-Condicionado no Banheiro
+        render('room-balcony', true);
     }
 
-    function renderChecklist(containerId, allowAC) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = '';
-
-        baseChecklist.forEach((item, index) => {
-            if (!allowAC && item.hasAC) return; // Filtra ar-condicionado no banheiro
-
-            const isBlocked = item.requires ? true : false;
-
-            container.innerHTML += `
-                <div class="step-item ${isBlocked ? 'disabled' : ''}" id="${containerId}-${item.id}-wrapper">
-                    <strong>${item.name}</strong> 
-                    ${isBlocked ? `<span class="badge badge-blocked" id="${containerId}-${item.id}-badge">Aguardando Antecessor</span>` : ''}
-                    
-                    <div class="status-options">
-                        <button class="btn btn-success" onclick="setStatus('${containerId}', '${item.id}', true)">[✓] Aprovado / Sim</button>
-                        <button class="btn btn-danger" onclick="setStatus('${containerId}', '${item.id}', false)">[✗] Pendente / Não</button>
+    function render(cId, allowAC) {
+        const c = document.getElementById(cId);
+        c.innerHTML = '';
+        checklist.forEach(item => {
+            if (!allowAC && item.hasAC) return;
+            const blocked = item.req ? 'disabled' : '';
+            c.innerHTML += `
+                <div class="item ${blocked}" id="${cId}-${item.id}">
+                    <strong>${item.name}</strong>
+                    <div style="display:flex; gap:8px; margin-top:6px;">
+                        <button class="btn btn-ok" onclick="setStatus('${cId}','${item.id}',true)">✓ Sim / Ok</button>
+                        <button class="btn btn-nok" onclick="setStatus('${cId}','${item.id}',false)">✗ Não / Pendente</button>
                     </div>
-
-                    <div class="sub-fields" id="${containerId}-${item.id}-fields">
-                        <label>Em qual fase atual a etapa parou?</label>
-                        <input type="text" placeholder="Ex: Aguardando secagem / 1ª Demão concluída">
-
-                        <label>Responsável / Empreiteiro:</label>
+                    <div class="sub-fields" id="${cId}-${item.id}-sub">
+                        <label>Fase atual / Detalhe:</label>
+                        <input type="text" placeholder="Ex: Aguardando Lixamento">
+                        <label>Responsável:</label>
                         <select>
-                            <option>Pintura / Acabamento</option>
-                            <option>Marmoraria / Graniteiro</option>
-                            <option>Instalações Hidráulicas</option>
+                            <option>Pintura</option>
+                            <option>Marmoraria</option>
+                            <option>Hidráulica</option>
                             <option>Eletricista</option>
-                            <option>Esquadrias de Alumínio</option>
                         </select>
-
-                        <label>Anexar Foto da Evidência:</label>
+                        <label>Foto:</label>
                         <input type="file" accept="image/*">
-
-                        <label>Data de Início da Correção:</label>
-                        <input type="date">
-
-                        <label>Prazo de Conclusão (Dias Úteis):</label>
-                        <input type="number" placeholder="Ex: 3" min="1" onchange="calculateBusinessDays(this)">
-                        <span style="font-size: 0.75rem; color: #666;" class="due-date-preview"></span>
+                        <label>Prazo (Dias Úteis):</label>
+                        <input type="number" placeholder="Ex: 3">
                     </div>
                 </div>
             `;
         });
     }
 
-    function setStatus(containerId, itemId, isApproved) {
-        const wrapper = document.getElementById(`${containerId}-${itemId}-wrapper`);
-        const subFields = document.getElementById(`${containerId}-${itemId}-fields`);
-
-        if (isApproved) {
-            subFields.style.display = 'none';
-            wrapper.style.borderLeftColor = 'var(--success)';
-            unlockDependentItems(containerId, itemId);
-        } else {
-            subFields.style.display = 'block';
-            wrapper.style.borderLeftColor = 'var(--danger)';
-        }
-    }
-
-    function unlockDependentItems(containerId, approvedItemId) {
-        baseChecklist.forEach(item => {
-            if (item.requires === approvedItemId) {
-                const depWrapper = document.getElementById(`${containerId}-${item.id}-wrapper`);
-                const depBadge = document.getElementById(`${containerId}-${item.id}-badge`);
-                
-                if (depWrapper) {
-                    depWrapper.classList.remove('disabled');
-                    if (depBadge) {
-                        depBadge.className = 'badge badge-ready';
-                        depBadge.innerText = 'Liberado para Inspeção';
-                    }
+    function setStatus(cId, id, isOk) {
+        const sub = document.getElementById(`${cId}-${id}-sub`);
+        sub.style.display = isOk ? 'none' : 'block';
+        if (isOk) {
+            checklist.forEach(i => {
+                if (i.req === id) {
+                    const dep = document.getElementById(`${cId}-${i.id}`);
+                    if (dep) dep.classList.remove('disabled');
                 }
-            }
-        });
-    }
-
-    function toggleAccordion(id) {
-        const content = document.getElementById(id);
-        content.style.display = content.style.display === "block" ? "none" : "block";
-    }
-
-    function calculateBusinessDays(input) {
-        const days = parseInt(input.value);
-        if (!days) return;
-        
-        let date = new Date();
-        let addedDays = 0;
-        
-        while (addedDays < days) {
-            date.setDate(date.getDate() + 1);
-            if (date.getDay() !== 0 && date.getDay() !== 6) { // Ignora Sábado (6) e Domingo (0)
-                addedDays++;
-            }
+            });
         }
-        
-        const previewSpan = input.nextElementSibling;
-        previewSpan.innerText = `Previsão de Término (Dias Úteis): ${date.toLocaleDateString('pt-BR')}`;
+    }
+
+    function toggle(id) {
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 </script>
 
-</body>
-</html>
-      border-radius: 12px;
-      margin-bottom: 12px;
-    }
-    .header-card h1 { margin: 0; font-size: 1.1rem; text-transform: uppercase; }
-    .header-card p { margin: 4px 0 0 0; font-size: 0.75rem; opacity: 0.8; }
-
-    .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
-    .tab-btn { flex: 1; padding: 10px; border: 1px solid var(--border); background: #fff; border-radius: 8px; font-weight: bold; font-size: 0.8rem; cursor: pointer; text-align: center; }
-    .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    .meta-form {
-      background: var(--card);
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      margin-bottom: 14px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .meta-form label { font-size: 0.7rem; font-weight: bold; color: #475569; display: block; }
-    .meta-form input { width: 100%; padding: 7px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; }
-
-    .category-title { font-size: 0.9rem; font-weight: bold; color: var(--primary); margin: 14px 0 6px 0; border-bottom: 2px solid var(--accent); padding-bottom: 4px; }
-    
-    .item-chip {
-      display: inline-flex;
-      align-items: center;
-      background: #fff;
-      border: 1px solid var(--border);
-      padding: 8px 10px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      margin: 3px;
-      cursor: pointer;
-    }
-    .item-chip input { margin-right: 6px; accent-color: var(--accent); }
-
-    /* Estilo do Card Ocorrência Criada */
-    .occurrence-card {
-      background: #fff;
-      border-left: 4px solid var(--accent);
-      border: 1px solid var(--border);
-      border-left-width: 4px;
-      border-radius: 8px;
-      padding: 10px;
-      margin: 8px 0;
-      font-size: 0.8rem;
-    }
-    .occurrence-card .title { font-weight: bold; color: var(--primary); display: flex; justify-content: space-between; }
-    .occurrence-card textarea { width: 100%; height: 40px; margin: 6px 0; border: 1px solid var(--border); border-radius: 6px; padding: 4px; font-size: 0.75rem; }
-    
-    .grid-fields { display: grid; grid-template-columns: 1.2fr 1fr 0.8fr; gap: 6px; margin-top: 6px; }
-    .grid-fields input { padding: 5px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.75rem; }
-
-    .photo-preview-container { display: flex; gap: 6px; margin-top: 6px; overflow-x: auto; }
-    .photo-thumb { width: 55px; height: 55px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border); }
-
-    .btn-add-occ { background: #eff6ff; color: var(--accent); border: 1px dashed var(--accent); padding: 6px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; width: 100%; margin-top: 4px; cursor: pointer; }
-
-    /* Tabela do Cronograma */
-    .schedule-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); font-size: 0.75rem; }
-    .schedule-table th { background: var(--primary); color: #fff; padding: 8px; text-align: left; }
-    .schedule-table td { padding: 8px; border-bottom: 1px solid var(--border); }
-
-    .action-bar {
-      position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); padding: 10px; display: flex; gap: 8px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-    }
-    .btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.85rem; cursor: pointer; text-align: center; }
-    .btn-primary { background: var(--accent); color: white; }
-    .btn-success { background: #16a34a; color: white; }
-    .btn-danger { background: #ef4444; color: white; flex: 0.3; }
-  </style>
-</head>
-<body>
-
-  <div class="header-card">
-    <h1>Vistoria de Campo & Cronograma</h1>
-    <p>Gestão de Não Conformidades & Planejamento</p>
-  </div>
-
-  <div class="tabs">
-    <div class="tab-btn active" onclick="switchTab('vistoria')">📋 Nova Vistoria</div>
-    <div class="tab-btn" onclick="switchTab('cronograma')">🚀 Cronograma</div>
-    <div class="tab-btn" onclick="switchTab('repositorio')">📁 Histórico</div>
-  </div>
-
-  <!-- TAB 1: VISTORIA -->
-  <div id="tab-vistoria" class="tab-content active">
-    <div class="meta-form">
-      <div><label>Obra</label><input type="text" id="meta-obra" placeholder="Ex: Obra Zoe"></div>
-      <div><label>Ambiente/Apto</label><input type="text" id="meta-amb" placeholder="Ex: 101 / Sala"></div>
-      <div><label>Inspecionado Por</label><input type="text" id="meta-resp" placeholder="Nome"></div>
-      <div><label>Data Vistoria</label><input type="date" id="meta-data"></div>
-    </div>
-
-    <div id="checklist-builder"></div>
-  </div>
-
-  <!-- TAB 2: CRONOGRAMA DE ATAQUE -->
-  <div id="tab-cronograma" class="tab-content">
-    <div class="category-title">Cronograma de Ataque (Prazos em Dias Úteis)</div>
-    <div id="cronograma-container">
-      <p style="font-size:0.8rem; color:#64748b;">Nenhuma pendência cadastrada com prazo.</p>
-    </div>
-  </div>
-
-  <!-- TAB 3: REPOSITÓRIO / HISTÓRICO -->
-  <div id="tab-repositorio" class="tab-content">
-    <div class="category-title">Vistorias Salvas no Dispositivo</div>
-    <div id="repositorio-list"></div>
-  </div>
-
-  <div class="action-bar">
-    <button class="btn btn-danger" onclick="limparTudo()">Limpar</button>
-    <button class="btn btn-success" onclick="salvarNoRepositorio()">Salvar</button>
-    <button class="btn btn-primary" onclick="gerarPDFRelatorio()">Gerar PDF</button>
-  </div>
-
-  <script>
-    const dadosChecklist = [
-      { id: 1, nome: "1. Revestimento & Rodapé", itens: ["Piso", "Parede", "Rodapé Int.", "Rodapé Ext."] },
-      { id: 2, nome: "2. Porta de Madeira", itens: ["Folha", "Alisar", "Fech. Eletr.", "Fech. Mec.", "Caixa"] },
-      { id: 3, nome: "3. Esquadrias", itens: ["Regular", "Repintar", "G. corpo alum.", "G. corpo vidro"] },
-      { id: 4, nome: "4. Instalações Hidráulicas", itens: ["Esgoto", "Água Fria", "Pluvial", "Piscina"] },
-      { id: 5, nome: "5. Forro de Gesso", itens: ["Aplicar", "Reforço", "Fechar abert.", "Reg. juntas"] },
-      { id: 6, nome: "6. Granito & Pedra", itens: ["Bancada", "Rodamão", "DivBox", "Soleira", "Chapins"] },
-      { id: 7, nome: "7. Pintura", itens: ["1ª Demão", "Emassamento", "Lixamento", "2ª Demão", "Retoque"] },
-      { id: 8, nome: "8. Instalações Elétricas", itens: ["Tom. 10A", "Tom. 20A", "Int. Simp.", "Ilum.", "Quadro", "Disj."] },
-      { id: 9, nome: "9. Lógicas & Automação", itens: ["Internet", "Antena", "Interfone"] },
-      { id: 10, nome: "10. Ar Condicionado", itens: ["Cobre", "Dreno", "Cabos"] },
-      { id: 11, nome: "11. Acabamentos Finalização", itens: ["Acab. elétr.", "Acab. regist.", "Grelha"] },
-      { id: 12, nome: "12. Paisagismo", itens: ["Terra preta", "Casca coco", "Bidim", "Vegetação"] }
-    ];
-
-    let ocorrencias = [];
-    document.getElementById('meta-data').valueAsDate = new Date();
-
-    function switchTab(tab) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      event.target.classList.add('active');
-      document.getElementById(`tab-${tab}`).classList.add('active');
-
-      if (tab === 'cronograma') gerarCronograma();
-      if (tab === 'repositorio') carregarRepositorio();
-    }
-
-    function renderChecklist() {
-      const container = document.getElementById('checklist-builder');
-      container.innerHTML = '';
-
-      dadosChecklist.forEach(cat => {
-        const catDiv = document.createElement('div');
-        catDiv.innerHTML = `<div class="category-title">${cat.nome}</div>`;
-
-        cat.itens.forEach(item => {
-          const chip = document.createElement('label');
-          chip.className = 'item-chip';
-          chip.innerHTML = `<input type="checkbox" onchange="toggleItem('${cat.nome}', '${item}', this)"> ${item}`;
-          catDiv.appendChild(chip);
-        });
-
-        const occContainer = document.createElement('div');
-        occContainer.id = `occ_container_${cat.id}`;
-        catDiv.appendChild(occContainer);
-
-        container.appendChild(catDiv);
-      });
-    }
-
-    function toggleItem(categoria, item, checkbox) {
-      if (checkbox.checked) {
-        adicionarOcorrencia(categoria, item);
-      }
-    }
-
-    function adicionarOcorrencia(categoria, item) {
-      const id = Date.now() + Math.random();
-      const novaOcc = { id, categoria, item, obs: '', resp: '', inicio: document.getElementById('meta-data').value, diasUteis: '', fotos: [] };
-      ocorrencias.push(novaOcc);
-      renderOcorrencias();
-    }
-
-    function removerOcorrencia(id) {
-      ocorrencias = ocorrencias.filter(o => o.id !== id);
-      renderOcorrencias();
-    }
-
-    function renderOcorrencias() {
-      dadosChecklist.forEach(cat => {
-        const catOccs = ocorrencias.filter(o => o.categoria === cat.nome);
-        const container = document.getElementById(`occ_container_${cat.id}`);
-        if (!container) return;
-
-        container.innerHTML = catOccs.map(occ => `
-          <div class="occurrence-card">
-            <div class="title">
-              <span>📍 ${occ.item}</span>
-              <span style="color:#ef4444; cursor:pointer;" onclick="removerOcorrencia(${occ.id})">✖ Remover</span>
-            </div>
-            <textarea placeholder="Observação técnica do ponto..." onchange="atualizarOcc(${occ.id}, 'obs', this.value)">${occ.obs}</textarea>
-            
-            <div style="margin:4px 0;">
-              <input type="file" accept="image/*" capture="environment" multiple onchange="uploadFoto(${occ.id}, event)" id="f_${occ.id}" style="display:none;">
-              <button class="btn-add-occ" onclick="document.getElementById('f_${occ.id}').click()">📷 Adicionar Foto do Ponto</button>
-              <div class="photo-preview-container" id="thumb_box_${occ.id}">
-                ${occ.fotos.map(f => `<img src="${f}" class="photo-thumb">`).join('')}
-              </div>
-            </div>
-
-            <div class="grid-fields">
-              <input type="text" placeholder="Resp." value="${occ.resp}" onchange="atualizarOcc(${occ.id}, 'resp', this.value)">
-              <input type="date" value="${occ.inicio}" onchange="atualizarOcc(${occ.id}, 'inicio', this.value)">
-              <input type="number" placeholder="D.Úteis" value="${occ.diasUteis}" onchange="atualizarOcc(${occ.id}, 'diasUteis', this.value)">
-            </div>
-            <button class="btn-add-occ" style="margin-top:6px; background:#f1f5f9; color:#334155;" onclick="adicionarOcorrencia('${occ.categoria}', '${occ.item}')">+ Adicionar outro ponto de ${occ.item}</button>
-          </div>
-        `).join('');
-      });
-    }
-
-    function atualizarOcc(id, campo, valor) {
-      const occ = ocorrencias.find(o => o.id === id);
-      if (occ) occ[campo] = valor;
-    }
-
-    function uploadFoto(id, event) {
-      const files = event.target.files;
-      const occ = ocorrencias.find(o => o.id === id);
-
-      for (let file of files) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          // Comprime a foto utilizando Canvas HTML5 para não pesar o PDF e a memória
-          const img = new Image();
-          img.src = e.target.result;
-          img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const maxDim = 800; // Redimensiona max 800px
-            let w = img.width, h = img.height;
-            if (w > h && w > maxDim) { h *= maxDim / w; w = maxDim; }
-            else if (h > maxDim) { w *= maxDim / h; h = maxDim; }
-            canvas.width = w; canvas.height = h;
-            ctx.drawImage(img, 0, 0, w, h);
-            const compressed = canvas.toDataURL('image/jpeg', 0.6); // 60% qualidade JPEG
-            occ.fotos.push(compressed);
-            renderOcorrencias();
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    // Adiciona N dias úteis pulando finais de semana
-    function somarDiasUteis(dataStr, dias) {
-      if (!dataStr || !dias) return '-';
-      let d = new Date(dataStr + 'T00:00:00');
-      let add = 0;
-      let count = parseInt(dias, 10);
-      while (add < count) {
-        d.setDate(d.getDate() + 1);
-        if (d.getDay() !== 0 && d.getDay() !== 6) add++;
-      }
-      return d.toLocaleDateString('pt-BR');
-    }
-
-    function gerarCronograma() {
-      const container = document.getElementById('cronograma-container');
-      const pendencias = ocorrencias.filter(o => o.diasUteis > 0);
-
-      if (pendencias.length === 0) {
-        container.innerHTML = '<p style="font-size:0.8rem; color:#64748b;">Nenhuma pendência cadastrada com dias úteis definidos.</p>';
-        return;
-      }
-
-      // Ordenar por data limite
-      pendencias.sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
-
-      let html = `<table class="schedule-table">
-        <thead>
-          <tr>
-            <th>Item / Serviço</th>
-            <th>Resp.</th>
-            <th>Início</th>
-            <th>D.Úteis</th>
-            <th>Término</th>
-          </tr>
-        </thead>
-        <tbody>`;
-
-      pendencias.forEach(p => {
-        html += `<tr>
-          <td><strong>${p.item}</strong><br><small>${p.categoria}</small></td>
-          <td>${p.resp || '-'}</td>
-          <td>${new Date(p.inicio + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-          <td>${p.diasUteis} d.ú.</td>
-          <td><strong style="color:#2563eb;">${somarDiasUteis(p.inicio, p.diasUteis)}</strong></td>
-        </tr>`;
-      });
-
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-
-    // Repositório de Dados Local
-    function salvarNoRepositorio() {
-      const obra = document.getElementById('meta-obra').value || 'Obra sem nome';
-      const amb = document.getElementById('meta-amb').value || 'Geral';
-      const data = document.getElementById('meta-data').value;
-
-      const reg = { id: Date.now(), obra, amb, data, ocorrencias };
-      let banco = JSON.parse(localStorage.getItem('vistorias_db') || '[]');
-      banco.push(reg);
-      localStorage.setItem('vistorias_db', JSON.stringify(banco));
-      alert('Vistoria salva no histórico local com sucesso!');
-    }
-
-    function carregarRepositorio() {
-      const container = document.getElementById('repositorio-list');
-      let banco = JSON.parse(localStorage.getItem('vistorias_db') || '[]');
-
-      if (banco.length === 0) {
-        container.innerHTML = '<p style="font-size:0.8rem; color:#64748b;">Nenhuma vistoria salva no histórico.</p>';
-        return;
-      }
-
-      container.innerHTML = banco.map(v => `
-        <div style="background:#fff; border:1px solid var(--border); padding:10px; border-radius:8px; margin-bottom:8px;">
-          <strong>${v.obra} — ${v.amb}</strong><br>
-          <small>Data: ${v.data} | Ocorrências: ${v.ocorrencias.length}</small>
-        </div>
-      `).join('');
-    }
-
-    function limparTudo() {
-      if (confirm("Limpar formulário atual?")) {
-        ocorrencias = [];
-        document.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
-        document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
-        renderOcorrencias();
-      }
-    }
-
-    // GERADOR DE PDF LEVE E EXECUTIVO VIA jsPDF
-    function gerarPDFRelatorio() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-
-      const obra = document.getElementById('meta-obra').value || 'Obra';
-      const amb = document.getElementById('meta-amb').value || 'Unidade';
-      const resp = document.getElementById('meta-resp').value || 'Técnico';
-      const data = document.getElementById('meta-data').value;
-
-      // Cabeçalho PDF
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, 210, 28, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(14);
-      doc.text("RELATÓRIO DE VISTORIA E ACOMPANHAMENTO", 14, 15);
-      doc.setFontSize(8);
-      doc.text(`OBRA: ${obra} | AMBIENTE: ${amb} | RESP: ${resp} | DATA: ${data}`, 14, 23);
-
-      let yPos = 35;
-
-      // Tabela de Ocorrências
-      const tableData = ocorrencias.map((o, idx) => [
-        idx + 1,
-        `${o.categoria}\nItem: ${o.item}`,
-        o.obs || 'Sem apontamentos',
-        o.resp || '-',
-        o.diasUteis ? `${o.diasUteis} d.ú. (${somarDiasUteis(o.inicio, o.diasUteis)})` : '-'
-      ]);
-
-      doc.autoTable({
-        startY: yPos,
-        head: [['#', 'Categoria / Item', 'Observação Técnica', 'Resp.', 'Prazo / Término']],
-        body: tableData,
-        headStyles: { fillColor: [30, 58, 138] },
-        styles: { fontSize: 8 }
-      });
-
-      yPos = doc.lastAutoTable.finalY + 10;
-
-      // Anexo de Fotos Organizado
-      let temFotos = false;
-      ocorrencias.forEach(o => {
-        if (o.fotos.length > 0) {
-          if (!temFotos) {
-            doc.setFontSize(11);
-            doc.setTextColor(15, 23, 42);
-            doc.text("REGISTRO FOTOGRÁFICO DE CAMPO", 14, yPos);
-            yPos += 8;
-            temFotos = true;
-          }
-
-          o.fotos.forEach(foto => {
-            if (yPos > 240) { doc.addPage(); yPos = 20; }
-            doc.addImage(foto, 'JPEG', 14, yPos, 50, 50);
-            doc.setFontSize(7);
-            doc.text(`${o.categoria} - ${o.item}`, 68, yPos + 10);
-            if (o.obs) doc.text(`Obs: ${o.obs.substring(0, 50)}...`, 68, yPos + 16);
-            yPos += 55;
-          });
-        }
-      });
-
-      doc.save(`Relatorio_Vistoria_${obra}_${amb}.pdf`);
-    }
-
-    renderChecklist();
-  </script>
 </body>
 </html>
