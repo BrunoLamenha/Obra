@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vistoria Obra - Subitens & Checklist</title>
+    <title>Vistoria Obra - Subitens Completos</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ccc; --success: #28a745; --danger: #dc3545; }
@@ -29,13 +29,13 @@
         .nc-header { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: bold; color: var(--danger); margin-bottom: 8px; }
         .btn-remove { background: #ff4d4d; color: white; border: none; border-radius: 3px; padding: 2px 6px; font-size: 0.75rem; cursor: pointer; }
 
-        .checklist-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; background: #fff; padding: 8px; border-radius: 4px; border: 1px solid #eee; }
-        .chk-label { font-size: 0.8rem; font-weight: normal; display: flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; }
+        .checklist-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #eee; }
+        .chk-label { font-size: 0.8rem; font-weight: normal; display: flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; color: #333; }
 
         label { font-size: 0.8rem; font-weight: bold; display: block; margin-top: 8px; color: #444; }
         input, select { width: 100%; padding: 8px; margin-top: 2px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
         
-        .btn-add-nc { background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 0.8rem; margin-top: 10px; cursor: pointer; display: none; width: 100%; }
+        .btn-add-nc { background: #007bff; color: white; border: none; padding: 10px 12px; border-radius: 5px; font-weight: bold; font-size: 0.85rem; margin-top: 10px; cursor: pointer; display: none; width: 100%; }
         .btn-export { width: 100%; padding: 15px; background: #17a2b8; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
 
         .accordion { width: 100%; padding: 12px; background: #eef4fa; border: 1px solid #b8daff; border-radius: 6px; font-weight: bold; color: var(--primary); text-align: left; margin-top: 10px; cursor: pointer; }
@@ -47,7 +47,7 @@
 <div class="container" id="report-content">
     <header>
         <h2>Vistoria de Obra</h2>
-        <p style="font-size:0.8rem;">Área Privativa & Checklist com Subitens</p>
+        <p style="font-size:0.8rem;">Área Privativa & Checklist Detalhado</p>
     </header>
 
     <div class="card">
@@ -94,42 +94,42 @@
         { 
             id: "bancada", 
             name: "1. Bancadas, Soleiras e Peitoris",
-            options: ["Peça Trincada/Bicada", "Falta de Rejunte/Silicone", "Falta Rodamão/Espelho", "Desnível/Fora de Prumo", "Outros"]
+            options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"]
         },
         { 
             id: "piso", 
             name: "2. Contrapiso e Revestimentos / Rodapés",
-            options: ["Peça Oca/Solta", "Junta Desalinhada", "Caimento Incorreto", "Rodapé Solto/Danificado", "Outros"]
+            options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"]
         },
         { 
             id: "pintura", 
             name: "3. Pintura e Emassamento",
-            options: ["Mancha/Desbotamento", "Recorte Mal Feito", "Fissura/Trinca", "Onda/Sujeira na Massa", "Outros"]
+            options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"]
         },
         { 
             id: "hidra", 
             name: "4. Metais, Louças e Sifão",
-            options: ["Vazamento/Gotejamento", "Sifão Sem Vedação", "Peça Arranhada", "Falta Acabamento/Registro", "Outros"]
+            options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"]
         },
         { 
             id: "portas", 
             name: "5. Portas de Madeira e Alizares",
-            options: ["Porta Raspando", "Fechadura/Maçaneta Ruim", "Alizar Descolando", "Falta Pintura/Verniz", "Outros"]
+            options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"]
         },
         { 
             id: "esquadria", 
-            name: "6. Esquadrias de Alumínio e Vidros",
-            options: ["Vidro Riscado/Trincado", "Falta Silicone Exterior", "Trilho/Roldana Travingo", "Fecho Danificado", "Outros"]
+            name: "6. Esquadrias de Alumínio, Vidros e Vedações",
+            options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"]
         },
         { 
             id: "eletrica", 
             name: "7. Tomadas, Interruptores e Plafons",
-            options: ["Espelho Torto/Descaixado", "Sem Espelho/Módulo", "Ponto Sem Energia", "Plafon Não Liga", "Outros"]
+            options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Ponto Sem Energia / Fio Solto", "Plafon Não Liga / Danificado", "Quadro de Disjuntores Incompleto", "Outros"]
         },
         { 
             id: "ac", 
-            name: "8. Infraestrutura/Aparelho Ar-Condicionado", 
-            options: ["Dreno Entupido", "Falta Ponto Elétrico", "Carga sem Pressão", "Tubulação Exposta", "Outros"],
+            name: "8. Infraestrutura / Aparelho Ar-Condicionado", 
+            options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"],
             hasAC: true 
         }
     ];
@@ -165,7 +165,7 @@
         c.innerHTML = '';
         checklist.forEach(item => {
             if (!allowAC && item.hasAC) return;
-            const fullId = `${cId}-${item.id}`;
+            const fullId = `${cId}_${item.id}`;
             ncCounters[fullId] = 0;
 
             c.innerHTML += `
@@ -178,7 +178,7 @@
                         </div>
                     </div>
                     <div class="nc-list" id="nc-list-${fullId}"></div>
-                    <button class="btn-add-nc" id="btn-add-${fullId}" onclick="addNC('${fullId}')">+ Adicionar Ponto / Não Conformidade</button>
+                    <button class="btn-add-nc" id="btn-add-${fullId}" onclick="addNC('${fullId}', '${item.id}')">+ Adicionar Ponto / Não Conformidade</button>
                 </div>
             `;
         });
@@ -201,22 +201,21 @@
             btnOk.className = "btn-status btn-neutral";
             btnAdd.style.display = 'block';
             if (ncCounters[fullId] === 0) {
-                addNC(fullId);
+                const baseItemId = fullId.split('_')[1];
+                addNC(fullId, baseItemId);
             }
         }
     }
 
-    function addNC(fullId) {
+    function addNC(fullId, itemId) {
         ncCounters[fullId]++;
         const count = ncCounters[fullId];
         const ncList = document.getElementById(`nc-list-${fullId}`);
         const ncBoxId = `nc-${fullId}-${count}`;
 
-        // Encontra os subitens configurados para o item
-        const baseItemId = fullId.split('-').slice(1).join('-');
-        const itemObj = checklist.find(i => i.id === baseItemId) || { options: ["Falha de Acabamento", "Outros"] };
+        const itemObj = checklist.find(i => i.id === itemId) || { options: ["Falha de Acabamento", "Outros"] };
 
-        let checkboxesHTML = itemObj.options.map((opt, idx) => `
+        let checkboxesHTML = itemObj.options.map((opt) => `
             <label class="chk-label">
                 <input type="checkbox" onchange="toggleOtherField('${ncBoxId}', this, '${opt}')"> ${opt}
             </label>
@@ -237,8 +236,8 @@
             </div>
 
             <div id="other-field-${ncBoxId}" style="display:none;">
-                <label style="color:var(--danger);">Descreva a opção "Outros" / Local Exato:</label>
-                <input type="text" placeholder="Ex: Trinca perto do interruptor no lado direito">
+                <label style="color:var(--danger);">Descreva a opção "Outros" / Observação Exata:</label>
+                <input type="text" placeholder="Ex: Trinca perto da tomada no lado direito">
             </div>
 
             <label>Responsável:</label>
