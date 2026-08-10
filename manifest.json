@@ -11,25 +11,16 @@
   "categories": ["utilities", "productivity"],
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/192/1048/1048953.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230f172a' rx='100'/%3E%3Cpath fill='%232563eb' d='M368 128H144c-17.7 0-32 14.3-32 32v224c0 17.7 14.3 32 32 32h224c17.7 0 32-14.3 32-32V160c0-17.7-14.3-32-32-32z'/%3E%3Cpath fill='%23ffffff' d='M224 288l-48-48-22.6 22.6L224 333.3l128-128L329.4 182.6z'/%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230f172a'/%3E%3Cpath fill='%232563eb' d='M368 128H144c-17.7 0-32 14.3-32 32v224c0 17.7 14.3 32 32 32h224c17.7 0 32-14.3 32-32V160c0-17.7-14.3-32-32-32z'/%3E%3Cpath fill='%23ffffff' d='M224 288l-48-48-22.6 22.6L224 333.3l128-128L329.4 182.6z'/%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
       "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "https://via.placeholder.com/1080x1920/0f172a/ffffff?text=Vistoria+de+Obras",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Tela do App de Vistoria"
     }
   ]
 }
