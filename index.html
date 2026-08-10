@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vistoria Obra - Múltiplas Pendências</title>
-    <!-- Biblioteca para exportação em PDF -->
+    <title>Vistoria Obra - Subitens & Checklist</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ccc; --success: #28a745; --danger: #dc3545; }
@@ -18,7 +17,7 @@
         .btn.active { background: var(--primary); color: #fff; }
         
         .item-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-        .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .item-header { display: flex; justify-content: space-between; align-items: center; }
         .item-title { font-weight: bold; font-size: 0.95rem; color: #333; }
         
         .btn-status { padding: 6px 12px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
@@ -26,15 +25,17 @@
         .btn-nok-active { background: var(--danger); color: white; }
         .btn-neutral { background: #e0e0e0; color: #333; }
 
-        .nc-list { margin-top: 10px; }
-        .nc-box { background: #fff5f5; border: 1px solid #f5c6cb; border-left: 5px solid var(--danger); border-radius: 6px; padding: 10px; margin-top: 8px; position: relative; }
-        .nc-header { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: bold; color: var(--danger); margin-bottom: 6px; }
+        .nc-box { background: #fff5f5; border: 1px solid #f5c6cb; border-left: 5px solid var(--danger); border-radius: 6px; padding: 12px; margin-top: 10px; position: relative; }
+        .nc-header { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: bold; color: var(--danger); margin-bottom: 8px; }
         .btn-remove { background: #ff4d4d; color: white; border: none; border-radius: 3px; padding: 2px 6px; font-size: 0.75rem; cursor: pointer; }
 
-        label { font-size: 0.8rem; font-weight: bold; display: block; margin-top: 6px; color: #444; }
+        .checklist-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; background: #fff; padding: 8px; border-radius: 4px; border: 1px solid #eee; }
+        .chk-label { font-size: 0.8rem; font-weight: normal; display: flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; }
+
+        label { font-size: 0.8rem; font-weight: bold; display: block; margin-top: 8px; color: #444; }
         input, select { width: 100%; padding: 8px; margin-top: 2px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
         
-        .btn-add-nc { background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 0.8rem; margin-top: 8px; cursor: pointer; display: none; }
+        .btn-add-nc { background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 0.8rem; margin-top: 10px; cursor: pointer; display: none; width: 100%; }
         .btn-export { width: 100%; padding: 15px; background: #17a2b8; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
 
         .accordion { width: 100%; padding: 12px; background: #eef4fa; border: 1px solid #b8daff; border-radius: 6px; font-weight: bold; color: var(--primary); text-align: left; margin-top: 10px; cursor: pointer; }
@@ -46,10 +47,9 @@
 <div class="container" id="report-content">
     <header>
         <h2>Vistoria de Obra</h2>
-        <p style="font-size:0.8rem;">Área Privativa & Não Conformidades Múltiplas</p>
+        <p style="font-size:0.8rem;">Área Privativa & Checklist com Subitens</p>
     </header>
 
-    <!-- 1. Seleção do Pavimento -->
     <div class="card">
         <h3>1. Selecione o Pavimento</h3>
         <div class="grid" id="floors">
@@ -60,13 +60,11 @@
         </div>
     </div>
 
-    <!-- 2. Seleção da Unidade -->
     <div class="card" id="unit-card" style="display:none;">
         <h3>2. Selecione a Unidade</h3>
         <div class="grid" id="units"></div>
     </div>
 
-    <!-- Área de Inspeção -->
     <div id="inspection-area" style="display:none;">
         <div class="card" style="background: var(--primary); color: white;">
             <h3 id="unit-title">Unidade: ---</h3>
@@ -93,15 +91,47 @@
 
 <script>
     const checklist = [
-        { id: "bancada", name: "1. Bancadas, Soleiras e Peitoris" },
-        { id: "piso", name: "2. Contrapiso e Revestimentos / Rodapés" },
-        { id: "massa", name: "3. Pintura: Emassamento e Lixamento" },
-        { id: "demao", name: "4. Pintura: Demãos e Acabamento" },
-        { id: "hidra", name: "5. Metais, Louças e Sifão" },
-        { id: "portas", name: "6. Portas de Madeira e Alizares" },
-        { id: "esquadria", name: "7. Esquadrias de Alumínio, Vidros e Vedações" },
-        { id: "eletrica", name: "8. Tomadas, Interruptores e Plafons" },
-        { id: "ac", name: "9. Infraestrutura/Aparelho Ar-Condicionado", hasAC: true }
+        { 
+            id: "bancada", 
+            name: "1. Bancadas, Soleiras e Peitoris",
+            options: ["Peça Trincada/Bicada", "Falta de Rejunte/Silicone", "Falta Rodamão/Espelho", "Desnível/Fora de Prumo", "Outros"]
+        },
+        { 
+            id: "piso", 
+            name: "2. Contrapiso e Revestimentos / Rodapés",
+            options: ["Peça Oca/Solta", "Junta Desalinhada", "Caimento Incorreto", "Rodapé Solto/Danificado", "Outros"]
+        },
+        { 
+            id: "pintura", 
+            name: "3. Pintura e Emassamento",
+            options: ["Mancha/Desbotamento", "Recorte Mal Feito", "Fissura/Trinca", "Onda/Sujeira na Massa", "Outros"]
+        },
+        { 
+            id: "hidra", 
+            name: "4. Metais, Louças e Sifão",
+            options: ["Vazamento/Gotejamento", "Sifão Sem Vedação", "Peça Arranhada", "Falta Acabamento/Registro", "Outros"]
+        },
+        { 
+            id: "portas", 
+            name: "5. Portas de Madeira e Alizares",
+            options: ["Porta Raspando", "Fechadura/Maçaneta Ruim", "Alizar Descolando", "Falta Pintura/Verniz", "Outros"]
+        },
+        { 
+            id: "esquadria", 
+            name: "6. Esquadrias de Alumínio e Vidros",
+            options: ["Vidro Riscado/Trincado", "Falta Silicone Exterior", "Trilho/Roldana Travingo", "Fecho Danificado", "Outros"]
+        },
+        { 
+            id: "eletrica", 
+            name: "7. Tomadas, Interruptores e Plafons",
+            options: ["Espelho Torto/Descaixado", "Sem Espelho/Módulo", "Ponto Sem Energia", "Plafon Não Liga", "Outros"]
+        },
+        { 
+            id: "ac", 
+            name: "8. Infraestrutura/Aparelho Ar-Condicionado", 
+            options: ["Dreno Entupido", "Falta Ponto Elétrico", "Carga sem Pressão", "Tubulação Exposta", "Outros"],
+            hasAC: true 
+        }
     ];
 
     let ncCounters = {};
@@ -148,7 +178,7 @@
                         </div>
                     </div>
                     <div class="nc-list" id="nc-list-${fullId}"></div>
-                    <button class="btn-add-nc" id="btn-add-${fullId}" onclick="addNC('${fullId}')">+ Adicionar Não Conformidade / Foto</button>
+                    <button class="btn-add-nc" id="btn-add-${fullId}" onclick="addNC('${fullId}')">+ Adicionar Ponto / Não Conformidade</button>
                 </div>
             `;
         });
@@ -171,7 +201,7 @@
             btnOk.className = "btn-status btn-neutral";
             btnAdd.style.display = 'block';
             if (ncCounters[fullId] === 0) {
-                addNC(fullId); // Adiciona a primeira não conformidade automaticamente
+                addNC(fullId);
             }
         }
     }
@@ -182,6 +212,16 @@
         const ncList = document.getElementById(`nc-list-${fullId}`);
         const ncBoxId = `nc-${fullId}-${count}`;
 
+        // Encontra os subitens configurados para o item
+        const baseItemId = fullId.split('-').slice(1).join('-');
+        const itemObj = checklist.find(i => i.id === baseItemId) || { options: ["Falha de Acabamento", "Outros"] };
+
+        let checkboxesHTML = itemObj.options.map((opt, idx) => `
+            <label class="chk-label">
+                <input type="checkbox" onchange="toggleOtherField('${ncBoxId}', this, '${opt}')"> ${opt}
+            </label>
+        `).join('');
+
         const div = document.createElement('div');
         div.className = 'nc-box';
         div.id = ncBoxId;
@@ -190,9 +230,17 @@
                 <span>PONTO / PENDÊNCIA #${count}</span>
                 <button class="btn-remove" onclick="removeNC('${ncBoxId}')">Remover ✕</button>
             </div>
-            <label>Descrição do Problema / Local exato:</label>
-            <input type="text" placeholder="Ex: Rodapé solto no canto esquerdo da parede">
             
+            <label>Selecione as não conformidades identificadas:</label>
+            <div class="checklist-group">
+                ${checkboxesHTML}
+            </div>
+
+            <div id="other-field-${ncBoxId}" style="display:none;">
+                <label style="color:var(--danger);">Descreva a opção "Outros" / Local Exato:</label>
+                <input type="text" placeholder="Ex: Trinca perto do interruptor no lado direito">
+            </div>
+
             <label>Responsável:</label>
             <select>
                 <option>Pintura / Emassamento</option>
@@ -205,13 +253,20 @@
                 <option>Gesso / Sancas</option>
             </select>
             
-            <label>Tirar Foto deste Ponto (Câmera):</label>
+            <label>Tirar Foto Deste Ponto (Câmera):</label>
             <input type="file" accept="image/*" capture="environment">
             
             <label>Prazo de Conclusão (Dias Úteis):</label>
             <input type="number" placeholder="Ex: 3">
         `;
         ncList.appendChild(div);
+    }
+
+    function toggleOtherField(boxId, checkbox, optName) {
+        if (optName === 'Outros') {
+            const otherDiv = document.getElementById(`other-field-${boxId}`);
+            otherDiv.style.display = checkbox.checked ? 'block' : 'none';
+        }
     }
 
     function removeNC(boxId) {
