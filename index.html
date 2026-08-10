@@ -22,8 +22,12 @@
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         
-        .btn { padding: 10px; background: #eee; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; }
-        .btn.active { background: var(--primary); color: #fff; }
+        .btn { padding: 10px; background: #eee; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; }
+        .btn.active { outline: 3px solid #000; font-weight: 900; }
+        
+        /* Estilos de Status das Unidades */
+        .btn-unit-ok { background: var(--success) !important; color: #fff !important; border-color: #1e7e34 !important; }
+        .btn-unit-nok { background: var(--danger) !important; color: #fff !important; border-color: #bd2130 !important; }
         
         .btn-opt { padding: 12px; background: #eef4fa; border: 2px solid #b8daff; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; color: var(--primary); }
         .btn-opt.active { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -56,13 +60,17 @@
         
         .badge { display: inline-block; background: #ffc107; color: #000; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: bold; margin-left: 5px; }
 
+        .legend-box { display: flex; gap: 10px; margin-top: 8px; font-size: 0.75rem; justify-content: center; }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
         /* Canvas de Assinatura */
         .signature-box { border: 2px dashed #a0aec0; border-radius: 6px; background: #fafafa; margin-top: 6px; position: relative; touch-action: none; }
         canvas { width: 100%; height: 120px; display: block; cursor: crosshair; }
         .btn-clear-sig { position: absolute; right: 8px; bottom: 8px; background: #6c757d; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
         .btn-confirm-inspector { background: var(--success); color: white; border: none; width: 100%; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 0.95rem; margin-top: 12px; cursor: pointer; }
 
-        /* ESTILOS DE IMPRESSÃO / SALVAR EM PDF NATIVO */
+        /* IMPRESSÃO NATIVA EM PDF */
         @media print {
             body { background: #fff !important; padding: 0 !important; }
             .no-print, #app-content { display: none !important; }
@@ -118,22 +126,31 @@
     <div class="card no-print" id="unit-card" style="display:none;">
         <h3>2. Selecione a Unidade</h3>
         <div class="grid" id="units"></div>
+        <div class="legend-box">
+            <div class="legend-item"><div class="legend-dot" style="background:#28a745;"></div> 100% OK</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#dc3545;"></div> Com Pendência</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#eee; border:1px solid #ccc;"></div> Não Vistoriado</div>
+        </div>
     </div>
 
     <!-- 3. Tipo e Etapa (Vistoria vs Revistoria) -->
     <div class="card no-print" id="type-card" style="display:none;">
         <h3>3. Configuração do Acompanhamento</h3>
         
-        <label>Tipo de Vistoria:</label>
-        <div class="grid-two">
-            <div class="btn-opt" onclick="setCategory('Padrão (Construtora)', this)">🏗️ Padrão</div>
-            <div class="btn-opt" onclick="setCategory('Reforma', this)">🔨 Reforma</div>
+        <div id="category-selection-container">
+            <label>Tipo de Vistoria:</label>
+            <div class="grid-two">
+                <div class="btn-opt" id="btn-cat-padrao" onclick="setCategory('Padrão (Construtora)', this)">🏗️ Padrão</div>
+                <div class="btn-opt" id="btn-cat-reforma" onclick="setCategory('Reforma', this)">🔨 Reforma</div>
+            </div>
         </div>
 
-        <label style="margin-top:12px;">Etapa / Ciclo de Inspeção:</label>
-        <div class="grid-two">
-            <div class="btn-opt" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</div>
-            <div class="btn-opt" onclick="setStage('Revistoria', this)">🔄 Revistoria</div>
+        <div id="stage-selection-container" style="margin-top:12px;">
+            <label>Etapa / Ciclo de Inspeção:</label>
+            <div class="grid-two" id="stage-buttons-grid">
+                <div class="btn-opt" id="btn-stage-first" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</div>
+                <div class="btn-opt" id="btn-stage-rev" onclick="setStage('Revistoria', this)">🔄 Revistoria</div>
+            </div>
         </div>
     </div>
 
@@ -268,12 +285,30 @@
         selectedFloorNum = f;
         document.querySelectorAll('#floors .btn').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
+        
         const u = document.getElementById('units');
         u.innerHTML = '';
+        
         for (let i = 1; i <= 19; i++) {
             let num = (f * 100) + i;
-            u.innerHTML += `<div class="btn" onclick="selectUnit(${num}, this)">${num}</div>`;
+            
+            // Checa status do histórico no localStorage
+            const historyKey = `history_unit_${num}`;
+            const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
+            
+            let statusClass = '';
+            if (existingHistory.length > 0) {
+                const lastInsp = existingHistory[existingHistory.length - 1];
+                if (lastInsp.pendenciesCount === 0) {
+                    statusClass = 'btn-unit-ok'; // Verde (Sem Pendência)
+                } else {
+                    statusClass = 'btn-unit-nok'; // Vermelho (Com Pendência)
+                }
+            }
+
+            u.innerHTML += `<div class="btn ${statusClass}" onclick="selectUnit(${num}, this)">${num}</div>`;
         }
+
         document.getElementById('unit-card').style.display = 'block';
         document.getElementById('type-card').style.display = 'none';
         document.getElementById('inspection-area').style.display = 'none';
@@ -283,12 +318,41 @@
         selectedUnitNum = u;
         document.querySelectorAll('#units .btn').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
+        
         document.getElementById('type-card').style.display = 'block';
         document.getElementById('inspection-area').style.display = 'none';
         
         selectedCategory = "";
         selectedStage = "";
-        document.querySelectorAll('#type-card .btn-opt').forEach(b => b.classList.remove('active'));
+
+        document.querySelectorAll('#type-card .btn-opt').forEach(b => {
+            b.classList.remove('active');
+            b.style.display = 'block';
+        });
+
+        const historyKey = `history_unit_${selectedUnitNum}`;
+        const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
+
+        if (existingHistory.length > 0) {
+            const lastInspection = existingHistory[existingHistory.length - 1];
+            selectedCategory = lastInspection.category;
+
+            if (selectedCategory.includes('Padrão')) {
+                document.getElementById('btn-cat-padrao').classList.add('active');
+                document.getElementById('btn-cat-reforma').style.display = 'none';
+            } else {
+                document.getElementById('btn-cat-reforma').classList.add('active');
+                document.getElementById('btn-cat-padrao').style.display = 'none';
+            }
+
+            document.getElementById('btn-stage-first').style.display = 'none';
+            document.getElementById('btn-stage-rev').style.gridColumn = 'span 2';
+        } else {
+            document.getElementById('btn-cat-padrao').style.display = 'block';
+            document.getElementById('btn-cat-reforma').style.display = 'block';
+            document.getElementById('btn-stage-first').style.display = 'block';
+            document.getElementById('btn-stage-rev').style.gridColumn = 'auto';
+        }
     }
 
     function setCategory(cat, el) {
@@ -307,7 +371,6 @@
 
     function checkAndShowInspection() {
         if (selectedCategory && selectedStage) {
-            // Verifica histórico da unidade no localStorage
             const historyKey = `history_unit_${selectedUnitNum}`;
             const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
             
@@ -335,13 +398,21 @@
             const fullId = `${cId}_${item.id}`;
             ncCounters[fullId] = 0;
 
-            // Busca se havia não conformidade registrada anteriormente para este item
-            let prevPending = null;
+            let prevPendings = [];
             if (history && history.length > 0) {
                 const lastInsp = history[history.length - 1];
                 if (lastInsp.pendencies) {
-                    prevPending = lastInsp.pendencies.find(p => p.fullId === fullId);
+                    prevPendings = lastInsp.pendencies.filter(p => p.fullId === fullId);
                 }
+            }
+
+            let historyNoticeHTML = '';
+            if (prevPendings.length > 0) {
+                historyNoticeHTML = prevPendings.map((p, idx) => `
+                    <div style="background:#fff3cd; border:1px solid #ffeeba; padding:6px 10px; border-radius:4px; margin-top:6px; font-size:0.78rem; color:#856404;">
+                        ⚠️ <strong>Pendência Anterior #${idx + 1}:</strong> ${p.details.join(', ')} (Prazo: ${p.days} dias | Resp: ${p.resp})
+                    </div>
+                `).join('');
             }
 
             c.innerHTML += `
@@ -353,19 +424,22 @@
                             <button class="btn-status btn-neutral" id="btn-nok-${fullId}" onclick="setStatus('${fullId}', false)">✗ Pendente</button>
                         </div>
                     </div>
-                    ${prevPending ? `
-                        <div style="background:#fff3cd; border:1px solid #ffeeba; padding:6px 10px; border-radius:4px; margin-top:8px; font-size:0.78rem; color:#856404;">
-                            ⚠️ <strong>Ponto Anterioremente Pendente:</strong> ${prevPending.details.join(', ')} (Prazo anterior: ${prevPending.days} dias)
-                        </div>
-                    ` : ''}
+                    ${historyNoticeHTML}
                     <div class="nc-list" id="nc-list-${fullId}"></div>
                     <button class="btn-add-nc" id="btn-add-${fullId}" onclick="addNC('${fullId}', '${item.id}')">+ Adicionar Ponto / Não Conformidade</button>
                 </div>
             `;
 
-            // Se era pendente anteriormente na revistoria, já inicializa em estado de checagem
-            if (prevPending && selectedStage.includes('Revistoria')) {
-                setTimeout(() => setStatus(fullId, false), 50);
+            if (prevPendings.length > 0 && selectedStage.includes('Revistoria')) {
+                setTimeout(() => {
+                    const btnNok = document.getElementById(`btn-nok-${fullId}`);
+                    btnNok.className = "btn-status btn-nok-active";
+                    document.getElementById(`btn-add-${fullId}`).style.display = 'block';
+
+                    prevPendings.forEach(p => {
+                        addNC(fullId, item.id, p);
+                    });
+                }, 50);
             }
         });
     }
@@ -393,7 +467,7 @@
         }
     }
 
-    function addNC(fullId, itemId) {
+    function addNC(fullId, itemId, prevData = null) {
         ncCounters[fullId]++;
         const count = ncCounters[fullId];
         const ncList = document.getElementById(`nc-list-${fullId}`);
@@ -401,11 +475,14 @@
 
         const itemObj = checklist.find(i => i.id === itemId) || { options: ["Falha de Acabamento", "Outros"] };
 
-        let checkboxesHTML = itemObj.options.map((opt) => `
-            <label class="chk-label">
-                <input type="checkbox" value="${opt}" onchange="toggleOtherField('${ncBoxId}', this, '${opt}')"> ${opt}
-            </label>
-        `).join('');
+        let checkboxesHTML = itemObj.options.map((opt) => {
+            const isChecked = prevData && prevData.details && prevData.details.includes(opt) ? 'checked' : '';
+            return `
+                <label class="chk-label">
+                    <input type="checkbox" value="${opt}" ${isChecked} onchange="toggleOtherField('${ncBoxId}', this, '${opt}')"> ${opt}
+                </label>
+            `;
+        }).join('');
 
         const div = document.createElement('div');
         div.className = 'nc-box';
@@ -430,18 +507,18 @@
 
             <label>Responsável Pela Correção:</label>
             <select class="nc-resp">
-                <option>Pintura / Emassamento</option>
-                <option>Marmoraria / Graniteiro</option>
-                <option>Instalações Hidráulicas</option>
-                <option>Eletricista</option>
-                <option>Marcenaria / Portas de Madeira</option>
-                <option>Esquadrias de Alumínio / Vidros</option>
-                <option>Piso e Revestimento</option>
-                <option>Gesso / Sancas</option>
+                <option ${prevData && prevData.resp === 'Pintura / Emassamento' ? 'selected' : ''}>Pintura / Emassamento</option>
+                <option ${prevData && prevData.resp === 'Marmoraria / Graniteiro' ? 'selected' : ''}>Marmoraria / Graniteiro</option>
+                <option ${prevData && prevData.resp === 'Instalações Hidráulicas' ? 'selected' : ''}>Instalações Hidráulicas</option>
+                <option ${prevData && prevData.resp === 'Eletricista' ? 'selected' : ''}>Eletricista</option>
+                <option ${prevData && prevData.resp === 'Marcenaria / Portas de Madeira' ? 'selected' : ''}>Marcenaria / Portas de Madeira</option>
+                <option ${prevData && prevData.resp === 'Esquadrias de Alumínio / Vidros' ? 'selected' : ''}>Esquadrias de Alumínio / Vidros</option>
+                <option ${prevData && prevData.resp === 'Piso e Revestimento' ? 'selected' : ''}>Piso e Revestimento</option>
+                <option ${prevData && prevData.resp === 'Gesso / Sancas' ? 'selected' : ''}>Gesso / Sancas</option>
             </select>
             
             <label>Novo Prazo de Conclusão (Dias Úteis):</label>
-            <input type="number" placeholder="Ex: 3" class="nc-days">
+            <input type="number" placeholder="Ex: 3" class="nc-days" value="${prevData ? prevData.days : ''}">
         `;
         ncList.appendChild(div);
     }
@@ -516,7 +593,7 @@
             });
         });
 
-        // Salva histórico no localStorage para revistorias futuras
+        // Salva histórico permanente no localStorage da unidade
         const historyKey = `history_unit_${selectedUnitNum}`;
         const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
         existingHistory.push({
@@ -594,6 +671,12 @@
         selectedUnitNum = null;
         selectedCategory = "";
         selectedStage = "";
+
+        // Atualiza as cores do pavimento atual se ele estiver aberto
+        if (selectedFloorNum) {
+            const currentFloorBtn = Array.from(document.querySelectorAll('#floors .btn')).find(b => b.innerText.includes(`${selectedFloorNum}º`));
+            if (currentFloorBtn) setFloor(selectedFloorNum, currentFloorBtn);
+        }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
