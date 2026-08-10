@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vistoria Obra</title>
+    <title>Vistoria Obra - Área Privativa</title>
+    <!-- Biblioteca externa para geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ddd; }
+        :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ddd; --success: #28a745; --danger: #dc3545; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { background: var(--bg); padding: 15px; }
         .container { max-width: 600px; margin: 0 auto; }
@@ -14,25 +16,26 @@
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .btn { padding: 10px; background: #eee; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; }
         .btn.active { background: var(--primary); color: #fff; }
-        .btn-ok { background: #28a745; color: #fff; border: none; }
-        .btn-nok { background: #dc3545; color: #fff; border: none; }
-        .accordion { width: 100%; padding: 12px; background: #eef4fa; border: none; border-radius: 6px; font-weight: bold; color: var(--primary); text-align: left; margin-top: 10px; }
+        .btn-ok { background: var(--success); color: #fff; border: none; flex: 1; }
+        .btn-nok { background: var(--danger); color: #fff; border: none; flex: 1; }
+        .accordion { width: 100%; padding: 12px; background: #eef4fa; border: none; border-radius: 6px; font-weight: bold; color: var(--primary); text-align: left; margin-top: 10px; cursor: pointer; }
         .content { display: none; padding-top: 10px; }
-        .item { border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 15px; }
-        .item.disabled { opacity: 0.4; pointer-events: none; border-left-color: #ccc; }
+        .item { border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 15px; background: #fff; padding-top: 5px; padding-bottom: 5px; }
         .sub-fields { background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid var(--border); margin-top: 8px; display: none; }
         label { font-size: 0.8rem; font-weight: bold; display: block; margin-top: 6px; }
         input, select { width: 100%; padding: 8px; margin-top: 2px; border: 1px solid var(--border); border-radius: 4px; }
+        .btn-export { width: 100%; padding: 15px; background: #17a2b8; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="report-content">
     <header>
         <h2>Vistoria de Obra</h2>
-        <p style="font-size:0.8rem;">Área Privativa & Sequência Logica</p>
+        <p style="font-size:0.8rem;">Área Privativa & Checklist Livre</p>
     </header>
 
+    <!-- 1. Seleção de Pavimento -->
     <div class="card">
         <h3>1. Selecione o Pavimento</h3>
         <div class="grid" id="floors">
@@ -43,11 +46,13 @@
         </div>
     </div>
 
+    <!-- 2. Seleção de Unidade -->
     <div class="card" id="unit-card" style="display:none;">
         <h3>2. Selecione a Unidade</h3>
         <div class="grid" id="units"></div>
     </div>
 
+    <!-- Área de Inspeção -->
     <div id="inspection-area" style="display:none;">
         <div class="card" style="background: var(--primary); color: white;">
             <h3 id="unit-title">Unidade: ---</h3>
@@ -67,6 +72,9 @@
             <button class="accordion" onclick="toggle('room-balcony')">Varanda</button>
             <div class="content" id="room-balcony"></div>
         </div>
+
+        <!-- Botão de Exportação -->
+        <button class="btn-export" onclick="exportPDF()">📄 Exportar Relatório em PDF</button>
     </div>
 </div>
 
@@ -75,11 +83,12 @@
         { id: "bancada", name: "1. Bancadas, Soleiras e Peitoris" },
         { id: "piso", name: "2. Contrapiso e Revestimentos" },
         { id: "massa", name: "3. Pintura: Emassamento e Lixamento" },
-        { id: "demao", name: "4. Pintura: Demãos e Acabamento", req: "massa" },
-        { id: "hidra", name: "5. Metais, Louças e Sifão", req: "bancada" },
-        { id: "esquadria", name: "6. Esquadrias e Vedações" },
-        { id: "eletrica", name: "7. Tomadas, Interruptores e Plafons", req: "demao" },
-        { id: "ac", name: "8. Ar-Condicionado", req: "eletrica", hasAC: true }
+        { id: "demao", name: "4. Pintura: Demãos e Acabamento" },
+        { id: "hidra", name: "5. Metais, Louças e Sifão" },
+        { id: "portas", name: "6. Portas de Madeira e Alizares" },
+        { id: "esquadria", name: "7. Esquadrias de Alumínio, Vidros e Vedações" },
+        { id: "eletrica", name: "8. Tomadas, Interruptores e Plafons" },
+        { id: "ac", name: "9. Infraestrutura/Aparelho Ar-Condicionado", hasAC: true }
     ];
 
     function setFloor(f, el) {
@@ -111,27 +120,32 @@
         c.innerHTML = '';
         checklist.forEach(item => {
             if (!allowAC && item.hasAC) return;
-            const blocked = item.req ? 'disabled' : '';
             c.innerHTML += `
-                <div class="item ${blocked}" id="${cId}-${item.id}">
+                <div class="item" id="${cId}-${item.id}">
                     <strong>${item.name}</strong>
                     <div style="display:flex; gap:8px; margin-top:6px;">
                         <button class="btn btn-ok" onclick="setStatus('${cId}','${item.id}',true)">✓ Sim / Ok</button>
                         <button class="btn btn-nok" onclick="setStatus('${cId}','${item.id}',false)">✗ Não / Pendente</button>
                     </div>
                     <div class="sub-fields" id="${cId}-${item.id}-sub">
-                        <label>Fase atual / Detalhe:</label>
-                        <input type="text" placeholder="Ex: Aguardando Lixamento">
+                        <label>Fase atual / Observação:</label>
+                        <input type="text" placeholder="Ex: Faltando retoque / Peça trincada">
+                        
                         <label>Responsável:</label>
                         <select>
-                            <option>Pintura</option>
-                            <option>Marmoraria</option>
-                            <option>Hidráulica</option>
+                            <option>Pintura / Emassamento</option>
+                            <option>Marmoraria / Graniteiro</option>
+                            <option>Instalações Hidráulicas</option>
                             <option>Eletricista</option>
+                            <option>Marcenaria / Portas de Madeira</option>
+                            <option>Esquadrias de Alumínio / Vidros</option>
+                            <option>Gesso / Sancas</option>
                         </select>
-                        <label>Foto:</label>
-                        <input type="file" accept="image/*">
-                        <label>Prazo (Dias Úteis):</label>
+                        
+                        <label>Tirar Foto na Hora (Câmera):</label>
+                        <input type="file" accept="image/*" capture="environment">
+                        
+                        <label>Prazo de Conclusão (Dias Úteis):</label>
                         <input type="number" placeholder="Ex: 3">
                     </div>
                 </div>
@@ -141,20 +155,32 @@
 
     function setStatus(cId, id, isOk) {
         const sub = document.getElementById(`${cId}-${id}-sub`);
-        sub.style.display = isOk ? 'none' : 'block';
+        const itemEl = document.getElementById(`${cId}-${id}`);
+        
         if (isOk) {
-            checklist.forEach(i => {
-                if (i.req === id) {
-                    const dep = document.getElementById(`${cId}-${i.id}`);
-                    if (dep) dep.classList.remove('disabled');
-                }
-            });
+            sub.style.display = 'none';
+            itemEl.style.borderLeftColor = 'var(--success)';
+        } else {
+            sub.style.display = 'block';
+            itemEl.style.borderLeftColor = 'var(--danger)';
         }
     }
 
     function toggle(id) {
         const el = document.getElementById(id);
         el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function exportPDF() {
+        const element = document.getElementById('report-content');
+        const opt = {
+            margin:       10,
+            filename:     `Vistoria_${document.getElementById('unit-title').innerText.replace(/\s+/g, '_')}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
     }
 </script>
 
