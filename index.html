@@ -25,6 +25,7 @@
         .btn { padding: 10px; background: #eee; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; }
         .btn.active { outline: 3px solid #000; font-weight: 900; }
         
+        /* Cores dos Apartamentos no Mapa */
         .btn-unit-ok { background: var(--success) !important; color: #fff !important; border-color: #1e7e34 !important; }
         .btn-unit-nok { background: var(--danger) !important; color: #fff !important; border-color: #bd2130 !important; }
         
@@ -72,8 +73,9 @@
         .btn-clear-sig { position: absolute; right: 8px; bottom: 8px; background: #6c757d; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
         .btn-confirm-inspector { background: var(--success); color: white; border: none; width: 100%; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 0.95rem; margin-top: 12px; cursor: pointer; }
 
-        /* IMPRESSÃO NATIVA EM PDF */
+        /* IMPRESSÃO NATIVA EM PDF PAISAGEM */
         @media print {
+            @page { size: landscape; margin: 1cm; }
             body { background: #fff !important; padding: 0 !important; }
             .no-print, #app-content { display: none !important; }
             #print-report { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
@@ -82,12 +84,12 @@
         #print-report { display: none; background: #fff; padding: 10px; font-family: Arial, sans-serif; color: #333; }
         .pdf-header-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #004a8f; }
         .pdf-header-table td { padding: 6px 10px; border: 1px solid #cccccc; font-size: 12px; }
-        .pdf-header-title { background: #004a8f; color: #ffffff; font-weight: bold; text-align: center; font-size: 15px; padding: 8px !important; }
+        .pdf-header-title { background: #004a8f; color: #ffffff; font-weight: bold; text-align: center; font-size: 16px; padding: 8px !important; }
         .pdf-section-title { background: #f0f4f8; color: #004a8f; padding: 6px 8px; font-size: 13px; font-weight: bold; border-left: 4px solid #004a8f; margin: 12px 0 8px 0; }
         .pdf-nc-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; }
         .pdf-nc-table th { background: #eef4fa; color: #333333; padding: 6px; border: 1px solid #cccccc; text-align: left; font-weight: bold; }
         .pdf-nc-table td { padding: 6px; border: 1px solid #cccccc; vertical-align: top; line-height: 1.3; }
-        .pdf-img { max-width: 90px; max-height: 90px; display: block; margin: 0 auto; border: 1px solid #ccc; border-radius: 4px; }
+        .pdf-img { max-width: 110px; max-height: 110px; display: block; margin: 0 auto; border: 1px solid #ccc; border-radius: 4px; }
         .pdf-signatures { margin-top: 30px; width: 300px; margin-left: auto; margin-right: auto; text-align: center; border-top: 1px solid #000000; padding-top: 5px; font-size: 11px; }
     </style>
 </head>
@@ -178,7 +180,7 @@
             <div class="content" id="room-balcony"></div>
         </div>
 
-        <button class="btn-export" onclick="generateTechnicalPDF()">📄 Finalizar & Salvar Relatório Interno (PDF)</button>
+        <button class="btn-export" onclick="generateTechnicalPDF()">📄 Finalizar & Salvar Relatório Interno (PDF Paisagem)</button>
         <button class="btn-next-unit" id="btn-next" onclick="startNextUnit()">➡️ Próxima Unidade</button>
     </div>
 </div>
@@ -555,7 +557,7 @@
         el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    // GERA O RELATÓRIO PDF NATIVO INTERNO COM FOTOS
+    // GERA O RELATÓRIO PDF NATIVO INTERNO EM PAISAGEM COM FOTOS
     function generateTechnicalPDF() {
         const today = new Date().toLocaleDateString('pt-BR');
         const printContainer = document.getElementById('print-report');
@@ -588,7 +590,6 @@
                 const respVal = box.querySelector('.nc-resp')?.value || 'Não informado';
                 const daysVal = box.querySelector('.nc-days')?.value || '-';
                 
-                // Pega a foto em base64 se existir
                 const photoSrc = document.getElementById(`img-preview-${boxId}`)?.src || '';
                 const hasPhoto = photoSrc && photoSrc.startsWith('data:image');
 
@@ -615,7 +616,6 @@
             });
         });
 
-        // Salva histórico no localStorage da unidade
         const historyKey = `history_unit_${selectedUnitNum}`;
         const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
         existingHistory.push({
