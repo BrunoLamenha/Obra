@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Sistema de Vistoria e Cronograma de Ataque</title>
+
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
   
   <!-- Bibliotecas leves para geração de PDF e Relatórios sem usar print da tela -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
