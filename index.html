@@ -1,39 +1,268 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Sistema de Vistoria e Cronograma de Ataque</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Vistoria de Obra</title>
+    <style>
+        :root {
+            --primary: #004a8f;
+            --primary-dark: #003366;
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --border: #e0e0e0;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
 
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f172a">
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        header { background: var(--primary); color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
+        h1 { font-size: 1.5rem; }
+        h2 { font-size: 1.2rem; color: var(--primary); margin-bottom: 10px; }
+
+        .card { background: var(--card-bg); border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
+        .btn { padding: 10px; background: #e9ecef; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; transition: all 0.2s; }
+        .btn:hover { background: #dee2e6; }
+        .btn.active { background: var(--primary); color: white; border-color: var(--primary-dark); }
+        .btn-success { background: var(--success); color: white; border: none; }
+        .btn-danger { background: var(--danger); color: white; border: none; }
+
+        .accordion { cursor: pointer; padding: 12px; width: 100%; text-align: left; border: none; outline: none; background-color: #eef4fa; border-radius: 6px; font-weight: bold; color: var(--primary-dark); display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .accordion-content { display: none; padding: 15px 5px; }
+
+        .step-item { border-left: 4px solid var(--primary); padding-left: 15px; margin-bottom: 20px; position: relative; }
+        .step-item.disabled { opacity: 0.5; pointer-events: none; border-left-color: #ccc; }
+        
+        .status-options { display: flex; gap: 10px; margin: 10px 0; }
+        .sub-fields { background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid var(--border); margin-top: 10px; display: none; }
+        
+        label { font-size: 0.85rem; font-weight: bold; display: block; margin-top: 8px; color: #555; }
+        input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid var(--border); border-radius: 4px; }
+        
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+        .badge-blocked { background: #e2e3e5; color: #383d41; }
+        .badge-ready { background: #cce5ff; color: #004085; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Vistoria Obra — Área Privativa</h1>
+        <p style="font-size: 0.85rem; opacity: 0.9;">Gestão de Qualidade & Cronograma de Ataque</p>
+    </header>
+
+    <!-- Passos de Seleção Inicial -->
+    <div class="card">
+        <h2>1. Selecione o Pavimento</h2>
+        <div class="grid" id="floor-select">
+            <div class="btn" onclick="selectFloor(1, this)">1º Pav.</div>
+            <div class="btn" onclick="selectFloor(2, this)">2º Pav.</div>
+            <div class="btn" onclick="selectFloor(3, this)">3º Pav.</div>
+            <div class="btn" onclick="selectFloor(4, this)">4º Pav.</div>
+        </div>
+    </div>
+
+    <div class="card" id="unit-card" style="display:none;">
+        <h2>2. Selecione a Unidade</h2>
+        <div class="grid" id="unit-select"></div>
+    </div>
+
+    <!-- Área de Inspeção -->
+    <div id="inspection-area" style="display:none;">
+        <div class="card" style="background: var(--primary); color: white;">
+            <h3 id="selected-location-title">Unidade: ---</h3>
+        </div>
+
+        <!-- Cômodo: Dormitório / Cozinha -->
+        <div class="card">
+            <button class="accordion" onclick="toggleAccordion('room-dorm-kitchen')">
+                Dormitório / Cozinha <span id="dorm-status">▶</span>
+            </button>
+            <div class="accordion-content" id="room-dorm-kitchen">
+                <div id="checklist-dorm"></div>
+            </div>
+        </div>
+
+        <!-- Cômodo: Banheiro -->
+        <div class="card">
+            <button class="accordion" onclick="toggleAccordion('room-bathroom')">
+                Banheiro <span id="bath-status">▶</span>
+            </button>
+            <div class="accordion-content" id="room-bathroom">
+                <div id="checklist-bath"></div>
+            </div>
+        </div>
+
+        <!-- Cômodo: Varanda -->
+        <div class="card">
+            <button class="accordion" onclick="toggleAccordion('room-balcony')">
+                Varanda <span id="balcony-status">▶</span>
+            </button>
+            <div class="accordion-content" id="room-balcony">
+                <div id="checklist-balcony"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
-</script>
-  
-  <!-- Bibliotecas leves para geração de PDF e Relatórios sem usar print da tela -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    let selectedFloor = null;
+    let selectedUnit = null;
 
-  <style>
-    :root {
-      --primary: #0f172a;
-      --accent: #2563eb;
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --border: #cbd5e1;
-      --text: #1e293b;
+    // Modelo de Sequência Predecessora de Obra
+    const baseChecklist = [
+        { id: "bancada", name: "1. Bancadas, Soleiras e Peitoris", type: "base" },
+        { id: "piso", name: "2. Contrapiso, Revestimento e Caimento", type: "base" },
+        { id: "pintura_massa", name: "3. Pintura: Emassamento e Lixamento", type: "base" },
+        { id: "pintura_demao", name: "4. Pintura: Demãos e Acabamento Final", requires: "pintura_massa" },
+        { id: "hidraulica", name: "5. Metais, Louças, Sifão e Registros", requires: "bancada" },
+        { id: "esquadrias", name: "6. Esquadrias, Vidros e Silicone", type: "base" },
+        { id: "eletrica", name: "7. Tomadas, Interruptores e Plafons", requires: "pintura_demao" },
+        { id: "ar_condicionado", name: "8. Infraestrutura/Aparelho Ar-Condicionado", requires: "eletrica", hasAC: true }
+    ];
+
+    function selectFloor(floor, element) {
+        selectedFloor = floor;
+        document.querySelectorAll('#floor-select .btn').forEach(b => b.classList.remove('active'));
+        element.classList.add('active');
+
+        const unitContainer = document.getElementById('unit-select');
+        unitContainer.innerHTML = '';
+
+        for (let i = 1; i <= 19; i++) {
+            let unitNum = (floor * 100) + i;
+            unitContainer.innerHTML += `<div class="btn" onclick="selectUnit(${unitNum}, this)">${unitNum}</div>`;
+        }
+
+        document.getElementById('unit-card').style.display = 'block';
+        document.getElementById('inspection-area').style.display = 'none';
     }
 
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); margin: 0; padding: 12px; padding-bottom: 90px; }
+    function selectUnit(unit, element) {
+        selectedUnit = unit;
+        document.querySelectorAll('#unit-select .btn').forEach(b => b.classList.remove('active'));
+        element.classList.add('active');
 
-    .header-card {
-      background: linear-gradient(135deg, #0f172a, #1e3a8a);
-      color: #fff;
-      padding: 16px;
+        document.getElementById('selected-location-title').innerText = `Vistoria da Unidade: ${unit}`;
+        document.getElementById('inspection-area').style.display = 'block';
+
+        renderChecklist('checklist-dorm', true);
+        renderChecklist('checklist-bath', false); // Banheiro (Sem Ar-Condicionado)
+        renderChecklist('checklist-balcony', true);
+    }
+
+    function renderChecklist(containerId, allowAC) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        baseChecklist.forEach((item, index) => {
+            if (!allowAC && item.hasAC) return; // Filtra ar-condicionado no banheiro
+
+            const isBlocked = item.requires ? true : false;
+
+            container.innerHTML += `
+                <div class="step-item ${isBlocked ? 'disabled' : ''}" id="${containerId}-${item.id}-wrapper">
+                    <strong>${item.name}</strong> 
+                    ${isBlocked ? `<span class="badge badge-blocked" id="${containerId}-${item.id}-badge">Aguardando Antecessor</span>` : ''}
+                    
+                    <div class="status-options">
+                        <button class="btn btn-success" onclick="setStatus('${containerId}', '${item.id}', true)">[✓] Aprovado / Sim</button>
+                        <button class="btn btn-danger" onclick="setStatus('${containerId}', '${item.id}', false)">[✗] Pendente / Não</button>
+                    </div>
+
+                    <div class="sub-fields" id="${containerId}-${item.id}-fields">
+                        <label>Em qual fase atual a etapa parou?</label>
+                        <input type="text" placeholder="Ex: Aguardando secagem / 1ª Demão concluída">
+
+                        <label>Responsável / Empreiteiro:</label>
+                        <select>
+                            <option>Pintura / Acabamento</option>
+                            <option>Marmoraria / Graniteiro</option>
+                            <option>Instalações Hidráulicas</option>
+                            <option>Eletricista</option>
+                            <option>Esquadrias de Alumínio</option>
+                        </select>
+
+                        <label>Anexar Foto da Evidência:</label>
+                        <input type="file" accept="image/*">
+
+                        <label>Data de Início da Correção:</label>
+                        <input type="date">
+
+                        <label>Prazo de Conclusão (Dias Úteis):</label>
+                        <input type="number" placeholder="Ex: 3" min="1" onchange="calculateBusinessDays(this)">
+                        <span style="font-size: 0.75rem; color: #666;" class="due-date-preview"></span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function setStatus(containerId, itemId, isApproved) {
+        const wrapper = document.getElementById(`${containerId}-${itemId}-wrapper`);
+        const subFields = document.getElementById(`${containerId}-${itemId}-fields`);
+
+        if (isApproved) {
+            subFields.style.display = 'none';
+            wrapper.style.borderLeftColor = 'var(--success)';
+            unlockDependentItems(containerId, itemId);
+        } else {
+            subFields.style.display = 'block';
+            wrapper.style.borderLeftColor = 'var(--danger)';
+        }
+    }
+
+    function unlockDependentItems(containerId, approvedItemId) {
+        baseChecklist.forEach(item => {
+            if (item.requires === approvedItemId) {
+                const depWrapper = document.getElementById(`${containerId}-${item.id}-wrapper`);
+                const depBadge = document.getElementById(`${containerId}-${item.id}-badge`);
+                
+                if (depWrapper) {
+                    depWrapper.classList.remove('disabled');
+                    if (depBadge) {
+                        depBadge.className = 'badge badge-ready';
+                        depBadge.innerText = 'Liberado para Inspeção';
+                    }
+                }
+            }
+        });
+    }
+
+    function toggleAccordion(id) {
+        const content = document.getElementById(id);
+        content.style.display = content.style.display === "block" ? "none" : "block";
+    }
+
+    function calculateBusinessDays(input) {
+        const days = parseInt(input.value);
+        if (!days) return;
+        
+        let date = new Date();
+        let addedDays = 0;
+        
+        while (addedDays < days) {
+            date.setDate(date.getDate() + 1);
+            if (date.getDay() !== 0 && date.getDay() !== 6) { // Ignora Sábado (6) e Domingo (0)
+                addedDays++;
+            }
+        }
+        
+        const previewSpan = input.nextElementSibling;
+        previewSpan.innerText = `Previsão de Término (Dias Úteis): ${date.toLocaleDateString('pt-BR')}`;
+    }
+</script>
+
+</body>
+</html>
       border-radius: 12px;
       margin-bottom: 12px;
     }
