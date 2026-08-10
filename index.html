@@ -11,22 +11,22 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#004a8f">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ccc; --success: #28a745; --danger: #dc3545; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background: var(--bg); padding: 12px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background: var(--bg); padding: 12px; color: #333; }
         .container { max-width: 680px; margin: 0 auto; }
         
         header { background: var(--primary); color: #fff; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
         .card { background: #fff; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-        .grid-type { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         
         .btn { padding: 10px; background: #eee; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; }
         .btn.active { background: var(--primary); color: #fff; }
-        .btn-type { padding: 12px; background: #eef4fa; border: 2px solid #b8daff; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.95rem; color: var(--primary); }
-        .btn-type.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        
+        .btn-opt { padding: 12px; background: #eef4fa; border: 2px solid #b8daff; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; color: var(--primary); }
+        .btn-opt.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         
         .item-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
         .item-header { display: flex; justify-content: space-between; align-items: center; }
@@ -49,52 +49,50 @@
         
         .btn-add-nc { background: #007bff; color: white; border: none; padding: 10px 12px; border-radius: 5px; font-weight: bold; font-size: 0.85rem; margin-top: 10px; cursor: pointer; display: none; width: 100%; }
         .btn-export { width: 100%; padding: 15px; background: #17a2b8; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
+        .btn-next-unit { width: 100%; padding: 14px; background: #28a745; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: none; }
 
         .accordion { width: 100%; padding: 12px; background: #eef4fa; border: 1px solid #b8daff; border-radius: 6px; font-weight: bold; color: var(--primary); text-align: left; margin-top: 10px; cursor: pointer; }
         .content { display: none; padding-top: 10px; }
         
-        .type-badge { display: inline-block; background: #ffc107; color: #000; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-left: 8px; }
+        .badge { display: inline-block; background: #ffc107; color: #000; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: bold; margin-left: 5px; }
 
-        /* Estilos do Canvas de Assinatura */
+        /* Canvas de Assinatura */
         .signature-box { border: 2px dashed #a0aec0; border-radius: 6px; background: #fafafa; margin-top: 6px; position: relative; touch-action: none; }
-        canvas { width: 100%; height: 130px; display: block; cursor: crosshair; }
+        canvas { width: 100%; height: 120px; display: block; cursor: crosshair; }
         .btn-clear-sig { position: absolute; right: 8px; bottom: 8px; background: #6c757d; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
         .btn-confirm-inspector { background: var(--success); color: white; border: none; width: 100%; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 0.95rem; margin-top: 12px; cursor: pointer; }
 
-        /* Container do PDF Técnico (Fora do Viewport Visível) */
-        #pdf-template { 
-            position: absolute; 
-            left: -9999px; 
-            top: -9999px; 
-            width: 750px; 
-            background: #ffffff; 
-            padding: 25px; 
-            font-family: Arial, Helvetica, sans-serif; 
-            color: #333333; 
+        /* ESTILOS DE IMPRESSÃO / SALVAR EM PDF NATIVO */
+        @media print {
+            body { background: #fff !important; padding: 0 !important; }
+            .no-print, #app-content { display: none !important; }
+            #print-report { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .page-break { page-break-after: always; }
         }
-        .pdf-header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #004a8f; }
-        .pdf-header-table td { padding: 8px 12px; border: 1px solid #cccccc; font-size: 13px; }
-        .pdf-header-title { background: #004a8f; color: #ffffff; font-weight: bold; text-align: center; font-size: 16px; padding: 10px !important; }
-        .pdf-section-title { background: #f0f4f8; color: #004a8f; padding: 8px 10px; font-size: 14px; font-weight: bold; border-left: 4px solid #004a8f; margin: 15px 0 10px 0; }
-        .pdf-nc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
-        .pdf-nc-table th { background: #eef4fa; color: #333333; padding: 8px; border: 1px solid #cccccc; text-align: left; font-weight: bold; }
-        .pdf-nc-table td { padding: 8px; border: 1px solid #cccccc; vertical-align: top; line-height: 1.4; }
-        .pdf-signatures { margin-top: 50px; display: flex; justify-content: space-between; }
-        .pdf-sig-box { width: 45%; text-align: center; border-top: 1px solid #000000; padding-top: 8px; font-size: 12px; }
+
+        #print-report { display: none; background: #fff; padding: 10px; font-family: Arial, sans-serif; color: #333; }
+        .pdf-header-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #004a8f; }
+        .pdf-header-table td { padding: 6px 10px; border: 1px solid #cccccc; font-size: 12px; }
+        .pdf-header-title { background: #004a8f; color: #ffffff; font-weight: bold; text-align: center; font-size: 15px; padding: 8px !important; }
+        .pdf-section-title { background: #f0f4f8; color: #004a8f; padding: 6px 8px; font-size: 13px; font-weight: bold; border-left: 4px solid #004a8f; margin: 12px 0 8px 0; }
+        .pdf-nc-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; }
+        .pdf-nc-table th { background: #eef4fa; color: #333333; padding: 6px; border: 1px solid #cccccc; text-align: left; font-weight: bold; }
+        .pdf-nc-table td { padding: 6px; border: 1px solid #cccccc; vertical-align: top; line-height: 1.3; }
+        .pdf-signatures { margin-top: 30px; display: flex; justify-content: space-between; }
+        .pdf-sig-box { width: 45%; text-align: center; border-top: 1px solid #000000; padding-top: 5px; font-size: 11px; }
     </style>
 </head>
 <body>
 
 <div class="container" id="app-content">
-    <header>
+    <header class="no-print">
         <h2>Vistoria de Obra</h2>
-        <p style="font-size:0.8rem;">Área Privativa & Checklist Detalhado</p>
+        <p style="font-size:0.8rem;">Gerenciamento de Unidades e Relatórios</p>
     </header>
 
     <!-- 0. Identificação do Vistoriador -->
-    <div class="card" id="inspector-card">
+    <div class="card no-print" id="inspector-card">
         <h3>👤 Identificação do Vistoriador</h3>
-        
         <label>Nome Completo do Vistoriador / Engenheiro:</label>
         <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha">
 
@@ -108,7 +106,7 @@
     </div>
 
     <!-- 1. Seleção de Pavimento -->
-    <div class="card" id="floor-card" style="display:none;">
+    <div class="card no-print" id="floor-card" style="display:none;">
         <h3>1. Selecione o Pavimento</h3>
         <div class="grid" id="floors">
             <div class="btn" onclick="setFloor(1, this)">1º Pav</div>
@@ -119,22 +117,30 @@
     </div>
 
     <!-- 2. Seleção de Unidade -->
-    <div class="card" id="unit-card" style="display:none;">
+    <div class="card no-print" id="unit-card" style="display:none;">
         <h3>2. Selecione a Unidade</h3>
         <div class="grid" id="units"></div>
     </div>
 
-    <!-- 3. Seleção de Tipo -->
-    <div class="card" id="type-card" style="display:none;">
-        <h3>3. Tipo de Vistoria</h3>
-        <div class="grid-type">
-            <div class="btn-type" onclick="setInspectionType('Padrão (Construtora)', this)">🏗️ Padrão</div>
-            <div class="btn-type" onclick="setInspectionType('Reforma', this)">🔨 Reforma</div>
+    <!-- 3. Tipo e Etapa (Vistoria vs Revistoria) -->
+    <div class="card no-print" id="type-card" style="display:none;">
+        <h3>3. Configuração da Vistoria</h3>
+        
+        <label>Tipo de Vistoria:</label>
+        <div class="grid-two">
+            <div class="btn-opt" onclick="setCategory('Padrão (Construtora)', this)">🏗️ Padrão</div>
+            <div class="btn-opt" onclick="setCategory('Reforma', this)">🔨 Reforma</div>
+        </div>
+
+        <label style="margin-top:12px;">Etapa / Ciclo:</label>
+        <div class="grid-two">
+            <div class="btn-opt" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</div>
+            <div class="btn-opt" onclick="setStage('Revistoria', this)">🔄 Revistoria</div>
         </div>
     </div>
 
     <!-- Área de Inspeção -->
-    <div id="inspection-area" style="display:none;">
+    <div id="inspection-area" class="no-print" style="display:none;">
         <div class="card" style="background: var(--primary); color: white;">
             <h3 id="unit-title">Unidade: ---</h3>
         </div>
@@ -154,12 +160,13 @@
             <div class="content" id="room-balcony"></div>
         </div>
 
-        <button class="btn-export" id="btn-export-pdf" onclick="generateTechnicalPDF()">📄 Exportar Relatório Técnico em PDF</button>
+        <button class="btn-export" onclick="generateTechnicalPDF()">📄 Exportar Relatório em PDF / Salvar</button>
+        <button class="btn-next-unit" id="btn-next" onclick="startNextUnit()">➡️ Iniciar Próxima Unidade (Próxima Vistoria)</button>
     </div>
 </div>
 
-<!-- TEMPLATE OCULTO PARA IMPRESSÃO EM PDF -->
-<div id="pdf-template"></div>
+<!-- CONTAINER QUE SERÁ EXIBIDO APENAS NA HORA DE IMPRIMIR EM PDF -->
+<div id="print-report"></div>
 
 <script>
     const roomNames = {
@@ -182,7 +189,8 @@
     let ncCounters = {};
     let selectedFloorNum = null;
     let selectedUnitNum = null;
-    let selectedType = "";
+    let selectedCategory = "";
+    let selectedStage = "";
     let inspectorName = "";
     let inspectorSigData = null;
 
@@ -191,10 +199,8 @@
     window.onload = () => {
         canvas = document.getElementById('sig-canvas');
         ctx = canvas.getContext('2d');
-        
         canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = 130;
-
+        canvas.height = 120;
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2.5;
         ctx.lineCap = 'round';
@@ -202,7 +208,6 @@
         canvas.addEventListener('touchstart', startDrawing);
         canvas.addEventListener('touchmove', draw);
         canvas.addEventListener('touchend', stopDrawing);
-
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
@@ -247,15 +252,8 @@
 
     function confirmInspector() {
         const nameInput = document.getElementById('inspector-name').value.trim();
-        if (!nameInput) {
-            alert('Por favor, informe o nome do vistoriador.');
-            return;
-        }
-
-        if (!inspectorSigData) {
-            alert('Por favor, faça a assinatura na tela.');
-            return;
-        }
+        if (!nameInput) { alert('Por favor, informe o nome do vistoriador.'); return; }
+        if (!inspectorSigData) { alert('Por favor, faça a assinatura na tela.'); return; }
 
         inspectorName = nameInput;
         document.getElementById('inspector-card').style.background = '#eef6ff';
@@ -264,7 +262,6 @@
             <p style="font-size:0.9rem; margin-top:5px;"><strong>Nome:</strong> ${inspectorName}</p>
             <p style="font-size:0.8rem; color:green; font-weight:bold; margin-top:3px;">✓ Assinatura Digital Registrada</p>
         `;
-
         document.getElementById('floor-card').style.display = 'block';
     }
 
@@ -289,20 +286,35 @@
         el.classList.add('active');
         document.getElementById('type-card').style.display = 'block';
         document.getElementById('inspection-area').style.display = 'none';
-        document.querySelectorAll('.btn-type').forEach(b => b.classList.remove('active'));
+        
+        selectedCategory = "";
+        selectedStage = "";
+        document.querySelectorAll('#type-card .btn-opt').forEach(b => b.classList.remove('active'));
     }
 
-    function setInspectionType(type, el) {
-        selectedType = type;
-        document.querySelectorAll('.btn-type').forEach(b => b.classList.remove('active'));
+    function setCategory(cat, el) {
+        selectedCategory = cat;
+        el.parentElement.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
+        checkAndShowInspection();
+    }
 
-        document.getElementById('unit-title').innerHTML = `Unidade: ${selectedUnitNum} <span class="type-badge">${selectedType}</span>`;
-        document.getElementById('inspection-area').style.display = 'block';
-        
-        render('room-dorm', true);
-        render('room-bath', false);
-        render('room-balcony', true);
+    function setStage(stage, el) {
+        selectedStage = stage;
+        el.parentElement.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        checkAndShowInspection();
+    }
+
+    function checkAndShowInspection() {
+        if (selectedCategory && selectedStage) {
+            document.getElementById('unit-title').innerHTML = `Unidade ${selectedUnitNum} <span class="badge">${selectedCategory}</span> <span class="badge" style="background:#17a2b8; color:#fff;">${selectedStage}</span>`;
+            document.getElementById('inspection-area').style.display = 'block';
+            
+            render('room-dorm', true);
+            render('room-bath', false);
+            render('room-balcony', true);
+        }
     }
 
     function render(cId, allowAC) {
@@ -398,9 +410,6 @@
                 <option>Gesso / Sancas</option>
             </select>
             
-            <label>Tirar Foto Deste Ponto (Câmera):</label>
-            <input type="file" accept="image/*" capture="environment" class="nc-photo">
-            
             <label>Prazo de Conclusão (Dias Úteis):</label>
             <input type="number" placeholder="Ex: 3" class="nc-days">
         `;
@@ -424,14 +433,10 @@
         el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    // GERADOR ROBUSTO DE PDF TÉCNICO
+    // GERA O RELATÓRIO PDF NATIVO VIA TELA DE IMPRESSÃO DO NAVEGADOR (SEM PÁGINA EM BRANCO)
     function generateTechnicalPDF() {
-        const btnExport = document.getElementById('btn-export-pdf');
-        btnExport.innerText = "⌛ Gerando PDF, aguarde...";
-        btnExport.disabled = true;
-
         const today = new Date().toLocaleDateString('pt-BR');
-        const pdfContainer = document.getElementById('pdf-template');
+        const printContainer = document.getElementById('print-report');
         
         let pendingCount = 0;
         let rowsHTML = '';
@@ -472,19 +477,19 @@
 
         const statusGeneral = pendingCount > 0 ? `<span style="color:#dc3545; font-weight:bold;">REPROVADO (${pendingCount} pendências)</span>` : `<span style="color:#28a745; font-weight:bold;">APROVADO (Sem pendências)</span>`;
 
-        pdfContainer.innerHTML = `
+        printContainer.innerHTML = `
             <table class="pdf-header-table">
                 <tr>
                     <td colspan="4" class="pdf-header-title">RELATÓRIO TÉCNICO DE VISTORIA DE OBRA</td>
                 </tr>
                 <tr>
                     <td><strong>Data da Vistoria:</strong> ${today}</td>
-                    <td><strong>Pavimento:</strong> ${selectedFloorNum || '-'}º Pavimento</td>
-                    <td><strong>Unidade:</strong> ${selectedUnitNum || '-'}</td>
-                    <td><strong>Tipo:</strong> ${selectedType || 'Padrão'}</td>
+                    <td><strong>Pavimento:</strong> ${selectedFloorNum}º Pav</td>
+                    <td><strong>Unidade:</strong> ${selectedUnitNum}</td>
+                    <td><strong>Tipo/Etapa:</strong> ${selectedCategory} (${selectedStage})</td>
                 </tr>
                 <tr>
-                    <td colspan="2"><strong>Vistoriador Responsável:</strong> ${inspectorName || 'Não Informado'}</td>
+                    <td colspan="2"><strong>Vistoriador Responsável:</strong> ${inspectorName}</td>
                     <td colspan="2"><strong>Status da Unidade:</strong> ${statusGeneral}</td>
                 </tr>
             </table>
@@ -519,37 +524,39 @@
 
             <div class="pdf-signatures">
                 <div class="pdf-sig-box">
-                    ${inspectorSigData ? `<img src="${inspectorSigData}" style="max-height:50px; display:block; margin:0 auto 5px auto;">` : ''}
-                    <strong>${inspectorName || 'Vistoriador'}</strong><br>
+                    ${inspectorSigData ? `<img src="${inspectorSigData}" style="max-height:45px; display:block; margin:0 auto 5px auto;">` : ''}
+                    <strong>${inspectorName}</strong><br>
                     Vistoriador / Responsável
                 </div>
-                <div class="pdf-sig-box" style="margin-top: 50px;">
+                <div class="pdf-sig-box" style="margin-top: 45px;">
                     <strong>Cliente / Proprietário</strong><br>
                     Assinatura
                 </div>
             </div>
         `;
 
-        // Pequena pausa (100ms) para garantir que o DOM renderizou completamente a tabela e a imagem
-        setTimeout(() => {
-            const opt = {
-                margin:       10,
-                filename:     `Relatorio_Vistoria_Unidade_${selectedUnitNum}_${selectedType}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+        // Exibe o botão da próxima unidade
+        document.getElementById('btn-next').style.display = 'block';
 
-            html2pdf().set(opt).from(pdfContainer).save().then(() => {
-                btnExport.innerText = "📄 Exportar Relatório Técnico em PDF";
-                btnExport.disabled = false;
-            }).catch(err => {
-                console.error(err);
-                alert("Erro ao gerar o PDF. Tente novamente.");
-                btnExport.innerText = "📄 Exportar Relatório Técnico em PDF";
-                btnExport.disabled = false;
-            });
-        }, 150);
+        // Dispara a caixa nativa do celular/PC de Salvar em PDF
+        window.print();
+    }
+
+    // LIMPA A TELA PARA A PRÓXIMA UNIDADE SEM PERDER A ASSINATURA
+    function startNextUnit() {
+        document.getElementById('inspection-area').style.display = 'none';
+        document.getElementById('type-card').style.display = 'none';
+        document.getElementById('unit-card').style.display = 'none';
+        document.getElementById('btn-next').style.display = 'none';
+
+        document.querySelectorAll('#floors .btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#units .btn').forEach(b => b.classList.remove('active'));
+        
+        selectedUnitNum = null;
+        selectedCategory = "";
+        selectedStage = "";
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 </script>
 
