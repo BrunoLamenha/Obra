@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vistoria Obra</title>
+    <title>Vistoria Interna de Obra</title>
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
@@ -67,7 +67,6 @@
             body { background: #fff !important; padding: 0 !important; }
             .no-print, #app-content { display: none !important; }
             #print-report { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
-            .page-break { page-break-after: always; }
         }
 
         #print-report { display: none; background: #fff; padding: 10px; font-family: Arial, sans-serif; color: #333; }
@@ -78,31 +77,30 @@
         .pdf-nc-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; }
         .pdf-nc-table th { background: #eef4fa; color: #333333; padding: 6px; border: 1px solid #cccccc; text-align: left; font-weight: bold; }
         .pdf-nc-table td { padding: 6px; border: 1px solid #cccccc; vertical-align: top; line-height: 1.3; }
-        .pdf-signatures { margin-top: 30px; display: flex; justify-content: space-between; }
-        .pdf-sig-box { width: 45%; text-align: center; border-top: 1px solid #000000; padding-top: 5px; font-size: 11px; }
+        .pdf-signatures { margin-top: 30px; width: 300px; margin-left: auto; margin-right: auto; text-align: center; border-top: 1px solid #000000; padding-top: 5px; font-size: 11px; }
     </style>
 </head>
 <body>
 
 <div class="container" id="app-content">
     <header class="no-print">
-        <h2>Vistoria de Obra</h2>
-        <p style="font-size:0.8rem;">Gerenciamento de Unidades e Relatórios</p>
+        <h2>Vistoria Interna de Obra</h2>
+        <p style="font-size:0.8rem;">Controle Técnico de Qualidade & Pendências</p>
     </header>
 
     <!-- 0. Identificação do Vistoriador -->
     <div class="card no-print" id="inspector-card">
-        <h3>👤 Identificação do Vistoriador</h3>
-        <label>Nome Completo do Vistoriador / Engenheiro:</label>
+        <h3>👤 Identificação do Responsável Técnico</h3>
+        <label>Nome Completo do Engenheiro / Vistoriador:</label>
         <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha">
 
-        <label>Assinatura Digital (Desenhe com o dedo abaixo):</label>
+        <label>Assinatura Digital (Desenhe abaixo):</label>
         <div class="signature-box">
             <canvas id="sig-canvas"></canvas>
             <button class="btn-clear-sig" onclick="clearSignature()">Limpar ↺</button>
         </div>
 
-        <button class="btn-confirm-inspector" onclick="confirmInspector()">Confirmar e Iniciar Vistoria ✓</button>
+        <button class="btn-confirm-inspector" onclick="confirmInspector()">Confirmar Responsável ✓</button>
     </div>
 
     <!-- 1. Seleção de Pavimento -->
@@ -124,7 +122,7 @@
 
     <!-- 3. Tipo e Etapa (Vistoria vs Revistoria) -->
     <div class="card no-print" id="type-card" style="display:none;">
-        <h3>3. Configuração da Vistoria</h3>
+        <h3>3. Configuração do Acompanhamento</h3>
         
         <label>Tipo de Vistoria:</label>
         <div class="grid-two">
@@ -132,7 +130,7 @@
             <div class="btn-opt" onclick="setCategory('Reforma', this)">🔨 Reforma</div>
         </div>
 
-        <label style="margin-top:12px;">Etapa / Ciclo:</label>
+        <label style="margin-top:12px;">Etapa / Ciclo de Inspeção:</label>
         <div class="grid-two">
             <div class="btn-opt" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</div>
             <div class="btn-opt" onclick="setStage('Revistoria', this)">🔄 Revistoria</div>
@@ -160,12 +158,12 @@
             <div class="content" id="room-balcony"></div>
         </div>
 
-        <button class="btn-export" onclick="generateTechnicalPDF()">📄 Exportar Relatório em PDF / Salvar</button>
-        <button class="btn-next-unit" id="btn-next" onclick="startNextUnit()">➡️ Iniciar Próxima Unidade (Próxima Vistoria)</button>
+        <button class="btn-export" onclick="generateTechnicalPDF()">📄 Finalizar & Salvar Relatório Interno (PDF)</button>
+        <button class="btn-next-unit" id="btn-next" onclick="startNextUnit()">➡️ Próxima Unidade</button>
     </div>
 </div>
 
-<!-- CONTAINER QUE SERÁ EXIBIDO APENAS NA HORA DE IMPRIMIR EM PDF -->
+<!-- CONTAINER DE IMPRESSÃO PDF -->
 <div id="print-report"></div>
 
 <script>
@@ -193,6 +191,7 @@
     let selectedStage = "";
     let inspectorName = "";
     let inspectorSigData = null;
+    let revisionCount = 1;
 
     let canvas, ctx, isDrawing = false;
 
@@ -258,9 +257,9 @@
         inspectorName = nameInput;
         document.getElementById('inspector-card').style.background = '#eef6ff';
         document.getElementById('inspector-card').innerHTML = `
-            <h3>👤 Vistoriador Confirmado</h3>
-            <p style="font-size:0.9rem; margin-top:5px;"><strong>Nome:</strong> ${inspectorName}</p>
-            <p style="font-size:0.8rem; color:green; font-weight:bold; margin-top:3px;">✓ Assinatura Digital Registrada</p>
+            <h3>👤 Responsável Confirmado</h3>
+            <p style="font-size:0.9rem; margin-top:5px;"><strong>Engenheiro/Vistoriador:</strong> ${inspectorName}</p>
+            <p style="font-size:0.8rem; color:green; font-weight:bold; margin-top:3px;">✓ Assinatura Registrada</p>
         `;
         document.getElementById('floor-card').style.display = 'block';
     }
@@ -308,22 +307,42 @@
 
     function checkAndShowInspection() {
         if (selectedCategory && selectedStage) {
+            // Verifica histórico da unidade no localStorage
+            const historyKey = `history_unit_${selectedUnitNum}`;
+            const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
+            
+            if (selectedStage === 'Revistoria') {
+                revisionCount = existingHistory.length + 1;
+                selectedStage = `${revisionCount}ª Revistoria`;
+            } else {
+                revisionCount = 1;
+            }
+
             document.getElementById('unit-title').innerHTML = `Unidade ${selectedUnitNum} <span class="badge">${selectedCategory}</span> <span class="badge" style="background:#17a2b8; color:#fff;">${selectedStage}</span>`;
             document.getElementById('inspection-area').style.display = 'block';
             
-            render('room-dorm', true);
-            render('room-bath', false);
-            render('room-balcony', true);
+            render('room-dorm', true, existingHistory);
+            render('room-bath', false, existingHistory);
+            render('room-balcony', true, existingHistory);
         }
     }
 
-    function render(cId, allowAC) {
+    function render(cId, allowAC, history) {
         const c = document.getElementById(cId);
         c.innerHTML = '';
         checklist.forEach(item => {
             if (!allowAC && item.hasAC) return;
             const fullId = `${cId}_${item.id}`;
             ncCounters[fullId] = 0;
+
+            // Busca se havia não conformidade registrada anteriormente para este item
+            let prevPending = null;
+            if (history && history.length > 0) {
+                const lastInsp = history[history.length - 1];
+                if (lastInsp.pendencies) {
+                    prevPending = lastInsp.pendencies.find(p => p.fullId === fullId);
+                }
+            }
 
             c.innerHTML += `
                 <div class="item-card" id="${fullId}">
@@ -334,10 +353,20 @@
                             <button class="btn-status btn-neutral" id="btn-nok-${fullId}" onclick="setStatus('${fullId}', false)">✗ Pendente</button>
                         </div>
                     </div>
+                    ${prevPending ? `
+                        <div style="background:#fff3cd; border:1px solid #ffeeba; padding:6px 10px; border-radius:4px; margin-top:8px; font-size:0.78rem; color:#856404;">
+                            ⚠️ <strong>Ponto Anterioremente Pendente:</strong> ${prevPending.details.join(', ')} (Prazo anterior: ${prevPending.days} dias)
+                        </div>
+                    ` : ''}
                     <div class="nc-list" id="nc-list-${fullId}"></div>
                     <button class="btn-add-nc" id="btn-add-${fullId}" onclick="addNC('${fullId}', '${item.id}')">+ Adicionar Ponto / Não Conformidade</button>
                 </div>
             `;
+
+            // Se era pendente anteriormente na revistoria, já inicializa em estado de checagem
+            if (prevPending && selectedStage.includes('Revistoria')) {
+                setTimeout(() => setStatus(fullId, false), 50);
+            }
         });
     }
 
@@ -382,6 +411,7 @@
         div.className = 'nc-box';
         div.id = ncBoxId;
         div.setAttribute('data-item-id', itemId);
+        div.setAttribute('data-full-id', fullId);
         div.innerHTML = `
             <div class="nc-header">
                 <span>PONTO / PENDÊNCIA #${count}</span>
@@ -398,7 +428,7 @@
                 <input type="text" class="nc-other-input" placeholder="Ex: Trinca perto da tomada no lado direito">
             </div>
 
-            <label>Responsável:</label>
+            <label>Responsável Pela Correção:</label>
             <select class="nc-resp">
                 <option>Pintura / Emassamento</option>
                 <option>Marmoraria / Graniteiro</option>
@@ -410,7 +440,7 @@
                 <option>Gesso / Sancas</option>
             </select>
             
-            <label>Prazo de Conclusão (Dias Úteis):</label>
+            <label>Novo Prazo de Conclusão (Dias Úteis):</label>
             <input type="number" placeholder="Ex: 3" class="nc-days">
         `;
         ncList.appendChild(div);
@@ -433,13 +463,14 @@
         el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    // GERA O RELATÓRIO PDF NATIVO VIA TELA DE IMPRESSÃO DO NAVEGADOR (SEM PÁGINA EM BRANCO)
+    // GERA O RELATÓRIO PDF NATIVO INTERNO
     function generateTechnicalPDF() {
         const today = new Date().toLocaleDateString('pt-BR');
         const printContainer = document.getElementById('print-report');
         
         let pendingCount = 0;
         let rowsHTML = '';
+        let currentPendencies = [];
 
         ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
             const roomName = roomNames[roomId];
@@ -450,6 +481,7 @@
             ncBoxes.forEach(box => {
                 pendingCount++;
                 const itemId = box.getAttribute('data-item-id');
+                const fullId = box.getAttribute('data-full-id');
                 const itemObj = checklist.find(i => i.id === itemId) || { name: 'Item de Vistoria' };
                 
                 let selectedOpts = [];
@@ -463,6 +495,15 @@
                 const respVal = box.querySelector('.nc-resp')?.value || 'Não informado';
                 const daysVal = box.querySelector('.nc-days')?.value || '-';
 
+                currentPendencies.push({
+                    fullId: fullId,
+                    room: roomName,
+                    item: itemObj.name,
+                    details: selectedOpts,
+                    resp: respVal,
+                    days: daysVal
+                });
+
                 rowsHTML += `
                     <tr>
                         <td style="font-weight:bold;">${roomName}</td>
@@ -475,26 +516,39 @@
             });
         });
 
+        // Salva histórico no localStorage para revistorias futuras
+        const historyKey = `history_unit_${selectedUnitNum}`;
+        const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
+        existingHistory.push({
+            date: today,
+            stage: selectedStage,
+            category: selectedCategory,
+            inspector: inspectorName,
+            pendenciesCount: pendingCount,
+            pendencies: currentPendencies
+        });
+        localStorage.setItem(historyKey, JSON.stringify(existingHistory));
+
         const statusGeneral = pendingCount > 0 ? `<span style="color:#dc3545; font-weight:bold;">REPROVADO (${pendingCount} pendências)</span>` : `<span style="color:#28a745; font-weight:bold;">APROVADO (Sem pendências)</span>`;
 
         printContainer.innerHTML = `
             <table class="pdf-header-table">
                 <tr>
-                    <td colspan="4" class="pdf-header-title">RELATÓRIO TÉCNICO DE VISTORIA DE OBRA</td>
+                    <td colspan="4" class="pdf-header-title">RELATÓRIO TÉCNICO INTERNO DE VISTORIA</td>
                 </tr>
                 <tr>
                     <td><strong>Data da Vistoria:</strong> ${today}</td>
                     <td><strong>Pavimento:</strong> ${selectedFloorNum}º Pav</td>
                     <td><strong>Unidade:</strong> ${selectedUnitNum}</td>
-                    <td><strong>Tipo/Etapa:</strong> ${selectedCategory} (${selectedStage})</td>
+                    <td><strong>Etapa/Ciclo:</strong> ${selectedCategory} (${selectedStage})</td>
                 </tr>
                 <tr>
-                    <td colspan="2"><strong>Vistoriador Responsável:</strong> ${inspectorName}</td>
-                    <td colspan="2"><strong>Status da Unidade:</strong> ${statusGeneral}</td>
+                    <td colspan="2"><strong>Responsável Técnico:</strong> ${inspectorName}</td>
+                    <td colspan="2"><strong>Status Técnico:</strong> ${statusGeneral}</td>
                 </tr>
             </table>
 
-            <div class="pdf-section-title">DETALHAMENTO DAS NÃO CONFORMIDADES / PENDÊNCIAS</div>
+            <div class="pdf-section-title">DETALHAMENTO DAS NÃO CONFORMIDADES / PENDÊNCIAS DA OBRA</div>
 
             ${pendingCount > 0 ? `
                 <table class="pdf-nc-table">
@@ -513,36 +567,21 @@
                 </table>
             ` : `
                 <div style="padding: 15px; text-align:center; border:1px solid #cccccc; background:#f9f9f9; color:#28a745; font-weight:bold; margin-bottom:20px;">
-                    ✓ Nenhum ponto de pendência foi identificado durante a vistoria desta unidade.
+                    ✓ Nenhum ponto de pendência foi identificado nesta vistoria. Unidade Liberada.
                 </div>
             `}
 
-            <div class="pdf-section-title">TERMO DE RECEBIMENTO E ACEITE</div>
-            <p style="font-size:11px; color:#555555; line-height:1.4; margin-bottom: 25px;">
-                Atestamos que a vistoria da unidade descrita foi realizada nesta data pelo vistoriador indicado. As pendências apontadas neste documento deverão ser sanadas pelas equipes responsáveis dentro dos prazos estipulados.
-            </p>
-
             <div class="pdf-signatures">
-                <div class="pdf-sig-box">
-                    ${inspectorSigData ? `<img src="${inspectorSigData}" style="max-height:45px; display:block; margin:0 auto 5px auto;">` : ''}
-                    <strong>${inspectorName}</strong><br>
-                    Vistoriador / Responsável
-                </div>
-                <div class="pdf-sig-box" style="margin-top: 45px;">
-                    <strong>Cliente / Proprietário</strong><br>
-                    Assinatura
-                </div>
+                ${inspectorSigData ? `<img src="${inspectorSigData}" style="max-height:45px; display:block; margin:0 auto 5px auto;">` : ''}
+                <strong>${inspectorName}</strong><br>
+                Responsável Técnico / Engenharia de Obra
             </div>
         `;
 
-        // Exibe o botão da próxima unidade
         document.getElementById('btn-next').style.display = 'block';
-
-        // Dispara a caixa nativa do celular/PC de Salvar em PDF
         window.print();
     }
 
-    // LIMPA A TELA PARA A PRÓXIMA UNIDADE SEM PERDER A ASSINATURA
     function startNextUnit() {
         document.getElementById('inspection-area').style.display = 'none';
         document.getElementById('type-card').style.display = 'none';
