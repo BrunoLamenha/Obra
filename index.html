@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vistoria Obra</title>
     
-    <!-- Ícone embutido para Android e iOS -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
     <meta name="mobile-web-app-capable" content="yes">
@@ -17,7 +16,8 @@
         :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ccc; --success: #28a745; --danger: #dc3545; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { background: var(--bg); padding: 12px; }
-        .container { max-width: 650px; margin: 0 auto; }
+        .container { max-width: 680px; margin: 0 auto; }
+        
         header { background: var(--primary); color: #fff; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
         .card { background: #fff; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
@@ -54,11 +54,23 @@
         .content { display: none; padding-top: 10px; }
         
         .type-badge { display: inline-block; background: #ffc107; color: #000; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-left: 8px; }
+
+        /* Estilos Ocultos para Documento PDF Técnico */
+        #pdf-template { display: none; background: #fff; padding: 20px; font-family: Arial, sans-serif; color: #333; }
+        .pdf-header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #004a8f; }
+        .pdf-header-table td { padding: 8px 12px; border: 1px solid #ccc; font-size: 0.85rem; }
+        .pdf-header-title { background: #004a8f; color: white; font-weight: bold; text-align: center; font-size: 1.1rem; padding: 10px !important; }
+        .pdf-section-title { background: #f0f4f8; color: #004a8f; padding: 6px 10px; font-size: 0.95rem; font-weight: bold; border-left: 4px solid #004a8f; margin: 15px 0 10px 0; }
+        .pdf-nc-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 0.8rem; }
+        .pdf-nc-table th { background: #eef4fa; color: #333; padding: 6px; border: 1px solid #ccc; text-align: left; }
+        .pdf-nc-table td { padding: 6px; border: 1px solid #ccc; vertical-align: top; }
+        .pdf-signatures { margin-top: 40px; display: flex; justify-content: space-between; }
+        .pdf-sig-box { width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 5px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-<div class="container" id="report-content">
+<div class="container" id="app-content">
     <header>
         <h2>Vistoria de Obra</h2>
         <p style="font-size:0.8rem;">Área Privativa & Checklist Detalhado</p>
@@ -81,7 +93,7 @@
         <div class="grid" id="units"></div>
     </div>
 
-    <!-- 3. Seleção de Tipo (Padrão ou Reforma) -->
+    <!-- 3. Seleção de Tipo -->
     <div class="card" id="type-card" style="display:none;">
         <h3>3. Tipo de Vistoria</h3>
         <div class="grid-type">
@@ -111,60 +123,38 @@
             <div class="content" id="room-balcony"></div>
         </div>
 
-        <button class="btn-export" onclick="exportPDF()">📄 Exportar Relatório em PDF</button>
+        <button class="btn-export" onclick="generateTechnicalPDF()">📄 Exportar Relatório Técnico em PDF</button>
     </div>
 </div>
 
+<!-- TEMPLATE OCULTO QUE SERÁ RENDERIZADO NO PDF TÉCNICO -->
+<div id="pdf-template"></div>
+
 <script>
+    const roomNames = {
+        'room-dorm': 'Dormitório / Cozinha',
+        'room-bath': 'Banheiro',
+        'room-balcony': 'Varanda'
+    };
+
     const checklist = [
-        { 
-            id: "bancada", 
-            name: "1. Bancadas, Soleiras e Peitoris",
-            options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"]
-        },
-        { 
-            id: "piso", 
-            name: "2. Contrapiso e Revestimentos / Rodapés",
-            options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"]
-        },
-        { 
-            id: "pintura", 
-            name: "3. Pintura e Emassamento",
-            options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"]
-        },
-        { 
-            id: "hidra", 
-            name: "4. Metais, Louças e Sifão",
-            options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"]
-        },
-        { 
-            id: "portas", 
-            name: "5. Portas de Madeira e Alizares",
-            options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"]
-        },
-        { 
-            id: "esquadria", 
-            name: "6. Esquadrias de Alumínio, Vidros e Vedações",
-            options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"]
-        },
-        { 
-            id: "eletrica", 
-            name: "7. Tomadas, Interruptores e Plafons",
-            options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Ponto Sem Energia / Fio Solto", "Plafon Não Liga / Danificado", "Quadro de Disjuntores Incompleto", "Outros"]
-        },
-        { 
-            id: "ac", 
-            name: "8. Infraestrutura / Aparelho Ar-Condicionado", 
-            options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"],
-            hasAC: true 
-        }
+        { id: "bancada", name: "1. Bancadas, Soleiras e Peitoris", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
+        { id: "piso", name: "2. Contrapiso e Revestimentos / Rodapés", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
+        { id: "pintura", name: "3. Pintura e Emassamento", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] },
+        { id: "hidra", name: "4. Metais, Louças e Sifão", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
+        { id: "portas", name: "5. Portas de Madeira e Alizares", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
+        { id: "esquadria", name: "6. Esquadrias de Alumínio, Vidros e Vedações", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
+        { id: "eletrica", name: "7. Tomadas, Interruptores e Plafons", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Ponto Sem Energia / Fio Solto", "Plafon Não Liga / Danificado", "Quadro de Disjuntores Incompleto", "Outros"] },
+        { id: "ac", name: "8. Infraestrutura / Aparelho Ar-Condicionado", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"], hasAC: true }
     ];
 
     let ncCounters = {};
+    let selectedFloorNum = null;
     let selectedUnitNum = null;
     let selectedType = "";
 
     function setFloor(f, el) {
+        selectedFloorNum = f;
         document.querySelectorAll('#floors .btn').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
         const u = document.getElementById('units');
@@ -182,8 +172,6 @@
         selectedUnitNum = u;
         document.querySelectorAll('#units .btn').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
-        
-        // Exibe o card de escolha do Tipo
         document.getElementById('type-card').style.display = 'block';
         document.getElementById('inspection-area').style.display = 'none';
         document.querySelectorAll('.btn-type').forEach(b => b.classList.remove('active'));
@@ -259,13 +247,14 @@
 
         let checkboxesHTML = itemObj.options.map((opt) => `
             <label class="chk-label">
-                <input type="checkbox" onchange="toggleOtherField('${ncBoxId}', this, '${opt}')"> ${opt}
+                <input type="checkbox" value="${opt}" onchange="toggleOtherField('${ncBoxId}', this, '${opt}')"> ${opt}
             </label>
         `).join('');
 
         const div = document.createElement('div');
         div.className = 'nc-box';
         div.id = ncBoxId;
+        div.setAttribute('data-item-id', itemId);
         div.innerHTML = `
             <div class="nc-header">
                 <span>PONTO / PENDÊNCIA #${count}</span>
@@ -279,11 +268,11 @@
 
             <div id="other-field-${ncBoxId}" style="display:none;">
                 <label style="color:var(--danger);">Descreva a opção "Outros" / Observação Exata:</label>
-                <input type="text" placeholder="Ex: Trinca perto da tomada no lado direito">
+                <input type="text" class="nc-other-input" placeholder="Ex: Trinca perto da tomada no lado direito">
             </div>
 
             <label>Responsável:</label>
-            <select>
+            <select class="nc-resp">
                 <option>Pintura / Emassamento</option>
                 <option>Marmoraria / Graniteiro</option>
                 <option>Instalações Hidráulicas</option>
@@ -295,10 +284,10 @@
             </select>
             
             <label>Tirar Foto Deste Ponto (Câmera):</label>
-            <input type="file" accept="image/*" capture="environment">
+            <input type="file" accept="image/*" capture="environment" class="nc-photo">
             
             <label>Prazo de Conclusão (Dias Úteis):</label>
-            <input type="number" placeholder="Ex: 3">
+            <input type="number" placeholder="Ex: 3" class="nc-days">
         `;
         ncList.appendChild(div);
     }
@@ -320,16 +309,123 @@
         el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    function exportPDF() {
-        const element = document.getElementById('report-content');
+    // FUNÇÃO QUE GERA O PDF TÉCNICO FORMATADO
+    function generateTechnicalPDF() {
+        const today = new Date().toLocaleDateString('pt-BR');
+        const pdfContainer = document.getElementById('pdf-template');
+        
+        let pendingCount = 0;
+        let rowsHTML = '';
+
+        // Varre todos os cômodos e itens procurando pendências
+        ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
+            const roomName = roomNames[roomId];
+            const roomEl = document.getElementById(roomId);
+            if (!roomEl) return;
+
+            const ncBoxes = roomEl.querySelectorAll('.nc-box');
+            ncBoxes.forEach(box => {
+                pendingCount++;
+                const itemId = box.getAttribute('data-item-id');
+                const itemObj = checklist.find(i => i.id === itemId) || { name: 'Item de Vistoria' };
+                
+                // Pega os checkboxes marcados
+                let selectedOpts = [];
+                box.querySelectorAll('.checklist-group input[type="checkbox"]:checked').forEach(chk => {
+                    selectedOpts.push(chk.value);
+                });
+
+                const otherVal = box.querySelector('.nc-other-input')?.value;
+                if (otherVal) selectedOpts.push(`Outros: ${otherVal}`);
+
+                const respVal = box.querySelector('.nc-resp')?.value || 'Não informado';
+                const daysVal = box.querySelector('.nc-days')?.value || '-';
+
+                rowsHTML += `
+                    <tr>
+                        <td style="font-weight:bold;">${roomName}</td>
+                        <td>${itemObj.name}</td>
+                        <td>${selectedOpts.length > 0 ? selectedOpts.join('<br>• ') : 'Pendência apontada sem detalhes'}</td>
+                        <td>${respVal}</td>
+                        <td style="text-align:center;">${daysVal} dias</td>
+                    </tr>
+                `;
+            });
+        });
+
+        const statusGeneral = pendingCount > 0 ? `<span style="color:red; font-weight:bold;">REPROVADO (${pendingCount} pendências)</span>` : `<span style="color:green; font-weight:bold;">APROVADO (Sem pendências)</span>`;
+
+        pdfContainer.innerHTML = `
+            <table class="pdf-header-table">
+                <tr>
+                    <td colspan="4" class="pdf-header-title">RELATÓRIO TÉCNICO DE VISTORIA DE OBRA</td>
+                </tr>
+                <tr>
+                    <td><strong>Data da Vistoria:</strong> ${today}</td>
+                    <td><strong>Pavimento:</strong> ${selectedFloorNum}º Pavimento</td>
+                    <td><strong>Unidade:</strong> ${selectedUnitNum}</td>
+                    <td><strong>Tipo:</strong> ${selectedType}</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Responsável Técnico:</strong> Eng. Vistoriador</td>
+                    <td colspan="2"><strong>Status da Unidade:</strong> ${statusGeneral}</td>
+                </tr>
+            </table>
+
+            <div class="pdf-section-title">DETALHAMENTO DAS NÃO CONFORMIDADES / PENDÊNCIAS</div>
+
+            ${pendingCount > 0 ? `
+                <table class="pdf-nc-table">
+                    <thead>
+                        <tr>
+                            <th style="width:20%;">Ambiente</th>
+                            <th style="width:25%;">Item / Serviço</th>
+                            <th style="width:35%;">Não Conformidade Identificada</th>
+                            <th style="width:12%;">Responsável</th>
+                            <th style="width:8%;">Prazo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHTML}
+                    </tbody>
+                </table>
+            ` : `
+                <p style="padding: 15px; text-align:center; border:1px solid #ccc; background:#f9f9f9; color:green; font-weight:bold;">
+                    ✓ Nenhum ponto de pendência foi identificado durante a vistoria desta unidade.
+                </p>
+            `}
+
+            <div class="pdf-section-title">TERMO DE RECEBIMENTO E ACEITE</div>
+            <p style="font-size:0.75rem; color:#555; line-height:1.3; margin-bottom: 25px;">
+                Atestamos que a vistoria da unidade descrita foi realizada nesta data. As pendências apontadas neste documento deverão ser sanadas pelas equipes responsáveis dentro dos prazos estipulados.
+            </p>
+
+            <div class="pdf-signatures">
+                <div class="pdf-sig-box">
+                    <strong>Vistoriador / Eng. Responsável</strong><br>
+                    Assinatura
+                </div>
+                <div class="pdf-sig-box">
+                    <strong>Cliente / Proprietário</strong><br>
+                    Assinatura
+                </div>
+            </div>
+        `;
+
+        // Torna o template temporariamente visível para o html2pdf capturar limpo
+        pdfContainer.style.display = 'block';
+
         const opt = {
             margin:       10,
-            filename:     `Vistoria_Unidade_${selectedUnitNum}_${selectedType}.pdf`,
+            filename:     `Relatorio_Tecnico_Unidade_${selectedUnitNum}_${selectedType}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2 },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-        html2pdf().set(opt).from(element).save();
+
+        html2pdf().set(opt).from(pdfContainer).save().then(() => {
+            pdfContainer.style.display = 'none'; // Oculta novamente após salvar
+        });
     }
 </script>
 
