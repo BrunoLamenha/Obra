@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página de Teste - Vistoria com Planta Baixa Interativa</title>
+    <title>Página de Teste - Pino com Checklist Integrado</title>
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
     
@@ -75,12 +75,12 @@
         /* Pinos Marcadores */
         .pin {
             position: absolute;
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
             background: var(--danger);
             color: white;
             font-weight: bold;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg) translate(-50%, -50%);
             display: flex;
@@ -94,12 +94,6 @@
         .pin span {
             transform: rotate(45deg);
         }
-        .pin.active {
-            background: #ff0000;
-            transform: rotate(-45deg) scale(1.25);
-            z-index: 20;
-            box-shadow: 0 0 10px rgba(220,53,69,0.8);
-        }
 
         .instructions {
             background: #eef6ff;
@@ -112,7 +106,7 @@
             line-height: 1.4;
         }
 
-        /* Formulário da Pendência */
+        /* Card de Não Conformidade */
         .nc-card {
             background: #fff0f0;
             border: 1px solid #f5c6cb;
@@ -140,6 +134,27 @@
             border-bottom: 1px dashed #f5c6cb;
         }
 
+        .checklist-group { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 8px; 
+            margin: 8px 0; 
+            background: #fff; 
+            padding: 10px; 
+            border-radius: 6px; 
+            border: 1px solid #eee; 
+        }
+        .chk-label { 
+            font-size: 0.8rem; 
+            font-weight: normal; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            margin: 0; 
+            cursor: pointer; 
+            color: #333; 
+        }
+
         label { 
             font-size: 0.8rem; 
             font-weight: bold; 
@@ -147,7 +162,7 @@
             margin-top: 10px; 
             color: #444; 
         }
-        input, select, textarea { 
+        input, select { 
             width: 100%; 
             padding: 8px 10px; 
             margin-top: 3px; 
@@ -156,7 +171,6 @@
             font-size: 0.85rem; 
             background: #fff;
         }
-        textarea { resize: vertical; min-height: 50px; }
 
         .btn-delete {
             background: #ff4d4d;
@@ -167,14 +181,6 @@
             font-size: 0.75rem;
             cursor: pointer;
         }
-
-        .wall-selector-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            padding: 10px;
-            border-radius: 6px;
-            margin-top: 8px;
-        }
     </style>
 </head>
 <body>
@@ -182,22 +188,21 @@
 <div class="container">
     <header>
         <span class="badge-test">Página de Teste Exclusiva</span>
-        <h2>Vistoria com Planta Baixa Interativa</h2>
-        <p style="font-size:0.8rem; opacity:0.9;">Mapeamento de Pendências na Planta do Apartamento</p>
+        <h2>Vistoria com Planta & Subitens Próprios</h2>
+        <p style="font-size:0.8rem; opacity:0.9;">Pinar na planta ➔ Escolher Serviço ➔ Selecionar Defeitos</p>
     </header>
 
-    <!-- Instruções -->
     <div class="instructions">
         💡 <strong>Como testar:</strong><br>
-        1. Coloquei uma <strong>Planta Baixa Ilustrativa</strong> abaixo para você testar no celular.<br>
-        2. <strong>Toque com o dedo na parede desejada</strong> no desenho da planta para marcar um ponto de não conformidade (📍).<br>
-        3. O formulário identificará o cômodo/parede e abrirá os campos para foto e observação!
+        1. <strong>Toque com o dedo no local exato da planta</strong> onde encontrou uma pendência.<br>
+        2. O sistema cria o pino (📍 **#1**) e abre o formulário abaixo.<br>
+        3. Escolha o <strong>Serviço/Item</strong> (ex: *Pintura*, *Hidráulica*, *Esquadria*), e o sistema carrega instantaneamente as <strong>caixas de seleção (subitens)</strong> daquele serviço!
     </div>
 
     <!-- CARD DA PLANTA INTERATIVA -->
     <div class="card">
         <h3>📍 Mapeamento Visual na Planta</h3>
-        <p style="font-size:0.78rem; color:#666;">Toque na parede exata onde foi encontrada a falha:</p>
+        <p style="font-size:0.78rem; color:#666;">Toque no local da parede/ponto para pinar:</p>
         
         <div class="blueprint-container" id="blueprint-box" onclick="handlePlantaClick(event)">
             <!-- SVG Ilustrativo da Planta Baixa -->
@@ -226,18 +231,70 @@
         </div>
     </div>
 
-    <!-- LISTA DE PONTOS / NÃO CONFORMIDADES CADASTRADAS -->
+    <!-- LISTA DE PONTOS PINADOS -->
     <div class="card">
-        <h3>📋 Detalhamento dos Pontos Marcados (<span id="pins-count">0</span>)</h3>
+        <h3>📋 Detalhamento dos Pontos Pinados (<span id="pins-count">0</span>)</h3>
         <div id="nc-forms-container">
             <p id="empty-msg" style="color: #888; font-size:0.85rem; text-align:center; padding: 15px 0;">
-                Nenhum ponto marcado ainda. Toque na planta acima para adicionar a primeira pendência!
+                Nenhum ponto pinado na planta ainda. Toque no desenho acima para testar!
             </p>
         </div>
     </div>
 </div>
 
 <script>
+    // Dicionário Completo de Itens e Subitens
+    const servicesData = [
+        { 
+            id: "pintura", 
+            name: "3. Pintura e Emassamento",
+            responsible: "Pintura / Emassamento",
+            options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"]
+        },
+        { 
+            id: "piso", 
+            name: "2. Contrapiso e Revestimentos / Rodapés",
+            responsible: "Piso e Revestimento",
+            options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"]
+        },
+        { 
+            id: "bancada", 
+            name: "1. Bancadas, Soleiras e Peitoris",
+            responsible: "Marmoraria / Graniteiro",
+            options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"]
+        },
+        { 
+            id: "hidra", 
+            name: "4. Metais, Louças e Sifão",
+            responsible: "Instalações Hidráulicas",
+            options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"]
+        },
+        { 
+            id: "portas", 
+            name: "5. Portas de Madeira e Alizares",
+            responsible: "Marcenaria / Portas de Madeira",
+            options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"]
+        },
+        { 
+            id: "esquadria", 
+            name: "6. Esquadrias de Alumínio, Vidros e Vedações",
+            responsible: "Esquadrias de Alumínio / Vidros",
+            options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"]
+        },
+        { 
+            id: "eletrica", 
+            name: "7. Tomadas, Interruptores e Plafons",
+            responsible: "Eletricista",
+            options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Ponto Sem Energia / Fio Solto", "Plafon Não Liga / Danificado", "Quadro de Disjuntores Incompleto", "Outros"]
+        },
+        { 
+            id: "ac", 
+            name: "8. Infraestrutura / Aparelho Ar-Condicionado", 
+            responsible: "Instalações Hidráulicas / Elétrica",
+            options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"]
+        }
+    ];
+
     let pins = [];
     let pinCounter = 0;
 
@@ -255,23 +312,12 @@
             id: pinCounter,
             x: xPercent.toFixed(2),
             y: yPercent.toFixed(2),
-            wall: guessWall(xPercent, yPercent),
-            category: "Pintura / Emassamento",
-            obs: "",
-            photo: null
+            serviceId: "pintura" // Inicia padrão em Pintura
         };
 
         pins.push(newPin);
         renderPins();
         renderForms();
-    }
-
-    function guessWall(x, y) {
-        if (y > 82) return "Varanda / Sacada";
-        if (x < 37 && y < 55) return "Dormitório - Parede";
-        if (x >= 37 && x < 63 && y < 55) return "Banheiro - Parede";
-        if (x >= 63) return "Suíte - Parede";
-        return "Sala / Cozinha - Parede";
     }
 
     function renderPins() {
@@ -311,50 +357,75 @@
             const formDiv = document.createElement('div');
             formDiv.className = 'nc-card';
             formDiv.id = `nc-card-${pin.id}`;
+
+            // Seleciona as opções do serviço atual do pino
+            const serviceObj = servicesData.find(s => s.id === pin.serviceId) || servicesData[0];
+
+            let serviceOptionsHTML = servicesData.map(s => `
+                <option value="${s.id}" ${s.id === pin.serviceId ? 'selected' : ''}>${s.name}</option>
+            `).join('');
+
+            let checkboxesHTML = serviceObj.options.map((opt) => `
+                <label class="chk-label">
+                    <input type="checkbox" onchange="toggleOtherField('${pin.id}', this, '${opt}')"> ${opt}
+                </label>
+            `).join('');
+
             formDiv.innerHTML = `
                 <div class="nc-header">
-                    <span>📍 PENDÊNCIA #${pin.id} (Pino na Planta)</span>
+                    <span>📍 PINO #${pin.id} (Registrado na Planta)</span>
                     <button class="btn-delete" onclick="deletePin(${pin.id})">Remover ✕</button>
                 </div>
 
-                <div class="wall-selector-box">
-                    <label style="margin-top:0;">📍 Parede / Localização Identificada:</label>
-                    <select onchange="updatePin(${pin.id}, 'wall', this.value)">
-                        <option value="Dormitório - Parede Frontal" ${pin.wall.includes('Dormitório') ? 'selected' : ''}>Dormitório - Parede Frontal</option>
-                        <option value="Dormitório - Parede Lateral" ${pin.wall.includes('Dormitório') ? 'selected' : ''}>Dormitório - Parede Lateral</option>
-                        <option value="Banheiro - Parede / Revestimento" ${pin.wall.includes('Banheiro') ? 'selected' : ''}>Banheiro - Parede / Revestimento</option>
-                        <option value="Suíte - Parede" ${pin.wall.includes('Suíte') ? 'selected' : ''}>Suíte - Parede</option>
-                        <option value="Sala / Cozinha - Parede" ${pin.wall.includes('Sala') ? 'selected' : ''}>Sala / Cozinha - Parede</option>
-                        <option value="Varanda / Sacada" ${pin.wall.includes('Varanda') ? 'selected' : ''}>Varanda / Sacada</option>
-                        <option value="Teto / Gesso (Geral)">Teto / Gesso (Geral)</option>
-                    </select>
-                </div>
-
-                <label>🛠️ Disciplina / Responsável:</label>
-                <select onchange="updatePin(${pin.id}, 'category', this.value)">
-                    <option value="Pintura / Emassamento">Pintura / Emassamento</option>
-                    <option value="Marmoraria / Granito">Marmoraria / Granito</option>
-                    <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
-                    <option value="Eletricista / Módulos">Eletricista / Módulos</option>
-                    <option value="Marcenaria / Portas">Marcenaria / Portas</option>
-                    <option value="Esquadrias / Vidros">Esquadrias / Vidros</option>
-                    <option value="Piso e Revestimento">Piso e Revestimento</option>
+                <label>🛠️ Selecione o Serviço / Item:</label>
+                <select onchange="changePinService(${pin.id}, this.value)">
+                    ${serviceOptionsHTML}
                 </select>
 
-                <label>📸 Anexar Foto do Ponto:</label>
+                <label>Selecione as não conformidades (Subitens):</label>
+                <div class="checklist-group">
+                    ${checkboxesHTML}
+                </div>
+
+                <div id="other-field-${pin.id}" style="display:none;">
+                    <label style="color:var(--danger);">Descreva a opção "Outros" / Observação Exata:</label>
+                    <input type="text" placeholder="Ex: Trinca perto do batente do lado direito">
+                </div>
+
+                <label>Responsável:</label>
+                <select>
+                    <option ${serviceObj.responsible === 'Pintura / Emassamento' ? 'selected' : ''}>Pintura / Emassamento</option>
+                    <option ${serviceObj.responsible === 'Marmoraria / Graniteiro' ? 'selected' : ''}>Marmoraria / Graniteiro</option>
+                    <option ${serviceObj.responsible === 'Instalações Hidráulicas' ? 'selected' : ''}>Instalações Hidráulicas</option>
+                    <option ${serviceObj.responsible === 'Eletricista' ? 'selected' : ''}>Eletricista</option>
+                    <option ${serviceObj.responsible === 'Marcenaria / Portas de Madeira' ? 'selected' : ''}>Marcenaria / Portas de Madeira</option>
+                    <option ${serviceObj.responsible === 'Esquadrias de Alumínio / Vidros' ? 'selected' : ''}>Esquadrias de Alumínio / Vidros</option>
+                    <option ${serviceObj.responsible === 'Piso e Revestimento' ? 'selected' : ''}>Piso e Revestimento</option>
+                    <option>Gesso / Sancas</option>
+                </select>
+
+                <label>📸 Tirar Foto Deste Ponto (Câmera):</label>
                 <input type="file" accept="image/*" capture="environment">
 
-                <label>📝 Observação / Detalhamento do Defeito:</label>
-                <textarea placeholder="Ex: Fissura na pintura próximo à tomada do lado direito" onchange="updatePin(${pin.id}, 'obs', this.value)">${pin.obs}</textarea>
+                <label>Prazo de Conclusão (Dias Úteis):</label>
+                <input type="number" placeholder="Ex: 3">
             `;
             container.appendChild(formDiv);
         });
     }
 
-    function updatePin(id, field, value) {
-        const pin = pins.find(p => p.id === id);
+    function changePinService(pinId, newServiceId) {
+        const pin = pins.find(p => p.id === pinId);
         if (pin) {
-            pin[field] = value;
+            pin.serviceId = newServiceId;
+            renderForms();
+        }
+    }
+
+    function toggleOtherField(pinId, checkbox, optName) {
+        if (optName === 'Outros') {
+            const otherDiv = document.getElementById(`other-field-${pinId}`);
+            if (otherDiv) otherDiv.style.display = checkbox.checked ? 'block' : 'none';
         }
     }
 
