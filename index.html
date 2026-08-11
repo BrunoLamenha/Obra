@@ -867,27 +867,21 @@ ncBoxes.forEach(box => {
             pendencies: currentPendencies,
             allInspectedItems: allInspectedItems
         };
-
-        existingHistory.push(recordData);
-
-        try {
-           db.collection('vistorias_unidades').doc(historyKey).set({
-    unitNumber: selectedUnitNum,
-    floorNumber: selectedFloorNum,
-    history: existingHistory,
-    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-}).then(function() {
-    dbUnitsCache[historyKey] = existingHistory;
-}).catch(function(error) {
-    console.error("Erro ao salvar no banco:", error);
-    alert("⚠️ Atenção: Não foi possível sincronizar com o banco em nuvem.");
-});
-
-        renderPDFToPrint(recordData);
-        document.getElementById('btn-next').style.display = 'block';
-        window.print();
-    }
-
+try {
+    db.collection('vistorias_unidades').doc(historyKey).set({
+        unitNumber: selectedUnitNum,
+        floorNumber: selectedFloorNum,
+        history: existingHistory,
+        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+        dbUnitsCache[historyKey] = existingHistory;
+    }).catch(function(error) {
+        console.error("Erro ao salvar no banco:", error);
+        alert("⚠️ Atenção: Não foi possível sincronizar com o banco em nuvem.");
+    });
+} catch (e) {
+    console.error("Erro ao executar envio ao Firebase:", e);
+}
     function renderPDFToPrint(record) {
         const printContainer = document.getElementById('print-report');
         const statusGeneral = record.pendenciesCount > 0 
