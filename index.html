@@ -407,39 +407,80 @@ const checklist = [
     let dbUnitsCache = {};
     let fullCalendarInstance = null;
 
-    window.onload = function() {
+    // 1. Inicialização segura da página
+window.onload = function() {
+    try {
         detectDevice();
+    } catch (e) {
+        console.warn("Aviso ao detectar dispositivo:", e);
+    }
+    
+    try {
         loadAllUnitsData();
-    };
+    } catch (e) {
+        console.warn("Aviso ao carregar dados iniciais:", e);
+    }
+};
 
-    function detectDevice() {
-        let deviceId = localStorage.getItem('vistoria_device_id') || 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+// 2. Detecção de dispositivo sem quebrar a execução se o DOM não estiver totalmente pronto
+function detectDevice() {
+    let deviceId = "DEV-LOCAL";
+    try {
+        deviceId = localStorage.getItem('vistoria_device_id') || 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
         localStorage.setItem('vistoria_device_id', deviceId);
-        deviceDetails = "Android | ID: " + deviceId;
-        
-        var infoEl = document.getElementById('device-info-text');
-        if (infoEl) infoEl.innerHTML = "📱 <strong>Android</strong><br>🆔 Código Único do Dispositivo: <strong>" + deviceId + "</strong>";
-
-        var localName = localStorage.getItem('vistoria_inspector_name');
-        if (localName) document.getElementById('inspector-name').value = localName;
+    } catch (e) {
+        console.warn("LocalStorage indisponível para o ID do dispositivo.");
     }
 
-    function confirmInspector() {
-        const nameInput = document.getElementById('inspector-name').value.trim();
-        if (!nameInput) { alert('Por favor, informe o nome do vistoriador.'); return; }
+    deviceDetails = "Android | ID: " + deviceId;
+    
+    const infoEl = document.getElementById('device-info-text');
+    if (infoEl) {
+        infoEl.innerHTML = "📱 <strong>Dispositivo Detectado</strong><br>🆔 Código Único: <strong>" + deviceId + "</strong>";
+    }
 
-        inspectorName = nameInput;
+    try {
+        const localName = localStorage.getItem('vistoria_inspector_name');
+        const nameInput = document.getElementById('inspector-name');
+        if (localName && nameInput) nameInput.value = localName;
+    } catch (e) {}
+}
+
+// 3. Confirmação do Vistoriador forçando a exibição do cartão de pavimento
+function confirmInspector() {
+    const inputEl = document.getElementById('inspector-name');
+    const nameInput = inputEl ? inputEl.value.trim() : '';
+    
+    if (!nameInput) { 
+        alert('Por favor, informe o nome do vistoriador.'); 
+        return; 
+    }
+
+    inspectorName = nameInput;
+    try {
         localStorage.setItem('vistoria_inspector_name', nameInput);
+    } catch (e) {}
 
-        document.getElementById('inspector-card').style.background = '#eef6ff';
-        document.getElementById('inspector-card').innerHTML = `
+    const card = document.getElementById('inspector-card');
+    if (card) {
+        card.style.background = '#eef6ff';
+        card.innerHTML = `
             <h3>👤 Responsável Confirmado</h3>
             <p style="font-size:0.9rem; margin-top:5px;"><strong>Vistoriador:</strong> ${inspectorName}</p>
         `;
-        document.getElementById('floor-card').style.display = 'block';
     }
 
-    function loadAllUnitsData() {
+    // Exibe forçadamente o próximo cartão
+    const floorCard = document.getElementById('floor-card');
+    if (floorCard) {
+        floorCard.style.display = 'block';
+        floorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// 4. Carregamento resiliente do banco de dados (Firebase / LocalStorage)
+function loadAllUnitsData() {
+    try {
         const localData = localStorage.getItem('vistorias_db');
         if (localData) {
             dbUnitsCache = JSON.parse(localData);
@@ -447,20 +488,32 @@ const checklist = [
             renderMapGrid();
             renderDashboards();
         }
+    } catch (e) {
+        console.warn("Erro ao ler cache local do DB:", e);
+    }
 
+    if (typeof db !== 'undefined' && db && db.collection) {
         db.collection('vistorias').get().then(snapshot => {
             snapshot.forEach(doc => {
                 dbUnitsCache[doc.id] = doc.data().history || [];
             });
-            localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
+            try {
+                localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
+            } catch (e) {}
+            
             updateMapAndKPIs();
             renderMapGrid();
             renderDashboards();
-            if (document.getElementById('tab-cronograma').style.display === 'block') {
+            
+            const cronogramaTab = document.getElementById('tab-cronograma');
+            if (cronogramaTab && cronogramaTab.style.display === 'block') {
                 renderInteractiveCalendar();
             }
-        }).catch(err => console.log("Carregando dados locais"));
+        }).catch(err => {
+            console.warn("Conexão offline ou falha no Firebase. Utilizando dados locais.");
+        });
     }
+}
 
     function addBusinessDays(dateStr, days) {
         if (!dateStr || isNaN(days) || days <= 0) return null;
