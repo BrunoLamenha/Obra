@@ -454,6 +454,18 @@ function addNC(key, itemId) {
     if (btnAdd) btnAdd.style.display = 'block';
 }
 
+
+    const itemObj = checklist.find(i => i.id === itemId);
+    const container = document.getElementById(`nc_container_${key}`);
+    if (container) {
+        container.innerHTML = renderNCBoxes(key, itemObj);
+        restaurarValoresInputs(key);
+    }
+    
+    const btnAdd = document.getElementById(`btn_add_${key}`);
+    if (btnAdd) btnAdd.style.display = 'block';
+}
+
     var pendingNCs = {};
     let selectedFloorNum = null;
     let selectedUnitNum = null;
