@@ -374,8 +374,10 @@
       measurementId: "G-GP1QQVWR50"
     };
 
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
 
     const roomNames = {
         'room-dorm': 'Dormitório / Cozinha',
@@ -383,19 +385,32 @@
         'room-balcony': 'Varanda'
     };
 
-    // Sequência ordenada pelo fluxo real de execução da obra
-    // 1. Checklist atualizada com novos termos e inclusão do Forro de Gesso
-const checklist = [
-    { id: "eletrica", name: "1. Tubulações, Tomadas, Interruptores e Luminárias", cleanName: "Instalações Elétricas e Iluminação", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Adicionar ou Retirar Módulo", "Adicionar ou Retirar Ponto", "Ponto Sem Energia / Fio Solto", "Luminária Não Liga / Danificada", "Quadro de Disjuntores Incompleto", "Outros"] },
-    { id: "hidra", name: "2. Tubulações, Louças, Metais e Sifão", cleanName: "Instalações Hidráulicas e Louças/Metais", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Instalar Torneira e Engate", "Instalar Grelha e Porta Grelha", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
-    { id: "gesso", name: "3. Forro e Sancas de Gesso", cleanName: "Gesso e Sancas", options: ["Fissura / Trinca na Chapa ou Junta", "Desnível / Placa Oca / Abulada", "Falta Tabica / Junta de Dilatação Deficiente", "Abertura / Recorte Incorreto para Luminária", "Marcas de Parafuso / Rebarbas Expostas", "Falta Emassamento / Rejunte no Gesso", "Umidade / Mofo / Mancha amarelada", "Outros"] },
-    { id: "ac", name: "4. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura de Climatização", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] },
-    { id: "piso", name: "5. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
-    { id: "bancada", name: "6. Bancadas, Soleiras e Peitoris", cleanName: "Marmoraria / Bancadas e Soleiras", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
-    { id: "esquadria", name: "7. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias e Vidraçaria", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
-    { id: "portas", name: "8. Portas de Madeira e Alizares", cleanName: "Esquadrias de Madeira", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
-    { id: "pintura", name: "9. Emassamento, Lixamento e Pintura", cleanName: "Pintura e Acabamento de Parede/Teto", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] }
-]
+    const respColors = {
+        "Pintura / Emassamento": "#2563eb",
+        "Marmoraria / Graniteiro": "#7c3aed",
+        "Instalações Hidráulicas": "#0284c7",
+        "Eletricista": "#d97706",
+        "Marcenaria / Portas de Madeira": "#78350f",
+        "Esquadrias de Alumínio / Vidros": "#475569",
+        "Piso e Revestimento": "#059669",
+        "Gesso / Sancas": "#db2777",
+        "Serralharia / Portões": "#525252",
+        "Impermeabilização": "#0891b2",
+        "Limpeza Pós-Obra": "#16a34a",
+        "Gás Encanado": "#ea580c"
+    };
+
+    const checklist = [
+        { id: "eletrica", name: "1. Tubulações, Tomadas, Interruptores e Luminárias", cleanName: "Instalações Elétricas e Iluminação", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Adicionar ou Retirar Módulo", "Adicionar ou Retirar Ponto", "Ponto Sem Energia / Fio Solto", "Luminária Não Liga / Danificada", "Quadro de Disjuntores Incompleto", "Outros"] },
+        { id: "hidra", name: "2. Tubulações, Louças, Metais e Sifão", cleanName: "Instalações Hidráulicas e Louças/Metais", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Instalar Torneira e Engate", "Instalar Grelha e Porta Grelha", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
+        { id: "gesso", name: "3. Forro e Sancas de Gesso", cleanName: "Gesso e Sancas", options: ["Fissura / Trinca na Chapa ou Junta", "Desnível / Placa Oca / Abulada", "Falta Tabica / Junta de Dilatação Deficiente", "Abertura / Recorte Incorreto para Luminária", "Marcas de Parafuso / Rebarbas Expostas", "Falta Emassamento / Rejunte no Gesso", "Umidade / Mofo / Mancha amarelada", "Outros"] },
+        { id: "ac", name: "4. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura de Climatização", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] },
+        { id: "piso", name: "5. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
+        { id: "bancada", name: "6. Bancadas, Soleiras e Peitoris", cleanName: "Marmoraria / Bancadas e Soleiras", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
+        { id: "esquadria", name: "7. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias e Vidraçaria", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
+        { id: "portas", name: "8. Portas de Madeira e Alizares", cleanName: "Esquadrias de Madeira", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
+        { id: "pintura", name: "9. Emassamento, Lixamento e Pintura", cleanName: "Pintura e Acabamento de Parede/Teto", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] }
+    ];
 
     var pendingNCs = {};
     let selectedFloorNum = null;
@@ -407,113 +422,83 @@ const checklist = [
     let dbUnitsCache = {};
     let fullCalendarInstance = null;
 
-    // 1. Inicialização segura da página
-window.onload = function() {
-    try {
-        detectDevice();
-    } catch (e) {
-        console.warn("Aviso ao detectar dispositivo:", e);
-    }
-    
-    try {
-        loadAllUnitsData();
-    } catch (e) {
-        console.warn("Aviso ao carregar dados iniciais:", e);
-    }
-};
+    window.onload = function() {
+        try { detectDevice(); } catch(e) { console.warn(e); }
+        try { loadAllUnitsData(); } catch(e) { console.warn(e); }
+    };
 
-// 2. Detecção de dispositivo sem quebrar a execução se o DOM não estiver totalmente pronto
-function detectDevice() {
-    let deviceId = "DEV-LOCAL";
-    try {
-        deviceId = localStorage.getItem('vistoria_device_id') || 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-        localStorage.setItem('vistoria_device_id', deviceId);
-    } catch (e) {
-        console.warn("LocalStorage indisponível para o ID do dispositivo.");
-    }
+    function detectDevice() {
+        let deviceId = "DEV-LOCAL";
+        try {
+            deviceId = localStorage.getItem('vistoria_device_id') || 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            localStorage.setItem('vistoria_device_id', deviceId);
+        } catch (e) {}
 
-    deviceDetails = "Android | ID: " + deviceId;
-    
-    const infoEl = document.getElementById('device-info-text');
-    if (infoEl) {
-        infoEl.innerHTML = "📱 <strong>Dispositivo Detectado</strong><br>🆔 Código Único: <strong>" + deviceId + "</strong>";
-    }
-
-    try {
-        const localName = localStorage.getItem('vistoria_inspector_name');
-        const nameInput = document.getElementById('inspector-name');
-        if (localName && nameInput) nameInput.value = localName;
-    } catch (e) {}
-}
-
-// 3. Confirmação do Vistoriador forçando a exibição do cartão de pavimento
-function confirmInspector() {
-    const inputEl = document.getElementById('inspector-name');
-    const nameInput = inputEl ? inputEl.value.trim() : '';
-    
-    if (!nameInput) { 
-        alert('Por favor, informe o nome do vistoriador.'); 
-        return; 
-    }
-
-    inspectorName = nameInput;
-    try {
-        localStorage.setItem('vistoria_inspector_name', nameInput);
-    } catch (e) {}
-
-    const card = document.getElementById('inspector-card');
-    if (card) {
-        card.style.background = '#eef6ff';
-        card.innerHTML = `
-            <h3>👤 Responsável Confirmado</h3>
-            <p style="font-size:0.9rem; margin-top:5px;"><strong>Vistoriador:</strong> ${inspectorName}</p>
-        `;
-    }
-
-    // Exibe forçadamente o próximo cartão
-    const floorCard = document.getElementById('floor-card');
-    if (floorCard) {
-        floorCard.style.display = 'block';
-        floorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-}
-
-// 4. Carregamento resiliente do banco de dados (Firebase / LocalStorage)
-function loadAllUnitsData() {
-    try {
-        const localData = localStorage.getItem('vistorias_db');
-        if (localData) {
-            dbUnitsCache = JSON.parse(localData);
-            updateMapAndKPIs();
-            renderMapGrid();
-            renderDashboards();
+        deviceDetails = "Android | ID: " + deviceId;
+        
+        const infoEl = document.getElementById('device-info-text');
+        if (infoEl) {
+            infoEl.innerHTML = "📱 <strong>Dispositivo Detectado</strong><br>🆔 Código Único: <strong>" + deviceId + "</strong>";
         }
-    } catch (e) {
-        console.warn("Erro ao ler cache local do DB:", e);
+
+        try {
+            const localName = localStorage.getItem('vistoria_inspector_name');
+            const nameInput = document.getElementById('inspector-name');
+            if (localName && nameInput) nameInput.value = localName;
+        } catch (e) {}
     }
 
-    if (typeof db !== 'undefined' && db && db.collection) {
-        db.collection('vistorias').get().then(snapshot => {
-            snapshot.forEach(doc => {
-                dbUnitsCache[doc.id] = doc.data().history || [];
-            });
-            try {
-                localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
-            } catch (e) {}
-            
-            updateMapAndKPIs();
-            renderMapGrid();
-            renderDashboards();
-            
-            const cronogramaTab = document.getElementById('tab-cronograma');
-            if (cronogramaTab && cronogramaTab.style.display === 'block') {
-                renderInteractiveCalendar();
-            }
-        }).catch(err => {
-            console.warn("Conexão offline ou falha no Firebase. Utilizando dados locais.");
-        });
+    function confirmInspector() {
+        const inputEl = document.getElementById('inspector-name');
+        const nameInput = inputEl ? inputEl.value.trim() : '';
+        
+        if (!nameInput) { 
+            alert('Por favor, informe o nome do vistoriador.'); 
+            return; 
+        }
+
+        inspectorName = nameInput;
+        try { localStorage.setItem('vistoria_inspector_name', nameInput); } catch (e) {}
+
+        const card = document.getElementById('inspector-card');
+        if (card) {
+            card.style.background = '#eef6ff';
+            card.innerHTML = `
+                <h3>👤 Responsável Confirmado</h3>
+                <p style="font-size:0.9rem; margin-top:5px;"><strong>Vistoriador:</strong> ${inspectorName}</p>
+            `;
+        }
+
+        const floorCard = document.getElementById('floor-card');
+        if (floorCard) {
+            floorCard.style.display = 'block';
+            floorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
-}
+
+    function loadAllUnitsData() {
+        try {
+            const localData = localStorage.getItem('vistorias_db');
+            if (localData) {
+                dbUnitsCache = JSON.parse(localData);
+                updateMapAndKPIs();
+                renderMapGrid();
+                renderDashboards();
+            }
+        } catch (e) {}
+
+        if (db && db.collection) {
+            db.collection('vistorias').get().then(snapshot => {
+                snapshot.forEach(doc => {
+                    dbUnitsCache[doc.id] = doc.data().history || [];
+                });
+                try { localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache)); } catch (e) {}
+                updateMapAndKPIs();
+                renderMapGrid();
+                renderDashboards();
+            }).catch(err => console.log("Carregando localmente"));
+        }
+    }
 
     function addBusinessDays(dateStr, days) {
         if (!dateStr || isNaN(days) || days <= 0) return null;
@@ -571,7 +556,7 @@ function loadAllUnitsData() {
 
     function setCategory(cat, el, isAuto = false) {
         if (selectedCategory && selectedCategory !== cat && !isAuto) {
-            const confirmChange = confirm(`Mudar o tipo para ${cat}? Isso iniciará o ciclo a partir da 1ª Vistoria para este tipo.`);
+            const confirmChange = confirm(`Mudar o tipo para ${cat}? Isso iniciará o ciclo a partir da 1ª Vistoria.`);
             if (!confirmChange) return;
         }
 
@@ -585,14 +570,12 @@ function loadAllUnitsData() {
     function calculateNextStage() {
         const historyKey = `unit_${selectedUnitNum}`;
         const history = dbUnitsCache[historyKey] || [];
-        
         const sameCatHistory = history.filter(h => h.category === selectedCategory);
 
         if (sameCatHistory.length === 0) {
             selectedStage = "1ª Vistoria";
         } else {
-            const count = sameCatHistory.length;
-            selectedStage = `${count}ª Revistoria`;
+            selectedStage = `${sameCatHistory.length}ª Revistoria`;
         }
 
         document.getElementById('suggested-stage-box').innerHTML = `🔄 <strong>${selectedStage}</strong> (Calculado pelo Histórico)`;
@@ -613,7 +596,6 @@ function loadAllUnitsData() {
         pendingNCs = {};
         const historyKey = `unit_${selectedUnitNum}`;
         const history = dbUnitsCache[historyKey] || [];
-        
         if (history.length === 0) return;
 
         const lastInsp = history[history.length - 1];
@@ -653,44 +635,42 @@ function loadAllUnitsData() {
     }
 
     function buildInspectionForm() {
-    ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
-        const container = document.getElementById(roomId);
-        if (!container) return;
-        container.innerHTML = '';
+        ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
+            const container = document.getElementById(roomId);
+            if (!container) return;
+            container.innerHTML = '';
 
-        checklist.forEach(item => {
-            // Oculta o item de Ar-Condicionado (ac) no Banheiro e na Varanda
-            if (item.id === 'ac' && (roomId === 'room-bath' || roomId === 'room-balcony')) {
-                return;
-            }
+            checklist.forEach(item => {
+                if (item.id === 'ac' && (roomId === 'room-bath' || roomId === 'room-balcony')) return;
 
-            const key = `${roomId}_${item.id}`;
-            if (!pendingNCs[key]) pendingNCs[key] = [];
+                const key = `${roomId}_${item.id}`;
+                if (!pendingNCs[key]) pendingNCs[key] = [];
 
-            let hasPending = pendingNCs[key].length > 0;
-            let ncBoxesHTML = renderNCBoxes(key, item);
+                let hasPending = pendingNCs[key].length > 0;
+                let ncBoxesHTML = renderNCBoxes(key, item);
 
-            let btnOkClass = 'btn-neutral';
-            let btnNokClass = hasPending ? 'btn-nok-active' : 'btn-neutral';
+                let btnOkClass = 'btn-neutral';
+                let btnNokClass = hasPending ? 'btn-nok-active' : 'btn-neutral';
 
-            container.innerHTML += `
-                <div class="item-card" id="card_${key}">
-                    <div class="item-header">
-                        <span class="item-title">${item.name}</span>
-                        <div>
-                            <button class="btn-status ${btnOkClass}" id="btn_ok_${key}" onclick="setItemStatus('${key}', 'OK', '${item.id}')">Conforme ✓</button>
-                            <button class="btn-status ${btnNokClass}" id="btn_nok_${key}" onclick="setItemStatus('${key}', 'NOK', '${item.id}')">Não Conforme ✕</button>
+                container.innerHTML += `
+                    <div class="item-card" id="card_${key}">
+                        <div class="item-header">
+                            <span class="item-title">${item.name}</span>
+                            <div>
+                                <button class="btn-status ${btnOkClass}" id="btn_ok_${key}" onclick="setItemStatus('${key}', 'OK', '${item.id}')">Conforme ✓</button>
+                                <button class="btn-status ${btnNokClass}" id="btn_nok_${key}" onclick="setItemStatus('${key}', 'NOK', '${item.id}')">Não Conforme ✕</button>
+                            </div>
                         </div>
+                        <div id="nc_container_${key}">${ncBoxesHTML}</div>
+                        <button class="btn-add-nc" id="btn_add_${key}" style="display:${hasPending ? 'block' : 'none'};" onclick="addNC('${key}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
                     </div>
-                    <div id="nc_container_${key}">${ncBoxesHTML}</div>
-                    <button class="btn-add-nc" id="btn_add_${key}" style="display:${hasPending ? 'block' : 'none'};" onclick="addNC('${key}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
-                </div>
-            `;
+                `;
+            });
         });
-    });
 
-    Object.keys(pendingNCs).forEach(key => restaurarValoresInputs(key));
-}
+        Object.keys(pendingNCs).forEach(key => restaurarValoresInputs(key));
+    }
+
     function renderNCBoxes(key, itemObj) {
         if (!pendingNCs[key] || pendingNCs[key].length === 0) return '';
 
@@ -812,10 +792,8 @@ function loadAllUnitsData() {
     }
 
     function sanarNC(key, index, itemId) {
-        const confirmAction = confirm("Confirma que esta pendência foi SANADA e resolvida?");
-        if (confirmAction) {
+        if (confirm("Confirma que esta pendência foi SANADA?")) {
             pendingNCs[key].splice(index, 1);
-            
             const itemObj = checklist.find(i => i.id === itemId);
             const container = document.getElementById(`nc_container_${key}`);
             if (container) {
@@ -831,9 +809,6 @@ function loadAllUnitsData() {
                 if (btnNok) btnNok.className = "btn-status btn-neutral";
                 if (btnAdd) btnAdd.style.display = 'none';
             }
-        } else {
-            const statusEl = document.getElementById(`status_${key}_${index}`);
-            if (statusEl) statusEl.value = 'Aguardando';
         }
     }
 
@@ -892,7 +867,6 @@ function loadAllUnitsData() {
 
     function addNC(key, itemId) {
         salvarEstadoAtualInput(key);
-
         if (!pendingNCs[key]) pendingNCs[key] = [];
 
         pendingNCs[key].push({
@@ -944,9 +918,7 @@ function loadAllUnitsData() {
         if (!input.files || input.files.length === 0) return;
         salvarEstadoAtualInput(key);
 
-        if (!pendingNCs[key][index].photos) {
-            pendingNCs[key][index].photos = [];
-        }
+        if (!pendingNCs[key][index].photos) pendingNCs[key][index].photos = [];
 
         const files = Array.from(input.files);
         let loadedCount = 0;
@@ -1038,7 +1010,7 @@ function loadAllUnitsData() {
         });
 
         if (hasMissingResp) {
-            alert("Por favor, escolha um Responsável / Subempreiteiro para todas as pendências antes de finalizar!");
+            alert("Por favor, escolha um Responsável para todas as pendências antes de finalizar!");
             return;
         }
 
@@ -1095,565 +1067,244 @@ function loadAllUnitsData() {
         if (!dbUnitsCache[historyKey]) dbUnitsCache[historyKey] = [];
         dbUnitsCache[historyKey].push(inspectionRecord);
 
-        localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
+        try { localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache)); } catch(e) {}
 
-        db.collection('vistorias').doc(historyKey).set({
-            unit: selectedUnitNum,
-            history: dbUnitsCache[historyKey]
-        }, { merge: true }).then(() => {
-            alert(`Vistoria da Unidade ${selectedUnitNum} finalizada! Pendências ativas: ${totalPendencies}`);
+        if (db && db.collection) {
+            db.collection('vistorias').doc(historyKey).set({
+                unit: selectedUnitNum,
+                history: dbUnitsCache[historyKey]
+            }, { merge: true }).then(() => {
+                alert(`Vistoria da Unidade ${selectedUnitNum} finalizada!`);
+                loadAllUnitsData();
+                document.getElementById('btn-next').style.display = 'block';
+            }).catch(err => {
+                alert(`Vistoria salva localmente!`);
+                loadAllUnitsData();
+                document.getElementById('btn-next').style.display = 'block';
+            });
+        } else {
+            alert(`Vistoria salva localmente no navegador!`);
             loadAllUnitsData();
             document.getElementById('btn-next').style.display = 'block';
-        }).catch(err => {
-            alert(`Vistoria salva localmente no dispositivo!`);
-            loadAllUnitsData();
-            document.getElementById('btn-next').style.display = 'block';
-        });
+        }
     }
 
     async function sendWhatsAppSummary() {
-    if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
+        if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
 
-    Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
+        Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
 
-    let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
-    text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
-    text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+        let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
+        text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
+        text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
 
-    let imageFiles = [];
-    let count = 0;
+        let imageFiles = [];
+        let count = 0;
 
-    for (const key of Object.keys(pendingNCs)) {
-        if (pendingNCs[key] && pendingNCs[key].length > 0) {
-            const lastUnderscoreIndex = key.lastIndexOf('_');
-            const roomKey = key.substring(0, lastUnderscoreIndex);
-            const itemId = key.substring(lastUnderscoreIndex + 1);
+        for (const key of Object.keys(pendingNCs)) {
+            if (pendingNCs[key] && pendingNCs[key].length > 0) {
+                const lastUnderscoreIndex = key.lastIndexOf('_');
+                const roomKey = key.substring(0, lastUnderscoreIndex);
+                const itemId = key.substring(lastUnderscoreIndex + 1);
 
-            const roomName = roomNames[roomKey] || 'Ambiente';
-            const itemObj = checklist.find(i => i.id === itemId);
-            const itemName = itemObj ? itemObj.cleanName : 'Item';
+                const roomName = roomNames[roomKey] || 'Ambiente';
+                const itemObj = checklist.find(i => i.id === itemId);
+                const itemName = itemObj ? itemObj.cleanName : 'Item';
 
-            for (const nc of pendingNCs[key]) {
-                count++;
-                const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
-                let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
-                let obsText = nc.obs ? ` (${nc.obs})` : '';
+                for (const nc of pendingNCs[key]) {
+                    count++;
+                    const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
+                    let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
+                    let obsText = nc.obs ? ` (${nc.obs})` : '';
 
-                let days = parseInt(nc.businessDays);
-                let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
+                    let days = parseInt(nc.businessDays);
+                    let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
 
-                text += `*${count}. ${roomName} - ${itemName}*\n`;
-                text += `• Pendência: ${(optsText + obsText).trim() || 'Sem detalhes'}\n`;
-                text += `• Responsável: ${resp || 'A definir'}\n`;
-                text += `• Data Início: ${nc.startDate || 'Sem data'}\n`;
-                text += `• Prazo Execução: ${nc.businessDays ? nc.businessDays + ' dias úteis' : 'A definir'}`;
-                if (deadlineDate) text += ` (Prazo Final: ${deadlineDate})`;
-                text += `\n• Severidade: ${nc.severity || 'Baixa'}\n\n`;
+                    text += `*${count}. ${roomName} - ${itemName}*\n`;
+                    text += `• Pendência: ${(optsText + obsText).trim() || 'Sem detalhes'}\n`;
+                    text += `• Responsável: ${resp || 'A definir'}\n`;
+                    text += `• Data Início: ${nc.startDate || 'Sem data'}\n`;
+                    text += `• Prazo Execução: ${nc.businessDays ? nc.businessDays + ' dias úteis' : 'A definir'}`;
+                    if (deadlineDate) text += ` (Prazo Final: ${deadlineDate})`;
+                    text += `\n• Severidade: ${nc.severity || 'Baixa'}\n\n`;
 
-                // Converte as imagens base64 em arquivos para o compartilhamento nativo
-                if (nc.photos && nc.photos.length > 0) {
-                    for (let i = 0; i < nc.photos.length; i++) {
-                        if (nc.photos[i].startsWith('data:image')) {
-                            try {
-                                const blob = await (await fetch(nc.photos[i])).blob();
-                                const file = new File([blob], `apto${selectedUnitNum}_item${count}_foto${i + 1}.jpg`, { type: 'image/jpeg' });
-                                imageFiles.push(file);
-                            } catch (e) {
-                                console.error("Erro ao converter foto:", e);
+                    if (nc.photos && nc.photos.length > 0) {
+                        for (let i = 0; i < nc.photos.length; i++) {
+                            if (nc.photos[i].startsWith('data:image')) {
+                                try {
+                                    const blob = await (await fetch(nc.photos[i])).blob();
+                                    const file = new File([blob], `apto${selectedUnitNum}_item${count}_foto${i + 1}.jpg`, { type: 'image/jpeg' });
+                                    imageFiles.push(file);
+                                } catch (e) {}
                             }
                         }
                     }
                 }
             }
         }
-    }
 
-    if (count === 0) text += `✅ *UNIDADE 100% APROVADA - SEM PENDÊNCIAS*`;
+        if (count === 0) text += `✅ *UNIDADE 100% APROVADA - SEM PENDÊNCIAS*`;
 
-    // 1. Tenta o Compartilhamento Nativo do Celular (Envia Texto + Imagens no WhatsApp)
-    if (navigator.canShare && imageFiles.length > 0) {
-        try {
-            if (navigator.canShare({ files: imageFiles })) {
-                await navigator.share({
-                    title: `Vistoria Apto ${selectedUnitNum}`,
-                    text: text,
-                    files: imageFiles
-                });
-                return;
-            }
-        } catch (err) {
-            console.log("Compartilhamento nativo cancelado ou não suportado, usando envio padrão por link.");
-        }
-    }
-
-    // 2. Fallback: Envio direto por link (Somente Texto se estiver no PC ou se o dispositivo não suportar envio de fotos direto)
-    const encoded = encodeURIComponent(text);
-    window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
-}
-    function updateTaskScheduleFromCalendar(unitNum, historyIndex, detailIndex) {
-        const historyKey = `unit_${unitNum}`;
-        if (!dbUnitsCache[historyKey] || !dbUnitsCache[historyKey][historyIndex]) return;
-
-        const dateEl = document.getElementById(`cal_date_${unitNum}_${historyIndex}_${detailIndex}`);
-        const daysEl = document.getElementById(`cal_days_${unitNum}_${historyIndex}_${detailIndex}`);
-
-        if (!dateEl || !daysEl) return;
-
-        const startDate = dateEl.value;
-        const daysVal = daysEl.value ? parseInt(daysEl.value) : null;
-
-        let record = dbUnitsCache[historyKey][historyIndex];
-        let itemDetail = record.details[detailIndex];
-
-        itemDetail.scheduledFor = startDate || null;
-        itemDetail.businessDays = daysVal;
-        itemDetail.deadlineDate = (startDate && daysVal) ? addBusinessDays(startDate, daysVal) : null;
-
-        localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
-        db.collection('vistorias').doc(historyKey).set({
-            unit: unitNum,
-            history: dbUnitsCache[historyKey]
-        }, { merge: true }).then(() => {
-            alert("Prazo/Agenda atualizado com sucesso!");
-            loadAllUnitsData();
-        });
-    }
-
-    function resolveTaskFromCalendar(unitNum, historyIndex, detailIndex) {
-        const confirmAction = confirm(`Marcar a pendência do Apto ${unitNum} como SANADA / REALIZADA?`);
-        if (!confirmAction) return;
-
-        const historyKey = `unit_${unitNum}`;
-        if (dbUnitsCache[historyKey] && dbUnitsCache[historyKey][historyIndex]) {
-            let record = dbUnitsCache[historyKey][historyIndex];
-            let itemDetail = record.details[detailIndex];
-
-            itemDetail.status = 'Concluído';
-            itemDetail.resolvedAt = new Date().toLocaleString('pt-BR');
-
-            const activeCount = record.details.filter(d => d.status !== 'Concluído').length;
-            record.pendenciesCount = activeCount;
-            if (activeCount === 0) {
-                record.status = '100_ok';
-            }
-
-            localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
-            db.collection('vistorias').doc(historyKey).set({
-                unit: unitNum,
-                history: dbUnitsCache[historyKey]
-            }, { merge: true }).then(() => {
-                alert("Serviço marcado como REALIZADO!");
-                loadAllUnitsData();
-            });
-        }
-    }
-
-    function startNextUnit() {
-        pendingNCs = {};
-        document.getElementById('btn-next').style.display = 'none';
-        document.getElementById('inspection-area').style.display = 'none';
-        document.getElementById('type-card').style.display = 'none';
-        if (selectedFloorNum) setFloor(selectedFloorNum, document.querySelector(`#floors .btn:nth-child(${selectedFloorNum})`));
-    }
-
-    function updateMapAndKPIs() {
-        let totalInspected = 0;
-        let totalApproved = 0;
-        let totalPending = 0;
-
-        Object.keys(dbUnitsCache).forEach(key => {
-            const history = dbUnitsCache[key];
-            if (history && history.length > 0) {
-                totalInspected++;
-                const last = history[history.length - 1];
-                if (last.pendenciesCount === 0 || last.status === '100_ok') totalApproved++;
-                else totalPending += last.pendenciesCount;
-            }
-        });
-
-        document.getElementById('kpi-inspected').innerText = `${totalInspected} / 76`;
-        document.getElementById('kpi-approved').innerText = totalApproved;
-        document.getElementById('kpi-pending').innerText = totalPending;
-    }
-
-    function renderDashboards() {
-        let ncCounts = {};
-        let activeByResp = {};
-
-        const severityWeight = { 'Alta': 3, 'Média': 2, 'Baixa': 1 };
-
-        Object.keys(dbUnitsCache).forEach(key => {
-            const unitNum = key.replace('unit_', '');
-            const history = dbUnitsCache[key] || [];
-            if (history.length > 0) {
-                const last = history[history.length - 1];
-                if (last.details) {
-                    last.details.forEach(d => {
-                        let ncName = `${d.item}: ${d.nonConformity}`;
-                        ncCounts[ncName] = (ncCounts[ncName] || 0) + 1;
-
-                        if (d.status !== 'Concluído') {
-                            let resp = d.responsible || 'Outro / Não Definido';
-                            if (!activeByResp[resp]) activeByResp[resp] = [];
-                            
-                            activeByResp[resp].push({
-                                unit: unitNum,
-                                item: d.item,
-                                nc: d.nonConformity,
-                                severity: d.severity || 'Baixa',
-                                timestamp: d.id || 0,
-                                date: d.inspectedAt || 'Recente'
-                            });
-                        }
+        if (navigator.canShare && imageFiles.length > 0) {
+            try {
+                if (navigator.canShare({ files: imageFiles })) {
+                    await navigator.share({
+                        title: `Vistoria Apto ${selectedUnitNum}`,
+                        text: text,
+                        files: imageFiles
                     });
+                    return;
                 }
-            }
-        });
-
-        const sortedNCs = Object.entries(ncCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        const topContainer = document.getElementById('top-nc-container');
-        if (sortedNCs.length === 0) {
-            topContainer.innerHTML = '<p style="font-size:0.8rem; color:#666;">Nenhuma pendência registrada ainda.</p>';
-        } else {
-            const maxVal = sortedNCs[0][1];
-            topContainer.innerHTML = sortedNCs.map(([name, count]) => {
-                const pct = Math.round((count / maxVal) * 100);
-                return `
-                    <div style="margin-bottom:8px;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.78rem; font-weight:bold;">
-                            <span>${name}</span>
-                            <span style="color:var(--danger);">${count} ocorrência(s)</span>
-                        </div>
-                        <div class="bar-container">
-                            <div class="bar-fill" style="width: ${pct}%;"></div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        const respContainer = document.getElementById('resp-priority-container');
-        if (Object.keys(activeByResp).length === 0) {
-            respContainer.innerHTML = '<p style="font-size:0.8rem; color:#666;">Nenhuma pendência ativa para exibição.</p>';
-        } else {
-            respContainer.innerHTML = Object.keys(activeByResp).map(resp => {
-                activeByResp[resp].sort((a, b) => {
-                    let weightA = severityWeight[a.severity] || 1;
-                    let weightB = severityWeight[b.severity] || 1;
-                    if (weightB !== weightA) return weightB - weightA;
-                    return a.timestamp - b.timestamp;
-                });
-
-                return `
-                    <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:6px; margin-bottom:10px;">
-                        <strong style="color:var(--primary); font-size:0.85rem;">👷‍♂️ ${resp} (${activeByResp[resp].length} em aberto)</strong>
-                        <div style="margin-top:6px;">
-                            ${activeByResp[resp].map(item => `
-                                <div style="background:#fff; border:1px solid #eee; padding:6px; border-radius:4px; margin-bottom:4px; font-size:0.75rem;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                                        <strong>Apto ${item.unit} - ${item.item}</strong>
-                                        <span class="badge-${item.severity.toLowerCase()}">${item.severity}</span>
-                                    </div>
-                                    <div style="color:#666; margin-top:2px;">${item.nc}</div>
-                                    <small style="color:#94a3b8;">📅 Vistoriado em: ${item.date}</small>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-
-    function renderMapGrid() {
-        const container = document.getElementById('map-container');
-        if (!container) return;
-        container.innerHTML = '';
-
-        for (let f = 4; f >= 1; f--) {
-            let floorHTML = `<h5 style="margin-top:10px; font-size:0.8rem;">${f}º Pavimento</h5><div class="grid-map">`;
-            for (let i = 1; i <= 19; i++) {
-                let num = (f * 100) + i;
-                const historyKey = `unit_${num}`;
-                const history = dbUnitsCache[historyKey] || [];
-                
-                let statusClass = '';
-                let text = `${num}`;
-                if (history.length > 0) {
-                    const last = history[history.length - 1];
-                    if (last.pendenciesCount === 0 || last.status === '100_ok') {
-                        statusClass = 'unit-ok';
-                        text += ' (OK)';
-                    } else {
-                        statusClass = 'unit-nok';
-                        text += ` (${last.pendenciesCount}p)`;
-                    }
-                }
-                floorHTML += `<div class="map-unit ${statusClass}" onclick="showUnitHistory(${num})">${text}</div>`;
-            }
-            floorHTML += `</div>`;
-            container.innerHTML += floorHTML;
-        }
-    }
-
-    function showUnitHistory(num) {
-        const historyKey = `unit_${num}`;
-        const history = dbUnitsCache[historyKey] || [];
-        const panel = document.getElementById('history-panel');
-        const title = document.getElementById('history-unit-title');
-        const content = document.getElementById('history-content');
-
-        title.innerText = `Histórico Completo: Apto ${num}`;
-        panel.style.display = 'block';
-
-        if (history.length === 0) {
-            content.innerHTML = '<p style="padding:10px;">Nenhuma vistoria realizada nesta unidade ainda.</p>';
-            return;
-        }
-
-        let html = `
-            <div style="margin-bottom:12px; display:flex; gap:8px;">
-                <button onclick="sendWhatsAppSummaryFromHistory(${num})" style="flex:1; background:#25d366; color:white; border:none; padding:8px; border-radius:5px; font-weight:bold; font-size:0.8rem; cursor:pointer;">
-                    📲 Enviar Resumo no WhatsApp
-                </button>
-                <button onclick="window.print()" style="flex:1; background:#17a2b8; color:white; border:none; padding:8px; border-radius:5px; font-weight:bold; font-size:0.8rem; cursor:pointer;">
-                    📄 Imprimir / Salvar PDF
-                </button>
-            </div>
-        `;
-
-        html += history.slice().reverse().map((h, i) => `
-            <div class="history-card ${i === 0 ? 'latest' : ''}">
-                <strong>Data do Registro:</strong> ${h.date} | <strong>Vistoriador:</strong> ${h.inspector}<br>
-                <strong>Tipo:</strong> ${h.category} - ${h.stage}<br>
-                <strong>Pendências Abertas:</strong> ${h.pendenciesCount}
-                ${h.details && h.details.length > 0 ? `
-                    <div style="margin-top:8px;">
-                        ${h.details.map(d => `
-                            <div style="background:#fff; border:1px solid #e2e8f0; padding:8px; border-radius:6px; margin-bottom:6px; font-size:0.8rem;">
-                                <div><strong>${d.room} - ${d.item}</strong></div>
-                                <div style="color:#e11d48; margin:2px 0;">${d.nonConformity}</div>
-                                <div><strong>Resp:</strong> ${d.responsible} | <strong>Status:</strong> ${d.status || 'Aguardando'}</div>
-                                
-                                <div style="background:#f1f5f9; padding:6px; border-radius:4px; margin-top:6px; font-size:0.73rem; color:#475569;">
-                                    ⏱️ <strong>Linha do Tempo:</strong><br>
-                                    📝 <strong>Vistoriado em:</strong> ${d.inspectedAt || h.date}<br>
-                                    📅 <strong>Início Agendado:</strong> ${d.scheduledFor || 'Sem data definida'}<br>
-                                    ⏳ <strong>Prazo:</strong> ${d.businessDays ? d.businessDays + ' dias úteis' : 'A definir'} ${d.deadlineDate ? '(Prazo Limite: ' + d.deadlineDate + ')' : ''}<br>
-                                    ${d.resolvedAt ? `✅ <strong style="color:#16a34a;">Serviço Realizado em:</strong> ${d.resolvedAt}` : '⏳ <strong style="color:#d97706;">Aguardando Conclusão</strong>'}
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : '<p style="color:#28a745; margin-top:5px;"><strong>✅ 100% Aprovado e Conforme</strong></p>'}
-            </div>
-        `).join('');
-
-        content.innerHTML = html;
-    }
-
-    function sendWhatsAppSummaryFromHistory(num) {
-        const historyKey = `unit_${num}`;
-        const history = dbUnitsCache[historyKey] || [];
-        if (history.length === 0) return;
-
-        const last = history[history.length - 1];
-        let text = `*HISTÓRICO DE VISTORIA - APTO ${num}*\n`;
-        text += `Vistoriador: ${last.inspector}\n`;
-        text += `Última Vistoria: ${last.date}\n\n`;
-
-        if (last.details && last.details.length > 0) {
-            last.details.forEach((d, idx) => {
-                text += `*${idx + 1}. ${d.room} - ${d.item}*\n`;
-                text += `• Pendência: ${d.nonConformity}\n`;
-                text += `• Responsável: ${d.responsible}\n`;
-                text += `• Início Agendado: ${d.scheduledFor || 'Sem data'}\n`;
-                text += `• Prazo: ${d.businessDays ? d.businessDays + ' dias úteis' : 'A definir'} ${d.deadlineDate ? '(Limite: ' + d.deadlineDate + ')' : ''}\n`;
-                text += `• Status: ${d.resolvedAt ? '✅ Concluído em ' + d.resolvedAt : '⏳ ' + (d.status || 'Aguardando')}\n\n`;
-            });
-        } else {
-            text += `✅ *UNIDADE 100% APROVADA / CONFORME*`;
+            } catch (err) {}
         }
 
         const encoded = encodeURIComponent(text);
         window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
     }
 
-    function closeHistory() {
-        document.getElementById('history-panel').style.display = 'none';
-    }
+    function renderInteractiveCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return;
 
-   // Mapeamento de cores fixas por Serviço/Responsável
-const respColors = {
-    "Pintura / Emassamento": "#2563eb",       // Azul
-    "Marmoraria / Graniteiro": "#7c3aed",     // Roxo
-    "Instalações Hidráulicas": "#0284c7",    // Azul Claro
-    "Eletricista": "#d97706",                // Âmbar / Laranja
-    "Marcenaria / Portas de Madeira": "#78350f", // Castanho
-    "Esquadrias de Alumínio / Vidros": "#475569",// Cinza Escuro
-    "Piso e Revestimento": "#059669",        // Verde Esmeralda
-    "Gesso / Sancas": "#db2777",             // Rosa
-    "Serralharia / Portões": "#525252",      // Grafite
-    "Impermeabilização": "#0891b2",          // Ciano
-    "Limpeza Pós-Obra": "#16a34a",           // Verde
-    "Gás Encanado": "#ea580c"                // Laranja Forte
-};
+        let events = [];
+        let unassignedHTML = '';
+        let scheduledTasksHTML = '';
+        const filterResp = document.getElementById('calendar-resp-filter').value;
 
-function renderInteractiveCalendar() {
-    const calendarEl = document.getElementById('calendar');
-    if (!calendarEl) return;
-
-    let events = [];
-    let unassignedHTML = '';
-    let scheduledTasksHTML = '';
-    const filterResp = document.getElementById('calendar-resp-filter').value;
-
-    Object.keys(dbUnitsCache).forEach(key => {
-        const unitNum = key.replace('unit_', '');
-        const history = dbUnitsCache[key] || [];
-        if (history.length > 0) {
-            const hIndex = history.length - 1;
-            const last = history[hIndex];
-            if (last.details) {
-                last.details.forEach((d, dIndex) => {
-                    const respName = d.responsible || 'Outro';
-                    
-                    if ((filterResp === 'TODOS' || respName === filterResp) && d.status !== 'Concluído') {
+        Object.keys(dbUnitsCache).forEach(key => {
+            const unitNum = key.replace('unit_', '');
+            const history = dbUnitsCache[key] || [];
+            if (history.length > 0) {
+                const hIndex = history.length - 1;
+                const last = history[hIndex];
+                if (last.details) {
+                    last.details.forEach((d, dIndex) => {
+                        const respName = d.responsible || 'Outro';
                         
-                        let deadline = d.deadlineDate || (d.scheduledFor && d.businessDays ? addBusinessDays(d.scheduledFor, parseInt(d.businessDays)) : null);
-                        let serviceColor = respColors[respName] || '#004a8f';
-                        const cardDomId = `task_card_${unitNum}_${hIndex}_${dIndex}`;
+                        if ((filterResp === 'TODOS' || respName === filterResp) && d.status !== 'Concluído') {
+                            
+                            let deadline = d.deadlineDate || (d.scheduledFor && d.businessDays ? addBusinessDays(d.scheduledFor, parseInt(d.businessDays)) : null);
+                            let serviceColor = respColors[respName] || '#004a8f';
+                            const cardDomId = `task_card_${unitNum}_${hIndex}_${dIndex}`;
 
-                        // 1. CARDS DE CONFIGURAÇÃO DE PRAZO (LATERAL ESQUERDA)
-                        unassignedHTML += `
-                            <div class="fc-task-card" id="${cardDomId}" style="background:#fff; border:1px solid #cbd5e1; border-left: 5px solid ${serviceColor}; padding:10px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition: all 0.3s ease;">
-                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                                    <div>
-                                        <strong style="color:${serviceColor}; font-size:0.9rem;">Apto ${unitNum}</strong> - ${d.item}<br>
-                                        <small style="color:#dc2626; font-weight:bold;">${d.nonConformity}</small><br>
-                                        <small><strong>Resp:</strong> ${respName}</small>
-                                    </div>
-                                    <button onclick="resolveTaskFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
-                                            style="background:#28a745; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; font-weight:bold;">
-                                        ✓ Sanar
-                                    </button>
-                                </div>
-
-                                <div style="background:#f1f5f9; padding:8px; border-radius:4px; margin-top:6px; font-size:0.75rem;">
-                                    <div style="font-weight:bold; color:#334155; margin-bottom:4px;">⚙️ Definir / Alterar Prazo:</div>
-                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                            unassignedHTML += `
+                                <div class="fc-task-card" id="${cardDomId}" style="background:#fff; border:1px solid #cbd5e1; border-left: 5px solid ${serviceColor}; padding:10px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition: all 0.3s ease;">
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
                                         <div>
-                                            <label style="font-size:0.7rem; margin:0;">Início:</label>
-                                            <input type="date" id="cal_date_${unitNum}_${hIndex}_${dIndex}" value="${d.scheduledFor || ''}" style="padding:4px; font-size:0.75rem;">
+                                            <strong style="color:${serviceColor}; font-size:0.9rem;">Apto ${unitNum}</strong> - ${d.item}<br>
+                                            <small style="color:#dc2626; font-weight:bold;">${d.nonConformity}</small><br>
+                                            <small><strong>Resp:</strong> ${respName}</small>
                                         </div>
-                                        <div>
-                                            <label style="font-size:0.7rem; margin:0;">Dias Úteis:</label>
-                                            <input type="number" id="cal_days_${unitNum}_${hIndex}_${dIndex}" min="1" placeholder="A definir" value="${d.businessDays || ''}" style="padding:4px; font-size:0.75rem;">
-                                        </div>
+                                        <button onclick="resolveTaskFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
+                                                style="background:#28a745; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; font-weight:bold;">
+                                            ✓ Sanar
+                                        </button>
                                     </div>
-                                    <button onclick="updateTaskScheduleFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
-                                            style="width:100%; margin-top:6px; background:#007bff; color:white; border:none; padding:5px; border-radius:3px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
-                                        💾 Salvar Prazo
-                                    </button>
-                                    <div style="margin-top:4px; color:#d97706; font-weight:bold;">
-                                        Prazo Final: ${deadline || 'Não calculada'}
+
+                                    <div style="background:#f1f5f9; padding:8px; border-radius:4px; margin-top:6px; font-size:0.75rem;">
+                                        <div style="font-weight:bold; color:#334155; margin-bottom:4px;">⚙️ Definir / Alterar Prazo:</div>
+                                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                                            <div>
+                                                <label style="font-size:0.7rem; margin:0;">Início:</label>
+                                                <input type="date" id="cal_date_${unitNum}_${hIndex}_${dIndex}" value="${d.scheduledFor || ''}" style="padding:4px; font-size:0.75rem;">
+                                            </div>
+                                            <div>
+                                                <label style="font-size:0.7rem; margin:0;">Dias Úteis:</label>
+                                                <input type="number" id="cal_days_${unitNum}_${hIndex}_${dIndex}" min="1" placeholder="A definir" value="${d.businessDays || ''}" style="padding:4px; font-size:0.75rem;">
+                                            </div>
+                                        </div>
+                                        <button onclick="updateTaskScheduleFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
+                                                style="width:100%; margin-top:6px; background:#007bff; color:white; border:none; padding:5px; border-radius:3px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
+                                            💾 Salvar Prazo
+                                        </button>
+                                        <div style="margin-top:4px; color:#d97706; font-weight:bold;">
+                                            Prazo Final: ${deadline || 'Não calculada'}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        `;
-
-                        // 2. MONTAGEM DAS TAGS NO CALENDÁRIO E DA LISTA DETALHADA
-                        if (d.scheduledFor) {
-                            let endDateIso = null;
-                            if (deadline && deadline.includes('/')) {
-                                const parts = deadline.split('/');
-                                endDateIso = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                            }
-
-                            // Tag Limpa no Calendário: Apenas "APTO X" com a cor do serviço
-                            events.push({
-                                id: cardDomId,
-                                title: `APTO ${unitNum}`,
-                                start: d.scheduledFor,
-                                end: endDateIso || d.scheduledFor,
-                                backgroundColor: serviceColor,
-                                borderColor: serviceColor,
-                                textColor: '#ffffff'
-                            });
-
-                            // Lista Detalhada com evento Clicável
-                           // Lista Detalhada com layout responsivo (não vasa mais da tela)
-scheduledTasksHTML += `
-    <div class="activity-card" onclick="highlightTaskCard('${cardDomId}')" style="border-left: 6px solid ${serviceColor};">
-        <div>
-            <span class="activity-badge" style="background:${serviceColor};">APTO ${unitNum}</span>
-            <strong>${respName}</strong><br>
-            <span style="color:#334155;">${d.item}: <strong>${d.nonConformity}</strong></span>
-        </div>
-        <div class="activity-dates">
-            📅 Início: <strong>${d.scheduledFor}</strong><br>
-            ⏳ Prazo Limite: <strong style="color:#d97706;">${deadline || 'Não definida'}</strong>
-        </div>
-    </div>
-`;
                             `;
+
+                            if (d.scheduledFor) {
+                                let endDateIso = null;
+                                if (deadline && deadline.includes('/')) {
+                                    const parts = deadline.split('/');
+                                    endDateIso = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                                }
+
+                                events.push({
+                                    id: cardDomId,
+                                    title: `APTO ${unitNum}`,
+                                    start: d.scheduledFor,
+                                    end: endDateIso || d.scheduledFor,
+                                    backgroundColor: serviceColor,
+                                    borderColor: serviceColor,
+                                    textColor: '#ffffff'
+                                });
+
+                                scheduledTasksHTML += `
+                                    <div class="activity-card" onclick="highlightTaskCard('${cardDomId}')" style="border-left: 6px solid ${serviceColor};">
+                                        <div>
+                                            <span class="activity-badge" style="background:${serviceColor};">APTO ${unitNum}</span>
+                                            <strong>${respName}</strong><br>
+                                            <span style="color:#334155;">${d.item}: <strong>${d.nonConformity}</strong></span>
+                                        </div>
+                                        <div class="activity-dates">
+                                            📅 Início: <strong>${d.scheduledFor}</strong><br>
+                                            ⏳ Prazo Limite: <strong style="color:#d97706;">${deadline || 'Não definida'}</strong>
+                                        </div>
+                                    </div>
+                                `;
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
-        }
-    });
+        });
 
-    document.getElementById('unassigned-tasks-list').innerHTML = unassignedHTML || '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência pendente.</p>';
-    
-    const activityListEl = document.getElementById('scheduled-activities-list');
-    if (activityListEl) {
-        activityListEl.innerHTML = scheduledTasksHTML || '<p style="font-size:0.8rem; color:#666;">Nenhuma atividade agendada para o filtro selecionado.</p>';
-    }
-
-    if (fullCalendarInstance) fullCalendarInstance.destroy();
-
-    fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'pt-br',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,listWeek'
-        },
-        events: events,
-        eventClick: function(info) {
-            // Ao clicar no bloco do calendário, leva direto à não conformidade na lista lateral
-            if (info.event.id) {
-                highlightTaskCard(info.event.id);
-            }
-        }
-    });
-    
-    fullCalendarInstance.render();
-}
-
-// Função para rolar a tela e destacar visualmente o card da Não Conformidade
-function highlightTaskCard(cardId) {
-    const el = document.getElementById(cardId);
-    if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('unassigned-tasks-list').innerHTML = unassignedHTML || '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência pendente.</p>';
         
-        // Aplica efeito de piscar/destaque
-        const originalBg = el.style.backgroundColor;
-        const originalTransform = el.style.transform;
+        const activityListEl = document.getElementById('scheduled-activities-list');
+        if (activityListEl) {
+            activityListEl.innerHTML = scheduledTasksHTML || '<p style="font-size:0.8rem; color:#666;">Nenhuma atividade agendada para o filtro selecionado.</p>';
+        }
 
-        el.style.backgroundColor = '#fef08a'; // Amarelo de destaque
-        el.style.transform = 'scale(1.03)';
-        el.style.boxShadow = '0 0 12px rgba(0,0,0,0.2)';
+        if (fullCalendarInstance) fullCalendarInstance.destroy();
 
-        setTimeout(() => {
-            el.style.backgroundColor = originalBg;
-            el.style.transform = originalTransform;
-            el.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-        }, 1500);
+        fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'pt-br',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,listWeek'
+            },
+            events: events,
+            eventClick: function(info) {
+                if (info.event.id) highlightTaskCard(info.event.id);
+            }
+        });
+        
+        fullCalendarInstance.render();
     }
-}
+
+    function highlightTaskCard(cardId) {
+        const el = document.getElementById(cardId);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const originalBg = el.style.backgroundColor;
+            const originalTransform = el.style.transform;
+
+            el.style.backgroundColor = '#fef08a';
+            el.style.transform = 'scale(1.03)';
+            el.style.boxShadow = '0 0 12px rgba(0,0,0,0.2)';
+
+            setTimeout(() => {
+                el.style.backgroundColor = originalBg;
+                el.style.transform = originalTransform;
+                el.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+            }, 1500);
+        }
+    }
 
     function exportToExcelXLSX() {
         let exportData = [];
@@ -1695,12 +1346,15 @@ function highlightTaskCard(cardId) {
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Vistorias");
-        XLSX.writeFile(workbook, `Relatorio_Vistorias_${new Date().toISOString().slice(0,10)}.xlsx`);
+        
+        // Nome do arquivo formatado por concatenação simples
+        var fileName = "Relatorio_Vistorias_" + new Date().toISOString().slice(0, 10) + ".xlsx";
+        XLSX.writeFile(workbook, fileName);
     }
 
     function switchTab(tab) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`tab-${tab}-btn`).classList.add('active');
+        document.getElementById("tab-" + tab + "-btn").classList.add('active');
 
         document.getElementById('tab-vistorias').style.display = tab === 'vistorias' ? 'block' : 'none';
         document.getElementById('tab-mapa').style.display = tab === 'mapa' ? 'block' : 'none';
@@ -1714,7 +1368,7 @@ function highlightTaskCard(cardId) {
 
     function toggle(id) {
         const el = document.getElementById(id);
-        el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 </script>
 </body>
