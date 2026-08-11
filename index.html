@@ -869,17 +869,17 @@ ncBoxes.forEach(box => {
         existingHistory.push(recordData);
 
         try {
-            await db.collection('vistorias_unidades').doc(historyKey).set({
-                unitNumber: selectedUnitNum,
-                floorNumber: selectedFloorNum,
-                history: existingHistory,
-                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            dbUnitsCache[historyKey] = existingHistory;
-        } catch (error) {
-            console.error("Erro ao salvar no banco:", error);
-            alert("⚠️ Atenção: Não foi possível sincronizar com o banco em nuvem.");
-        }
+           db.collection('vistorias_unidades').doc(historyKey).set({
+    unitNumber: selectedUnitNum,
+    floorNumber: selectedFloorNum,
+    history: existingHistory,
+    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+}).then(function() {
+    dbUnitsCache[historyKey] = existingHistory;
+}).catch(function(error) {
+    console.error("Erro ao salvar no banco:", error);
+    alert("⚠️ Atenção: Não foi possível sincronizar com o banco em nuvem.");
+});
 
         renderPDFToPrint(recordData);
         document.getElementById('btn-next').style.display = 'block';
