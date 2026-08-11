@@ -335,7 +335,7 @@
     let dbUnitsCache = {};
     let fullCalendarInstance = null;
 
-   window.onload = () => {
+   window.onload = function() {
     detectDevice();
     loadAllUnitsData();
 };
@@ -358,25 +358,31 @@
 
     deviceDetails = `${platform} | ID: ${deviceId}`;
 
-    // 1. Atualiza a tela IMEDIATAMENTE (sem esperar o banco)
+    // Atualiza o texto do dispositivo na tela na hora
     const infoEl = document.getElementById('device-info-text');
     if (infoEl) {
         infoEl.innerHTML = `📱 <strong>${platform}</strong><br>🆔 Código Único do Dispositivo: <strong>${deviceId}</strong>`;
     }
 
-    // 2. Busca no Firebase em segundo plano sem travar a interface
-    db.collection('dispositivos').doc(deviceId).get()
-        .then(devDoc => {
-            if (devDoc.exists && devDoc.data().lastInspectorName) {
-                const nameInput = document.getElementById('inspector-name');
-                if (nameInput) {
-                    nameInput.value = devDoc.data().lastInspectorName;
-                }
+    // Tenta resgatar primeiro do LocalStorage (respostas instantâneas)
+    const localName = localStorage.getItem('vistoria_inspector_name');
+    const nameInput = document.getElementById('inspector-name');
+
+    if (localName && nameInput) {
+        nameInput.value = localName;
+    }
+
+    // Busca do Firebase para sincronizar/garantir se houver registro no banco
+    if (typeof db !== 'undefined' && db) {
+        db.collection('dispositivos').doc(deviceId).get().then(devDoc => {
+            if (devDoc.exists && devDoc.data().lastInspectorName && nameInput) {
+                nameInput.value = devDoc.data().lastInspectorName;
+                localStorage.setItem('vistoria_inspector_name', devDoc.data().lastInspectorName);
             }
-        })
-        .catch(err => {
-            console.warn("Aviso: Não foi possível buscar o nome no Firebase (usando valor local se disponível).", err);
+        }).catch(err => {
+            console.log("Sincronização de dispositivo em segundo plano:", err);
         });
+    }
 }
 
     function switchTab(tab) {
@@ -407,24 +413,23 @@
         }
     }
 
-  async function confirmInspector() {
+  function confirmInspector() {
     const nameInput = document.getElementById('inspector-name').value.trim();
     if (!nameInput) { alert('Por favor, informe o nome do vistoriador.'); return; }
 
     const deviceId = localStorage.getItem('vistoria_device_id');
 
-    // --- SALVA E SINCRONIZA NO FIREBASE PARA ESTE DISPOSITIVO ---
-    if (deviceId) {
-        try {
-            await db.collection('dispositivos').doc(deviceId).set({
-                deviceId: deviceId,
-                lastInspectorName: nameInput,
-                platformDetails: deviceDetails,
-                lastAccess: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-        } catch (err) {
-            console.error("Erro ao salvar dados do dispositivo no Firebase:", err);
-        }
+    // 1. Salva imediatamente no navegador local
+    localStorage.setItem('vistoria_inspector_name', nameInput);
+
+    // 2. Salva e sincroniza no Firebase em segundo plano
+    if (deviceId && typeof db !== 'undefined' && db) {
+        db.collection('dispositivos').doc(deviceId).set({
+            deviceId: deviceId,
+            lastInspectorName: nameInput,
+            platformDetails: deviceDetails,
+            lastAccess: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(err => console.error("Erro ao sincronizar dispositivo no Firebase:", err));
     }
 
     inspectorName = nameInput;
@@ -436,7 +441,6 @@
     `;
     document.getElementById('floor-card').style.display = 'block';
 }
-
     function setFloor(f, el) {
         selectedFloorNum = f;
         document.querySelectorAll('#floors .btn').forEach(b => b.classList.remove('active'));
