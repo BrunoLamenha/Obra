@@ -54,25 +54,8 @@
         .btn-sanar { background: #28a745; color: white; border: none; border-radius: 3px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-right: 5px; }
 
         .checklist-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #eee; }
-        /* Ajuste no CSS para alinhar perfeitamente o checkbox com o texto */
-.chk-label { 
-    font-size: 0.8rem; 
-    font-weight: normal; 
-    display: flex; 
-    align-items: flex-start; /* Alinha o topo da caixinha com o topo da linha de texto */
-    gap: 8px; 
-    margin: 0; 
-    cursor: pointer; 
-    color: #333; 
-    line-height: 1.2;
-}
-
-.chk-label input[type="checkbox"] {
-    width: auto;
-    margin: 0;
-    margin-top: 2px; /* Ajuste fino de altura em relação ao texto */
-    cursor: pointer;
-}
+        .chk-label { font-size: 0.8rem; font-weight: normal; display: flex; align-items: flex-start; gap: 8px; margin: 0; cursor: pointer; color: #333; line-height: 1.2; }
+        .chk-label input[type="checkbox"] { width: auto; margin: 0; margin-top: 2px; cursor: pointer; }
 
         label { font-size: 0.8rem; font-weight: bold; display: block; margin-top: 8px; color: #444; }
         input, select { width: 100%; padding: 8px; margin-top: 2px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
@@ -313,158 +296,17 @@
         'room-balcony': 'Varanda'
     };
 
-    // Sequência reordenada em ordem cronológica comum de execução em obra predial:
-// 1. Array de checklist reordenado com IDs padronizados
-const checklist = [
-    { id: "eletrica", name: "1. Tubulações, Tomadas, Interruptores e Plafons", cleanName: "Instalações Elétricas e Iluminação", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Ponto Sem Energia / Fio Solto", "Plafon Não Liga / Danificado", "Quadro de Disjuntores Incompleto", "Outros"] },
-    { id: "hidra", name: "2. Tubulações, Louças, Metais e Sifão", cleanName: "Instalações Hidráulicas e Louças/Metais", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
-    { id: "ac", name: "3. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura de Climatização", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] },
-    { id: "piso", name: "4. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
-    { id: "bancada", name: "5. Bancadas, Soleiras e Peitoris", cleanName: "Marmoraria / Bancadas e Soleiras", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
-    { id: "esquadria", name: "6. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias e Vidraçaria", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
-    { id: "portas", name: "7. Portas de Madeira e Alizares", cleanName: "Esquadrias de Madeira", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
-    { id: "pintura", name: "8. Emassamento, Lixamento e Pintura", cleanName: "Pintura e Acabamento de Parede/Teto", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] }
-];
-
-// 2. Renderização das opções da pendência
-function renderNCBoxes(key, itemObj) {
-    if (!pendingNCs[key] || pendingNCs[key].length === 0) return '';
-
-    if (!itemObj) {
-        const lastUnderscoreIndex = key.lastIndexOf('_');
-        const itemId = key.substring(lastUnderscoreIndex + 1);
-        itemObj = checklist.find(i => i.id === itemId);
-    }
-
-    if (!itemObj || !itemObj.options) return '';
-
-    return pendingNCs[key].map((nc, index) => {
-        const chkBoxes = itemObj.options.map(opt => `
-            <label class="chk-label">
-                <input type="checkbox" class="chk_${key}_${index}" value="${opt}" onchange="salvarEstadoAtualInput('${key}')"> ${opt}
-            </label>
-        `).join('');
-
-        return `
-            <div class="nc-box">
-                <div class="nc-header">
-                    <span>PENDÊNCIA #${index + 1}</span>
-                    <div>
-                        <button class="btn-sanar" onclick="sanarNC('${key}', ${index}, '${itemObj.id}')">✓ Sanar / Concluir</button>
-                        <button class="btn-remove" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
-                    </div>
-                </div>
-                <div class="checklist-group">${chkBoxes}</div>
-                
-                <div class="grid-two" style="margin-top: 5px;">
-                    <div>
-                        <label>Responsável / Subempreiteiro: <span style="color:red;">*</span></label>
-                        <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
-                            <option value="" disabled selected>Escolha o Responsável...</option>
-                            <option value="Pintura / Emassamento">Pintura / Emassamento</option>
-                            <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
-                            <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
-                            <option value="Eletricista">Eletricista</option>
-                            <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
-                            <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
-                            <option value="Piso e Revestimento">Piso e Revestimento</option>
-                            <option value="Gesso / Sancas">Gesso / Sancas</option>
-                            <option value="Serralharia / Portões">Serralharia / Portões</option>
-                            <option value="Impermeabilização">Impermeabilização</option>
-                            <option value="Limpeza Pós-Obra">Limpeza Pós-Obra</option>
-                            <option value="Gás Encanado">Gás Encanado</option>
-                            <option value="Outro">Outro (Especifique)</option>
-                        </select>
-                        <input type="text" id="resp_other_${key}_${index}" placeholder="Digite o responsável..." style="display:none; margin-top:6px;" oninput="salvarEstadoAtualInput('${key}')">
-                    </div>
-                    
-                    <div class="grid-two">
-                        <div>
-                            <label>Data Início:</label>
-                            <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
-                        </div>
-                        <div>
-                            <label>Prazo (Dias Úteis):</label>
-                            <input type="number" id="days_${key}_${index}" min="1" placeholder="A definir" value="${nc.businessDays || ''}" oninput="salvarEstadoAtualInput('${key}')">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid-two" style="margin-top: 5px;">
-                    <div>
-                        <label>Status do Reparo:</label>
-                        <select id="status_${key}_${index}" onchange="handleStatusChange('${key}', ${index}, '${itemObj.id}')">
-                            <option value="Aguardando">Aguardando Início</option>
-                            <option value="Em Andamento">Em Andamento</option>
-                            <option value="Concluído">Concluído / Sanado</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Gravidade / Severidade:</label>
-                        <select id="sev_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
-                            <option value="Baixa">Baixa (Estética / Limpeza)</option>
-                            <option value="Média">Média (Funcional)</option>
-                            <option value="Alta">Alta / Crítica (Urgente / Vazamento)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="margin-top: 5px;">
-                    <label>Observação Técnica:</label>
-                    <input type="text" id="obs_${key}_${index}" placeholder="Descreva a pendência com precisão..." oninput="salvarEstadoAtualInput('${key}')">
-                </div>
-
-                <div class="photo-area">
-                    <label style="margin:0 0 6px 0; color:#004a8f;">📷 Anexar Foto(s) da Pendência:</label>
-                    <input type="file" accept="image/*" multiple capture="environment" onchange="handleMultiplePhotos(this, '${key}', ${index})">
-                    <div class="photo-gallery" id="gallery_${key}_${index}"></div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-// 3. Adiciona pendência e renderiza as opções imediatamente
-function addNC(key, itemId) {
-    salvarEstadoAtualInput(key);
-
-    if (!pendingNCs[key]) pendingNCs[key] = [];
-
-    pendingNCs[key].push({
-        id: Date.now(),
-        selectedOpts: [],
-        obs: '',
-        resp: '',
-        respOther: '',
-        startDate: '',
-        businessDays: '',
-        status: 'Aguardando',
-        severity: 'Baixa',
-        photos: []
-    });
-
-    const itemObj = checklist.find(i => i.id === itemId);
-    const container = document.getElementById(`nc_container_${key}`);
-    if (container) {
-        container.innerHTML = renderNCBoxes(key, itemObj);
-        restaurarValoresInputs(key);
-    }
-    
-    const btnAdd = document.getElementById(`btn_add_${key}`);
-    if (btnAdd) btnAdd.style.display = 'block';
-}
-
-
-    const itemObj = checklist.find(i => i.id === itemId);
-    const container = document.getElementById(`nc_container_${key}`);
-    if (container) {
-        container.innerHTML = renderNCBoxes(key, itemObj);
-        restaurarValoresInputs(key);
-    }
-    
-    const btnAdd = document.getElementById(`btn_add_${key}`);
-    if (btnAdd) btnAdd.style.display = 'block';
-}
+    // Sequência ordenada pelo fluxo real de execução da obra
+    const checklist = [
+        { id: "eletrica", name: "1. Tubulações, Tomadas, Interruptores e Plafons", cleanName: "Instalações Elétricas e Iluminação", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Ponto Sem Energia / Fio Solto", "Plafon Não Liga / Danificado", "Quadro de Disjuntores Incompleto", "Outros"] },
+        { id: "hidra", name: "2. Tubulações, Louças, Metais e Sifão", cleanName: "Instalações Hidráulicas e Louças/Metais", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
+        { id: "ac", name: "3. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura de Climatização", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] },
+        { id: "piso", name: "4. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
+        { id: "bancada", name: "5. Bancadas, Soleiras e Peitoris", cleanName: "Marmoraria / Bancadas e Soleiras", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
+        { id: "esquadria", name: "6. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias e Vidraçaria", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
+        { id: "portas", name: "7. Portas de Madeira e Alizares", cleanName: "Esquadrias de Madeira", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
+        { id: "pintura", name: "8. Emassamento, Lixamento e Pintura", cleanName: "Pintura e Acabamento de Parede/Teto", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] }
+    ];
 
     var pendingNCs = {};
     let selectedFloorNum = null;
@@ -528,7 +370,7 @@ function addNC(key, itemId) {
             if (document.getElementById('tab-cronograma').style.display === 'block') {
                 renderInteractiveCalendar();
             }
-        }).catch(err => console.log("Carregando do banco local"));
+        }).catch(err => console.log("Carregando dados locais"));
     }
 
     function addBusinessDays(dateStr, days) {
@@ -620,13 +462,11 @@ function addNC(key, itemId) {
             document.getElementById('unit-title').innerText = `Unidade: Apto ${selectedUnitNum} (${selectedCategory} - ${selectedStage})`;
             document.getElementById('inspection-area').style.display = 'block';
             
-            // Tenta carregar pendências não resolvidas da última vistoria
             loadPreviousActivePendencies();
             buildInspectionForm();
         }
     }
 
-    // CARREGA PENDÊNCIAS ANTERIORES PARA A REVISTORIA
     function loadPreviousActivePendencies() {
         pendingNCs = {};
         const historyKey = `unit_${selectedUnitNum}`;
@@ -639,14 +479,12 @@ function addNC(key, itemId) {
 
         lastInsp.details.forEach(d => {
             if (d.status !== 'Concluído') {
-                // Mapeia ambiente e item de volta para a chave de controle
                 let roomKey = Object.keys(roomNames).find(k => roomNames[k] === d.room) || 'room-dorm';
-                let itemObj = checklist.find(i => i.cleanName === d.item) || checklist[0];
+                let itemObj = checklist.find(i => i.cleanName === d.item || i.name === d.item) || checklist[0];
                 let key = `${roomKey}_${itemObj.id}`;
 
                 if (!pendingNCs[key]) pendingNCs[key] = [];
 
-                // Separa opções marcadas das observações
                 let opts = [];
                 let obsText = '';
 
@@ -672,259 +510,510 @@ function addNC(key, itemId) {
         });
     }
 
-   // 1. Constrói a tela iniciando todos os botões em estado NEUTRO se não houver pendência
-function buildInspectionForm() {
-    ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
-        const container = document.getElementById(roomId);
-        container.innerHTML = '';
+    function buildInspectionForm() {
+        ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
+            const container = document.getElementById(roomId);
+            container.innerHTML = '';
 
-        checklist.forEach(item => {
-            const key = `${roomId}_${item.id}`;
-            if (!pendingNCs[key]) pendingNCs[key] = [];
+            checklist.forEach(item => {
+                const key = `${roomId}_${item.id}`;
+                if (!pendingNCs[key]) pendingNCs[key] = [];
 
-            let hasPending = pendingNCs[key].length > 0;
-            let ncBoxesHTML = renderNCBoxes(key, item);
+                let hasPending = pendingNCs[key].length > 0;
+                let ncBoxesHTML = renderNCBoxes(key, item);
 
-            // Se tem pendência ativa carregada: botão NOK fica ativo. Se não, AMBOS iniciam neutros (cinza).
-            let btnOkClass = 'btn-neutral';
-            let btnNokClass = hasPending ? 'btn-nok-active' : 'btn-neutral';
+                let btnOkClass = 'btn-neutral';
+                let btnNokClass = hasPending ? 'btn-nok-active' : 'btn-neutral';
 
-            container.innerHTML += `
-                <div class="item-card" id="card_${key}">
-                    <div class="item-header">
-                        <span class="item-title">${item.name}</span>
+                container.innerHTML += `
+                    <div class="item-card" id="card_${key}">
+                        <div class="item-header">
+                            <span class="item-title">${item.name}</span>
+                            <div>
+                                <button class="btn-status ${btnOkClass}" id="btn_ok_${key}" onclick="setItemStatus('${key}', 'OK', '${item.id}')">Conforme ✓</button>
+                                <button class="btn-status ${btnNokClass}" id="btn_nok_${key}" onclick="setItemStatus('${key}', 'NOK', '${item.id}')">Não Conforme ✕</button>
+                            </div>
+                        </div>
+                        <div id="nc_container_${key}">${ncBoxesHTML}</div>
+                        <button class="btn-add-nc" id="btn_add_${key}" style="display:${hasPending ? 'block' : 'none'};" onclick="addNC('${key}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
+                    </div>
+                `;
+            });
+        });
+
+        Object.keys(pendingNCs).forEach(key => restaurarValoresInputs(key));
+    }
+
+    function renderNCBoxes(key, itemObj) {
+        if (!pendingNCs[key] || pendingNCs[key].length === 0) return '';
+
+        if (!itemObj) {
+            const lastUnderscoreIndex = key.lastIndexOf('_');
+            const itemId = key.substring(lastUnderscoreIndex + 1);
+            itemObj = checklist.find(i => i.id === itemId);
+        }
+
+        if (!itemObj || !itemObj.options) return '';
+
+        return pendingNCs[key].map((nc, index) => {
+            const chkBoxes = itemObj.options.map(opt => `
+                <label class="chk-label">
+                    <input type="checkbox" class="chk_${key}_${index}" value="${opt}" onchange="salvarEstadoAtualInput('${key}')"> ${opt}
+                </label>
+            `).join('');
+
+            return `
+                <div class="nc-box">
+                    <div class="nc-header">
+                        <span>PENDÊNCIA #${index + 1}</span>
                         <div>
-                            <button class="btn-status ${btnOkClass}" id="btn_ok_${key}" onclick="setItemStatus('${key}', 'OK', '${item.id}')">Conforme ✓</button>
-                            <button class="btn-status ${btnNokClass}" id="btn_nok_${key}" onclick="setItemStatus('${key}', 'NOK', '${item.id}')">Não Conforme ✕</button>
+                            <button class="btn-sanar" onclick="sanarNC('${key}', ${index}, '${itemObj.id}')">✓ Sanar / Concluir</button>
+                            <button class="btn-remove" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
                         </div>
                     </div>
-                    <div id="nc_container_${key}">${ncBoxesHTML}</div>
-                    <button class="btn-add-nc" id="btn_add_${key}" style="display:${hasPending ? 'block' : 'none'};" onclick="addNC('${key}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
+                    <div class="checklist-group">${chkBoxes}</div>
+                    
+                    <div class="grid-two" style="margin-top: 5px;">
+                        <div>
+                            <label>Responsável / Subempreiteiro: <span style="color:red;">*</span></label>
+                            <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
+                                <option value="" disabled selected>Escolha o Responsável...</option>
+                                <option value="Pintura / Emassamento">Pintura / Emassamento</option>
+                                <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
+                                <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
+                                <option value="Eletricista">Eletricista</option>
+                                <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
+                                <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
+                                <option value="Piso e Revestimento">Piso e Revestimento</option>
+                                <option value="Gesso / Sancas">Gesso / Sancas</option>
+                                <option value="Serralharia / Portões">Serralharia / Portões</option>
+                                <option value="Impermeabilização">Impermeabilização</option>
+                                <option value="Limpeza Pós-Obra">Limpeza Pós-Obra</option>
+                                <option value="Gás Encanado">Gás Encanado</option>
+                                <option value="Outro">Outro (Especifique)</option>
+                            </select>
+                            <input type="text" id="resp_other_${key}_${index}" placeholder="Digite o responsável..." style="display:none; margin-top:6px;" oninput="salvarEstadoAtualInput('${key}')">
+                        </div>
+                        
+                        <div class="grid-two">
+                            <div>
+                                <label>Data Início:</label>
+                                <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                            </div>
+                            <div>
+                                <label>Prazo (Dias Úteis):</label>
+                                <input type="number" id="days_${key}_${index}" min="1" placeholder="A definir" value="${nc.businessDays || ''}" oninput="salvarEstadoAtualInput('${key}')">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-two" style="margin-top: 5px;">
+                        <div>
+                            <label>Status do Reparo:</label>
+                            <select id="status_${key}_${index}" onchange="handleStatusChange('${key}', ${index}, '${itemObj.id}')">
+                                <option value="Aguardando">Aguardando Início</option>
+                                <option value="Em Andamento">Em Andamento</option>
+                                <option value="Concluído">Concluído / Sanado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Gravidade / Severidade:</label>
+                            <select id="sev_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                                <option value="Baixa">Baixa (Estética / Limpeza)</option>
+                                <option value="Média">Média (Funcional)</option>
+                                <option value="Alta">Alta / Crítica (Urgente / Vazamento)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 5px;">
+                        <label>Observação Técnica:</label>
+                        <input type="text" id="obs_${key}_${index}" placeholder="Descreva a pendência com precisão..." oninput="salvarEstadoAtualInput('${key}')">
+                    </div>
+
+                    <div class="photo-area">
+                        <label style="margin:0 0 6px 0; color:#004a8f;">📷 Anexar Foto(s) da Pendência:</label>
+                        <input type="file" accept="image/*" multiple capture="environment" onchange="handleMultiplePhotos(this, '${key}', ${index})">
+                        <div class="photo-gallery" id="gallery_${key}_${index}"></div>
+                    </div>
                 </div>
             `;
-        });
-    });
+        }).join('');
+    }
 
-    // Restaura valores e marcadores nos inputs e checkboxes
-    Object.keys(pendingNCs).forEach(key => restaurarValoresInputs(key));
-}
+    function toggleOutroResp(key, index) {
+        const select = document.getElementById(`resp_${key}_${index}`);
+        const otherInput = document.getElementById(`resp_other_${key}_${index}`);
+        if (select && otherInput) {
+            if (select.value === 'Outro') {
+                otherInput.style.display = 'block';
+            } else {
+                otherInput.style.display = 'none';
+                otherInput.value = '';
+            }
+        }
+        salvarEstadoAtualInput(key);
+    }
 
-// 2. Transição manual dos botões ao clicar
-function setItemStatus(key, status, itemId) {
-    const btnOk = document.getElementById(`btn_ok_${key}`);
-    const btnNok = document.getElementById(`btn_nok_${key}`);
-    const btnAdd = document.getElementById(`btn_add_${key}`);
+    function handleStatusChange(key, index, itemId) {
+        const statusEl = document.getElementById(`status_${key}_${index}`);
+        if (statusEl && statusEl.value === 'Concluído') {
+            sanarNC(key, index, itemId);
+            return;
+        }
+        salvarEstadoAtualInput(key);
+    }
 
-    if (status === 'OK') {
-        btnOk.className = "btn-status btn-ok-active";
-        btnNok.className = "btn-status btn-neutral";
-        pendingNCs[key] = [];
-        document.getElementById(`nc_container_${key}`).innerHTML = '';
-        if (btnAdd) btnAdd.style.display = 'none';
-    } else {
-        btnOk.className = "btn-status btn-neutral";
-        btnNok.className = "btn-status btn-nok-active";
-        if (btnAdd) btnAdd.style.display = 'block';
-
-        if (!pendingNCs[key] || pendingNCs[key].length === 0) {
-            addNC(key, itemId);
-        } else {
-            salvarEstadoAtualInput(key);
+    function sanarNC(key, index, itemId) {
+        const confirmAction = confirm("Confirma que esta pendência foi SANADA e resolvida?");
+        if (confirmAction) {
+            pendingNCs[key].splice(index, 1);
+            
             const itemObj = checklist.find(i => i.id === itemId);
-            document.getElementById(`nc_container_${key}`).innerHTML = renderNCBoxes(key, itemObj);
-            restaurarValoresInputs(key);
+            const container = document.getElementById(`nc_container_${key}`);
+            if (container) {
+                container.innerHTML = renderNCBoxes(key, itemObj);
+                restaurarValoresInputs(key);
+            }
+
+            if (pendingNCs[key].length === 0) {
+                const btnOk = document.getElementById(`btn_ok_${key}`);
+                const btnNok = document.getElementById(`btn_nok_${key}`);
+                const btnAdd = document.getElementById(`btn_add_${key}`);
+                if (btnOk) btnOk.className = "btn-status btn-neutral";
+                if (btnNok) btnNok.className = "btn-status btn-neutral";
+                if (btnAdd) btnAdd.style.display = 'none';
+            }
+        } else {
+            const statusEl = document.getElementById(`status_${key}_${index}`);
+            if (statusEl) statusEl.value = 'Aguardando';
         }
     }
-}
 
-// 3. Função de envio do WhatsApp corrigida para ler pendências ativas
-function sendWhatsAppSummary() {
-    if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
+    function salvarEstadoAtualInput(key) {
+        if (!pendingNCs[key]) return;
+        pendingNCs[key].forEach((nc, index) => {
+            const obsEl = document.getElementById(`obs_${key}_${index}`);
+            const respEl = document.getElementById(`resp_${key}_${index}`);
+            const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
+            const dateEl = document.getElementById(`date_${key}_${index}`);
+            const daysEl = document.getElementById(`days_${key}_${index}`);
+            const statusEl = document.getElementById(`status_${key}_${index}`);
+            const sevEl = document.getElementById(`sev_${key}_${index}`);
 
-    Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
+            if (obsEl) nc.obs = obsEl.value;
+            if (respEl) nc.resp = respEl.value;
+            if (respOtherEl) nc.respOther = respOtherEl.value;
+            if (dateEl) nc.startDate = dateEl.value;
+            if (daysEl) nc.businessDays = daysEl.value;
+            if (statusEl) nc.status = statusEl.value;
+            if (sevEl) nc.severity = sevEl.value;
 
-    let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
-    text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
-    text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+            nc.selectedOpts = [];
+            document.querySelectorAll(`.chk_${key}_${index}:checked`).forEach(chk => {
+                nc.selectedOpts.push(chk.value);
+            });
+        });
+    }
 
-    let count = 0;
-    Object.keys(pendingNCs).forEach(key => {
-        const lastUnderscoreIndex = key.lastIndexOf('_');
-        const roomKey = key.substring(0, lastUnderscoreIndex);
-        const itemId = key.substring(lastUnderscoreIndex + 1);
+    function setItemStatus(key, status, itemId) {
+        const btnOk = document.getElementById(`btn_ok_${key}`);
+        const btnNok = document.getElementById(`btn_nok_${key}`);
+        const btnAdd = document.getElementById(`btn_add_${key}`);
 
-        const roomName = roomNames[roomKey] || 'Ambiente';
+        if (status === 'OK') {
+            btnOk.className = "btn-status btn-ok-active";
+            btnNok.className = "btn-status btn-neutral";
+            pendingNCs[key] = [];
+            document.getElementById(`nc_container_${key}`).innerHTML = '';
+            if (btnAdd) btnAdd.style.display = 'none';
+        } else {
+            btnOk.className = "btn-status btn-neutral";
+            btnNok.className = "btn-status btn-nok-active";
+            if (btnAdd) btnAdd.style.display = 'block';
+
+            if (!pendingNCs[key] || pendingNCs[key].length === 0) {
+                addNC(key, itemId);
+            } else {
+                salvarEstadoAtualInput(key);
+                const itemObj = checklist.find(i => i.id === itemId);
+                document.getElementById(`nc_container_${key}`).innerHTML = renderNCBoxes(key, itemObj);
+                restaurarValoresInputs(key);
+            }
+        }
+    }
+
+    function addNC(key, itemId) {
+        salvarEstadoAtualInput(key);
+
+        if (!pendingNCs[key]) pendingNCs[key] = [];
+
+        pendingNCs[key].push({
+            id: Date.now(),
+            selectedOpts: [],
+            obs: '',
+            resp: '',
+            respOther: '',
+            startDate: '',
+            businessDays: '',
+            status: 'Aguardando',
+            severity: 'Baixa',
+            photos: []
+        });
+
         const itemObj = checklist.find(i => i.id === itemId);
-        const itemName = itemObj ? itemObj.cleanName : 'Item';
+        const container = document.getElementById(`nc_container_${key}`);
+        if (container) {
+            container.innerHTML = renderNCBoxes(key, itemObj);
+            restaurarValoresInputs(key);
+        }
+        
+        const btnAdd = document.getElementById(`btn_add_${key}`);
+        if (btnAdd) btnAdd.style.display = 'block';
+    }
 
-        if (pendingNCs[key] && pendingNCs[key].length > 0) {
+    function removeNC(key, index, itemId) {
+        salvarEstadoAtualInput(key);
+        pendingNCs[key].splice(index, 1);
+        const itemObj = checklist.find(i => i.id === itemId);
+        
+        const container = document.getElementById(`nc_container_${key}`);
+        if (container) {
+            container.innerHTML = renderNCBoxes(key, itemObj);
+            restaurarValoresInputs(key);
+        }
+
+        if (pendingNCs[key].length === 0) {
+            const btnOk = document.getElementById(`btn_ok_${key}`);
+            const btnNok = document.getElementById(`btn_nok_${key}`);
+            const btnAdd = document.getElementById(`btn_add_${key}`);
+            if (btnOk) btnOk.className = "btn-status btn-neutral";
+            if (btnNok) btnNok.className = "btn-status btn-neutral";
+            if (btnAdd) btnAdd.style.display = 'none';
+        }
+    }
+
+    function handleMultiplePhotos(input, key, index) {
+        if (!input.files || input.files.length === 0) return;
+        salvarEstadoAtualInput(key);
+
+        if (!pendingNCs[key][index].photos) {
+            pendingNCs[key][index].photos = [];
+        }
+
+        const files = Array.from(input.files);
+        let loadedCount = 0;
+
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                pendingNCs[key][index].photos.push(e.target.result);
+                loadedCount++;
+                if (loadedCount === files.length) {
+                    renderGallery(key, index);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function removePhoto(key, ncIndex, photoIndex) {
+        salvarEstadoAtualInput(key);
+        if (pendingNCs[key] && pendingNCs[key][ncIndex] && pendingNCs[key][ncIndex].photos) {
+            pendingNCs[key][ncIndex].photos.splice(photoIndex, 1);
+            renderGallery(key, ncIndex);
+        }
+    }
+
+    function renderGallery(key, index) {
+        const galleryEl = document.getElementById(`gallery_${key}_${index}`);
+        if (!galleryEl) return;
+
+        const photos = (pendingNCs[key] && pendingNCs[key][index]) ? pendingNCs[key][index].photos || [] : [];
+        
+        galleryEl.innerHTML = photos.map((p, pIdx) => `
+            <div class="photo-container">
+                <img src="${p}" class="photo-thumb">
+                <button type="button" class="btn-remove-photo" onclick="removePhoto('${key}', ${index}, ${pIdx})">✕</button>
+            </div>
+        `).join('');
+    }
+
+    function restaurarValoresInputs(key) {
+        if (!pendingNCs[key]) return;
+        pendingNCs[key].forEach((nc, index) => {
+            const obsEl = document.getElementById(`obs_${key}_${index}`);
+            const respEl = document.getElementById(`resp_${key}_${index}`);
+            const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
+            const dateEl = document.getElementById(`date_${key}_${index}`);
+            const daysEl = document.getElementById(`days_${key}_${index}`);
+            const statusEl = document.getElementById(`status_${key}_${index}`);
+            const sevEl = document.getElementById(`sev_${key}_${index}`);
+
+            if (obsEl && nc.obs) obsEl.value = nc.obs;
+            if (respEl && nc.resp) {
+                let options = Array.from(respEl.options).map(o => o.value);
+                if (options.includes(nc.resp)) {
+                    respEl.value = nc.resp;
+                } else {
+                    respEl.value = 'Outro';
+                    if (respOtherEl) {
+                        respOtherEl.style.display = 'block';
+                        respOtherEl.value = nc.resp;
+                    }
+                }
+            }
+            if (dateEl && nc.startDate) dateEl.value = nc.startDate;
+            if (daysEl && nc.businessDays !== undefined) daysEl.value = nc.businessDays;
+            if (statusEl && nc.status) statusEl.value = nc.status;
+            if (sevEl && nc.severity) sevEl.value = nc.severity;
+
+            if (nc.selectedOpts) {
+                nc.selectedOpts.forEach(val => {
+                    const chk = document.querySelector(`.chk_${key}_${index}[value="${val}"]`);
+                    if (chk) chk.checked = true;
+                });
+            }
+
+            renderGallery(key, index);
+        });
+    }
+
+    function generateTechnicalPDF() {
+        let hasMissingResp = false;
+        Object.keys(pendingNCs).forEach(key => {
+            salvarEstadoAtualInput(key);
             pendingNCs[key].forEach(nc => {
-                count++;
-                const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
+                if (!nc.resp || nc.resp === "" || (nc.resp === "Outro" && (!nc.respOther || !nc.respOther.trim()))) {
+                    hasMissingResp = true;
+                }
+            });
+        });
+
+        if (hasMissingResp) {
+            alert("Por favor, escolha um Responsável / Subempreiteiro para todas as pendências antes de finalizar!");
+            return;
+        }
+
+        let totalPendencies = 0;
+        let ncList = [];
+        const nowIso = new Date().toLocaleString('pt-BR');
+
+        Object.keys(pendingNCs).forEach(key => {
+            const lastUnderscoreIndex = key.lastIndexOf('_');
+            const roomKey = key.substring(0, lastUnderscoreIndex);
+            const itemId = key.substring(lastUnderscoreIndex + 1);
+
+            const itemObj = checklist.find(i => i.id === itemId);
+
+            pendingNCs[key].forEach(nc => {
+                totalPendencies++;
                 
                 let days = parseInt(nc.businessDays);
                 let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
 
                 let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
                 let obsText = nc.obs ? ` (${nc.obs})` : '';
-                let pendenciaDesc = (optsText + obsText).trim() || 'Pendência não detalhada';
 
-                text += `*${count}. ${roomName} - ${itemName}*\n`;
-                text += `• Pendência: ${pendenciaDesc}\n`;
-                text += `• Responsável: ${resp || 'Não definido'}\n`;
-                text += `• Data Início: ${nc.startDate || 'Sem data'}\n`;
-                text += `• Prazo Execução: ${nc.businessDays ? nc.businessDays + ' dias úteis' : 'A definir'}`;
-                if (deadlineDate) text += ` (Prazo Final: ${deadlineDate})`;
-                text += `\n• Severidade: ${nc.severity || 'Baixa'}\n\n`;
-            });
-        }
-    });
-
-    if (count === 0) {
-        text += `✅ *UNIDADE 100% APROVADA - SEM PENDÊNCIAS*`;
-    }
-
-    const encoded = encodeURIComponent(text);
-    window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
-}
-
-// 4. Correção no salvamento do histórico / salvamento técnico
-function generateTechnicalPDF() {
-    let hasMissingResp = false;
-    Object.keys(pendingNCs).forEach(key => {
-        salvarEstadoAtualInput(key);
-        pendingNCs[key].forEach(nc => {
-            if (!nc.resp || nc.resp === "" || (nc.resp === "Outro" && (!nc.respOther || !nc.respOther.trim()))) {
-                hasMissingResp = true;
-            }
-        });
-    });
-
-    if (hasMissingResp) {
-        alert("Por favor, escolha um Responsável / Subempreiteiro para todas as pendências antes de finalizar!");
-        return;
-    }
-
-    let totalPendencies = 0;
-    let ncList = [];
-    const nowIso = new Date().toLocaleString('pt-BR');
-
-    Object.keys(pendingNCs).forEach(key => {
-        const lastUnderscoreIndex = key.lastIndexOf('_');
-        const roomKey = key.substring(0, lastUnderscoreIndex);
-        const itemId = key.substring(lastUnderscoreIndex + 1);
-
-        const itemObj = checklist.find(i => i.id === itemId);
-
-        pendingNCs[key].forEach(nc => {
-            totalPendencies++;
-            
-            let days = parseInt(nc.businessDays);
-            let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
-
-            let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
-            let obsText = nc.obs ? ` (${nc.obs})` : '';
-
-            ncList.push({
-                id: nc.id || Date.now(),
-                room: roomNames[roomKey] || 'Geral',
-                item: itemObj ? itemObj.cleanName : 'Item',
-                nonConformity: (optsText + obsText).trim() || 'Pendência mantida',
-                responsible: nc.resp === 'Outro' ? nc.respOther : nc.resp,
-                severity: nc.severity || 'Baixa',
-                status: nc.status || 'Aguardando',
-                inspectedAt: nowIso,
-                scheduledFor: nc.startDate || null,
-                businessDays: nc.businessDays || null,
-                deadlineDate: deadlineDate || null,
-                resolvedAt: nc.status === 'Concluído' ? nowIso : null,
-                photos: nc.photos || []
+                ncList.push({
+                    id: nc.id || Date.now(),
+                    room: roomNames[roomKey] || 'Geral',
+                    item: itemObj ? itemObj.cleanName : 'Item',
+                    nonConformity: (optsText + obsText).trim() || 'Pendência mantida',
+                    responsible: nc.resp === 'Outro' ? nc.respOther : nc.resp,
+                    severity: nc.severity || 'Baixa',
+                    status: nc.status || 'Aguardando',
+                    inspectedAt: nowIso,
+                    scheduledFor: nc.startDate || null,
+                    businessDays: nc.businessDays || null,
+                    deadlineDate: deadlineDate || null,
+                    resolvedAt: nc.status === 'Concluído' ? nowIso : null,
+                    photos: nc.photos || []
+                });
             });
         });
-    });
 
-    const inspectionRecord = {
-        date: new Date().toLocaleDateString('pt-BR'),
-        timestamp: Date.now(),
-        inspector: inspectorName,
-        category: selectedCategory,
-        stage: selectedStage,
-        pendenciesCount: totalPendencies,
-        status: totalPendencies === 0 ? '100_ok' : 'com_pendencia',
-        details: ncList
-    };
+        const inspectionRecord = {
+            date: new Date().toLocaleDateString('pt-BR'),
+            timestamp: Date.now(),
+            inspector: inspectorName,
+            category: selectedCategory,
+            stage: selectedStage,
+            pendenciesCount: totalPendencies,
+            status: totalPendencies === 0 ? '100_ok' : 'com_pendencia',
+            details: ncList
+        };
 
-    const historyKey = `unit_${selectedUnitNum}`;
-    if (!dbUnitsCache[historyKey]) dbUnitsCache[historyKey] = [];
-    dbUnitsCache[historyKey].push(inspectionRecord);
+        const historyKey = `unit_${selectedUnitNum}`;
+        if (!dbUnitsCache[historyKey]) dbUnitsCache[historyKey] = [];
+        dbUnitsCache[historyKey].push(inspectionRecord);
 
-    localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
+        localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
 
-    db.collection('vistorias').doc(historyKey).set({
-        unit: selectedUnitNum,
-        history: dbUnitsCache[historyKey]
-    }, { merge: true }).then(() => {
-        alert(`Vistoria da Unidade ${selectedUnitNum} finalizada! Pendências ativas: ${totalPendencies}`);
-        loadAllUnitsData();
-        document.getElementById('btn-next').style.display = 'block';
-    }).catch(err => {
-        alert(`Vistoria salva localmente no dispositivo!`);
-        loadAllUnitsData();
-        document.getElementById('btn-next').style.display = 'block';
-    });
-}
+        db.collection('vistorias').doc(historyKey).set({
+            unit: selectedUnitNum,
+            history: dbUnitsCache[historyKey]
+        }, { merge: true }).then(() => {
+            alert(`Vistoria da Unidade ${selectedUnitNum} finalizada! Pendências ativas: ${totalPendencies}`);
+            loadAllUnitsData();
+            document.getElementById('btn-next').style.display = 'block';
+        }).catch(err => {
+            alert(`Vistoria salva localmente no dispositivo!`);
+            loadAllUnitsData();
+            document.getElementById('btn-next').style.display = 'block';
+        });
+    }
 
     function sendWhatsAppSummary() {
-    if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
+        if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
 
-    Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
+        Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
 
-    let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
-    text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
-    text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+        let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
+        text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
+        text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
 
-    let count = 0;
-    Object.keys(pendingNCs).forEach(key => {
-        // Extrai corretamente o ID do cômodo (antes do último underline) e o ID do item (após o último underline)
-        const lastUnderscoreIndex = key.lastIndexOf('_');
-        const roomKey = key.substring(0, lastUnderscoreIndex);
-        const itemId = key.substring(lastUnderscoreIndex + 1);
+        let count = 0;
+        Object.keys(pendingNCs).forEach(key => {
+            const lastUnderscoreIndex = key.lastIndexOf('_');
+            const roomKey = key.substring(0, lastUnderscoreIndex);
+            const itemId = key.substring(lastUnderscoreIndex + 1);
 
-        const roomName = roomNames[roomKey] || 'Ambiente';
-        const itemObj = checklist.find(i => i.id === itemId);
-        const itemName = itemObj ? itemObj.cleanName : 'Item';
+            const roomName = roomNames[roomKey] || 'Ambiente';
+            const itemObj = checklist.find(i => i.id === itemId);
+            const itemName = itemObj ? itemObj.cleanName : 'Item';
 
-        if (pendingNCs[key] && pendingNCs[key].length > 0) {
-            pendingNCs[key].forEach(nc => {
-                let hasOpts = nc.selectedOpts && nc.selectedOpts.length > 0;
-                let hasObs = nc.obs && nc.obs.trim() !== '';
-
-                if (hasOpts || hasObs) {
+            if (pendingNCs[key] && pendingNCs[key].length > 0) {
+                pendingNCs[key].forEach(nc => {
                     count++;
                     const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
                     
                     let days = parseInt(nc.businessDays);
                     let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
 
+                    let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
+                    let obsText = nc.obs ? ` (${nc.obs})` : '';
+                    let pendenciaDesc = (optsText + obsText).trim() || 'Pendência não detalhada';
+
                     text += `*${count}. ${roomName} - ${itemName}*\n`;
-                    text += `• Pendência: ${nc.selectedOpts.join(', ')} ${nc.obs ? '(' + nc.obs + ')' : ''}\n`;
+                    text += `• Pendência: ${pendenciaDesc}\n`;
                     text += `• Responsável: ${resp || 'Não definido'}\n`;
                     text += `• Data Início: ${nc.startDate || 'Sem data'}\n`;
                     text += `• Prazo Execução: ${nc.businessDays ? nc.businessDays + ' dias úteis' : 'A definir'}`;
                     if (deadlineDate) text += ` (Prazo Final: ${deadlineDate})`;
                     text += `\n• Severidade: ${nc.severity || 'Baixa'}\n\n`;
-                }
-            });
-        }
-    });
+                });
+            }
+        });
 
-    if (count === 0) {
-        text += `✅ *UNIDADE 100% APROVADA - SEM PENDÊNCIAS*`;
+        if (count === 0) {
+            text += `✅ *UNIDADE 100% APROVADA - SEM PENDÊNCIAS*`;
+        }
+
+        const encoded = encodeURIComponent(text);
+        window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
     }
 
-    const encoded = encodeURIComponent(text);
-    window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
-}
     function updateTaskScheduleFromCalendar(unitNum, historyIndex, detailIndex) {
         const historyKey = `unit_${unitNum}`;
         if (!dbUnitsCache[historyKey] || !dbUnitsCache[historyKey][historyIndex]) return;
