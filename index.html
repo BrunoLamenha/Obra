@@ -709,16 +709,25 @@ if (document.readyState === 'loading') {
             </div>
 
             <label>Responsável Pela Correção:</label>
-            <select class="nc-resp">
-                <option ${prevData && prevData.resp === 'Pintura / Emassamento' ? 'selected' : ''}>Pintura / Emassamento</option>
-                <option ${prevData && prevData.resp === 'Marmoraria / Graniteiro' ? 'selected' : ''}>Marmoraria / Graniteiro</option>
-                <option ${prevData && prevData.resp === 'Instalações Hidráulicas' ? 'selected' : ''}>Instalações Hidráulicas</option>
-                <option ${prevData && prevData.resp === 'Eletricista' ? 'selected' : ''}>Eletricista</option>
-                <option ${prevData && prevData.resp === 'Marcenaria / Portas de Madeira' ? 'selected' : ''}>Marcenaria / Portas de Madeira</option>
-                <option ${prevData && prevData.resp === 'Esquadrias de Alumínio / Vidros' ? 'selected' : ''}>Esquadrias de Alumínio / Vidros</option>
-                <option ${prevData && prevData.resp === 'Piso e Revestimento' ? 'selected' : ''}>Piso e Revestimento</option>
-                <option ${prevData && prevData.resp === 'Gesso / Sancas' ? 'selected' : ''}>Gesso / Sancas</option>
-            </select>
+            // Substitua o trecho da seleção do responsável dentro da função addNC por este:
+<label>Responsável Pela Correção <span style="color:red;">*</span>:</label>
+<select class="nc-resp" onchange="toggleOtherRespField('${ncBoxId}', this)">
+    <option value="" ${!prevData || !prevData.resp ? 'selected' : ''} disabled>Escolher...</option>
+    <option ${prevData && prevData.resp === 'Pintura / Emassamento' ? 'selected' : ''}>Pintura / Emassamento</option>
+    <option ${prevData && prevData.resp === 'Marmoraria / Graniteiro' ? 'selected' : ''}>Marmoraria / Graniteiro</option>
+    <option ${prevData && prevData.resp === 'Instalações Hidráulicas' ? 'selected' : ''}>Instalações Hidráulicas</option>
+    <option ${prevData && prevData.resp === 'Eletricista' ? 'selected' : ''}>Eletricista</option>
+    <option ${prevData && prevData.resp === 'Marcenaria / Portas de Madeira' ? 'selected' : ''}>Marcenaria / Portas de Madeira</option>
+    <option ${prevData && prevData.resp === 'Esquadrias de Alumínio / Vidros' ? 'selected' : ''}>Esquadrias de Alumínio / Vidros</option>
+    <option ${prevData && prevData.resp === 'Piso e Revestimento' ? 'selected' : ''}>Piso e Revestimento</option>
+    <option ${prevData && prevData.resp === 'Gesso / Sancas' ? 'selected' : ''}>Gesso / Sancas</option>
+    <option ${prevData && prevData.resp === 'Outro' || (prevData && prevData.respCustom) ? 'selected' : ''} value="Outro">Outro</option>
+</select>
+
+<div id="other-resp-container-${ncBoxId}" style="display:${prevData && (prevData.resp === 'Outro' || prevData.respCustom) ? 'block' : 'none'}; margin-top:6px;">
+    <label style="color:#004a8f;">Especifique o Responsável / Empresa:</label>
+    <input type="text" class="nc-resp-other-input" placeholder="Ex: Serralheria / Empreiteiro X" value="${prevData && prevData.respCustom ? prevData.respCustom : ''}">
+</div>
             
             <div class="grid-two">
                 <div>
@@ -808,48 +817,70 @@ if (document.readyState === 'loading') {
 
                 if (statusInfo.status === 'NOK') {
                     const ncBoxes = itemCard.querySelectorAll('.nc-box');
-                    ncBoxes.forEach(box => {
-                        pendingCount++;
-                        const itemId = box.getAttribute('data-item-id');
-                        const boxId = box.id;
-                        const itemObj = checklist.find(i => i.id === itemId) || { cleanName: 'Item de Vistoria' };
-                        
-                        let selectedOpts = [];
-                        box.querySelectorAll('.checklist-group input[type="checkbox"]:checked').forEach(chk => {
-                            selectedOpts.push(chk.value);
-                        });
+                    // DENTRO DA FUNÇÃO generateTechnicalPDF():
+ncBoxes.forEach(box => {
+    pendingCount++;
+    const itemId = box.getAttribute('data-item-id');
+    const boxId = box.id;
+    const itemObj = checklist.find(i => i.id === itemId) || { cleanName: 'Item de Vistoria' };
+    
+    let selectedOpts = [];
+    box.querySelectorAll('.checklist-group input[type="checkbox"]:checked').forEach(chk => {
+        selectedOpts.push(chk.value);
+    });
 
-                        const otherVal = box.querySelector('.nc-other-input')?.value;
-                        if (otherVal) selectedOpts.push(`Outros: ${otherVal}`);
+    const otherVal = box.querySelector('.nc-other-input')?.value;
+    if (otherVal) selectedOpts.push(`Outros: ${otherVal}`);
 
-                        const respVal = box.querySelector('.nc-resp')?.value || 'Não informado';
-                        const daysVal = box.querySelector('.nc-days')?.value || '-';
-                        
-                        const startDateRaw = box.querySelector('.nc-start-date')?.value || '';
-                        let startDateFormatted = 'Não definida';
-                        if(startDateRaw) {
-                            const parts = startDateRaw.split('-');
-                            if(parts.length === 3) startDateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                        }
+    // =========================================================
+    // COLE O ITEM 3 AQUI (Validação do Responsável & Outro)
+    // =========================================================
+    let respVal = box.querySelector('.nc-resp')?.value;
+    const respOtherInput = box.querySelector('.nc-resp-other-input')?.value.trim();
 
-                        const photoSrc = document.getElementById(`img-preview-${boxId}`)?.src || '';
-                        const hasPhoto = photoSrc && photoSrc.startsWith('data:image');
+    if (!respVal) {
+        alert(`⚠️ Por favor, selecione o Responsável Pela Correção na pendência do ambiente "${roomName}".`);
+        box.querySelector('.nc-resp').focus();
+        throw new Error("Responsável não selecionado"); // Interrompe a execução
+    }
 
-                        currentPendencies.push({
-                            fullId: fullId,
-                            room: roomName,
-                            item: itemObj.cleanName,
-                            details: selectedOpts,
-                            resp: respVal,
-                            days: daysVal,
-                            startDate: startDateFormatted,
-                            startDateRaw: startDateRaw,
-                            photo: hasPhoto ? photoSrc : null
-                        });
-                    });
-                }
-            });
-        });
+    let customRespNote = '';
+    if (respVal === 'Outro') {
+        if (!respOtherInput) {
+            alert(`⚠️ Por favor, especifique o nome do responsável no campo "Outro" do ambiente "${roomName}".`);
+            box.querySelector('.nc-resp-other-input').focus();
+            throw new Error("Responsável especificado em branco"); // Interrompe a execução
+        }
+        customRespNote = respOtherInput;
+        respVal = `Outro (${respOtherInput})`;
+    }
+    // =========================================================
+
+    const daysVal = box.querySelector('.nc-days')?.value || '-';
+    
+    const startDateRaw = box.querySelector('.nc-start-date')?.value || '';
+    let startDateFormatted = 'Não definida';
+    if(startDateRaw) {
+        const parts = startDateRaw.split('-');
+        if(parts.length === 3) startDateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    const photoSrc = document.getElementById(`img-preview-${boxId}`)?.src || '';
+    const hasPhoto = photoSrc && photoSrc.startsWith('data:image');
+
+    currentPendencies.push({
+        fullId: fullId,
+        room: roomName,
+        item: itemObj.cleanName,
+        details: selectedOpts,
+        resp: respVal,
+        respCustom: customRespNote,
+        days: daysVal,
+        startDate: startDateFormatted,
+        startDateRaw: startDateRaw,
+        photo: hasPhoto ? photoSrc : null
+    });
+});
 
         const historyKey = `unit_${selectedUnitNum}`;
         const existingHistory = dbUnitsCache[historyKey] || [];
@@ -1435,6 +1466,16 @@ async function assignTaskDateFromInput(unitKey, ncIndex, originalDays) {
         } catch (err) {
             console.error("Erro ao atualizar dados no Firebase:", err);
             alert("⚠️ Não foi possível salvar as alterações no banco de dados.");
+        }
+    }
+}
+    function toggleOtherRespField(boxId, selectEl) {
+    const container = document.getElementById(`other-resp-container-${boxId}`);
+    if (container) {
+        if (selectEl.value === 'Outro') {
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
         }
     }
 }
