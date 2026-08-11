@@ -1065,7 +1065,49 @@
     function closeHistory() {
         document.getElementById('history-panel').style.display = 'none';
     }
+function assignTaskDateFromInput(unitKey, ncIndex, originalDays) {
+    const dateInput = document.getElementById(`input-date-${unitKey}-${ncIndex}`);
+    const daysInput = document.getElementById(`input-days-${unitKey}-${ncIndex}`);
 
+    if (!dateInput || !dateInput.value) {
+        alert('Por favor, escolha uma data de início antes de agendar.');
+        return;
+    }
+
+    const selectedDate = dateInput.value;
+    const newDays = parseInt(daysInput.value) || originalDays;
+
+    const history = dbUnitsCache[unitKey] || [];
+    if (history.length === 0) return;
+
+    const latestInsp = history[history.length - 1];
+    if (latestInsp.pendencies && latestInsp.pendencies[ncIndex]) {
+        const nc = latestInsp.pendencies[ncIndex];
+        const parts = selectedDate.split('-');
+
+        nc.startDateRaw = selectedDate;
+        nc.startDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+        if (newDays !== parseInt(originalDays)) {
+            const todayFormatted = new Date().toLocaleDateString('pt-BR');
+            nc.days = newDays;
+            nc.daysUpdatedNote = `Prazo alterado de ${originalDays} para ${newDays} dia(s) em ${todayFormatted}`;
+        }
+
+        // Salva no banco de dados
+        db.collection('vistorias_unidades').doc(unitKey).set({
+            history: history,
+            lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).then(() => {
+            dbUnitsCache[unitKey] = history;
+            renderInteractiveCalendar(); // Atualiza a tela e envia o card para o Calendário
+        }).catch(err => {
+            console.error("Erro ao agendar tarefa:", err);
+            alert("⚠️ Não foi possível salvar a data no banco de dados.");
+        });
+    }
+}
+    
     function renderInteractiveCalendar() {
         const legendContainer = document.getElementById('resp-legend-box');
         legendContainer.innerHTML = '';
