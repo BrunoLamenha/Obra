@@ -86,7 +86,6 @@
         .kpi-card h5 { font-size: 0.72rem; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
         .kpi-card .kpi-num { font-size: 1.3rem; font-weight: bold; color: #0f172a; }
 
-        /* Barra de Recorrência */
         .bar-container { background: #e2e8f0; border-radius: 4px; height: 14px; width: 100%; overflow: hidden; margin-top: 4px; }
         .bar-fill { background: var(--primary); height: 100%; transition: width 0.3s; }
         
@@ -196,7 +195,7 @@
         </div>
     </div>
 
-    <!-- ABA 2: MAPA GERAL DA OBRA & INDICADORES (DASHBOARD COMPLETO) -->
+    <!-- ABA 2: MAPA GERAL DA OBRA & INDICADORES -->
     <div id="tab-mapa" class="no-print" style="display:none;">
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
@@ -212,7 +211,6 @@
                 <div class="kpi-card"><h5>Pendências Abertas</h5><div class="kpi-num" id="kpi-pending" style="color:#dc2626;">0</div></div>
             </div>
 
-            <!-- DASHBOARD 1: NÃO CONFORMIDADES MAIS RECORRENTES -->
             <div style="margin-top: 15px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
                 <h4 style="font-size:0.85rem; color:var(--primary); margin-bottom:10px;">🔥 Top Não Conformidades Mais Recorrentes na Obra</h4>
                 <div id="top-nc-container">
@@ -220,7 +218,6 @@
                 </div>
             </div>
 
-            <!-- DASHBOARD 2: LISTA DE PENDÊNCIAS POR RESPONSÁVEL (GRAVIDADE > TEMPO) -->
             <div style="margin-top: 15px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
                 <h4 style="font-size:0.85rem; color:var(--primary); margin-bottom:10px;">👷‍♂️ Fila de Pendências por Responsável (Ordenado por Gravidade > Tempo)</h4>
                 <div id="resp-priority-container">
@@ -421,7 +418,6 @@
         document.getElementById('type-card').style.display = 'block';
         document.getElementById('inspection-area').style.display = 'none';
 
-        // Restaura Categoria Se Existir
         if (selectedCategory) {
             let catBtn = selectedCategory.includes('Reforma') ? document.getElementById('btn-cat-reforma') : document.getElementById('btn-cat-padrao');
             if (catBtn) setCategory(selectedCategory, catBtn, true);
@@ -441,12 +437,10 @@
         calculateNextStage();
     }
 
-    // CALCULA AUTOMATICAMENTE SE É 1ª VISTORIA OU REVISTORIA (1ª Rev, 2ª Rev...)
     function calculateNextStage() {
         const historyKey = `unit_${selectedUnitNum}`;
         const history = dbUnitsCache[historyKey] || [];
         
-        // Filtra histórico pelo tipo atual
         const sameCatHistory = history.filter(h => h.category === selectedCategory);
 
         if (sameCatHistory.length === 0) {
@@ -892,34 +886,42 @@
         });
     }
 
+    // ENVIO VIA WHATSAPP DIRETO DA TELA (CORRIGIDO)
     function sendWhatsAppSummary() {
         if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
-        
+
+        // Salvar todos os inputs dos campos visíveis na tela
+        Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
+
         let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
         text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
         text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
 
         let count = 0;
         Object.keys(pendingNCs).forEach(key => {
-            salvarEstadoAtualInput(key);
             const roomKey = key.split('_')[0] + '_' + key.split('_')[1];
             const roomId = key.replace(`${roomKey}_`, '');
             const itemObj = checklist.find(i => i.id === roomId);
 
-            pendingNCs[key].forEach(nc => {
-                if (nc.selectedOpts.length > 0 || nc.obs.trim() !== '') {
-                    count++;
-                    const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
-                    let deadlineDate = addBusinessDays(nc.startDate, parseInt(nc.businessDays));
+            if (pendingNCs[key] && pendingNCs[key].length > 0) {
+                pendingNCs[key].forEach(nc => {
+                    let hasOpts = nc.selectedOpts && nc.selectedOpts.length > 0;
+                    let hasObs = nc.obs && nc.obs.trim() !== '';
 
-                    text += `*${count}. ${roomNames[roomKey]} - ${itemObj.cleanName}*\n`;
-                    text += `• Pendência: ${nc.selectedOpts.join(', ')} ${nc.obs ? '('+nc.obs+')' : ''}\n`;
-                    text += `• Responsável: ${resp || 'Não definido'}\n`;
-                    text += `• Data Início: ${nc.startDate || 'Não informada'}\n`;
-                    text += `• Prazo Execução: ${nc.businessDays || 3} dias úteis ${deadlineDate ? '(Prazo Final: ' + deadlineDate + ')' : ''}\n`;
-                    text += `• Severidade: ${nc.severity}\n\n`;
-                }
-            });
+                    if (hasOpts || hasObs) {
+                        count++;
+                        const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
+                        let deadlineDate = addBusinessDays(nc.startDate, parseInt(nc.businessDays));
+
+                        text += `*${count}. ${roomNames[roomKey]} - ${itemObj ? itemObj.cleanName : ''}*\n`;
+                        text += `• Pendência: ${nc.selectedOpts.join(', ')} ${nc.obs ? '(' + nc.obs + ')' : ''}\n`;
+                        text += `• Responsável: ${resp || 'Não definido'}\n`;
+                        text += `• Data Início: ${nc.startDate || 'Não informada'}\n`;
+                        text += `• Prazo Execução: ${nc.businessDays || 3} dias úteis ${deadlineDate ? '(Prazo Final: ' + deadlineDate + ')' : ''}\n`;
+                        text += `• Severidade: ${nc.severity || 'Baixa'}\n\n`;
+                    }
+                });
+            }
         });
 
         if (count === 0) {
@@ -927,7 +929,9 @@
         }
 
         const encoded = encodeURIComponent(text);
-        window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+        const url = `https://api.whatsapp.com/send?text=${encoded}`;
+        
+        window.open(url, '_blank');
     }
 
     function resolveTaskFromCalendar(unitNum, historyIndex, detailIndex) {
@@ -987,7 +991,6 @@
         document.getElementById('kpi-pending').innerText = totalPending;
     }
 
-    // RENDERIZAÇÃO DOS DASHBOARDS DE RECORRÊNCIA E PRIORIDADE
     function renderDashboards() {
         let ncCounts = {};
         let activeByResp = {};
@@ -1001,11 +1004,9 @@
                 const last = history[history.length - 1];
                 if (last.details) {
                     last.details.forEach(d => {
-                        // Contador de Recorrência (Mesmo para concluídas)
                         let ncName = `${d.item}: ${d.nonConformity}`;
                         ncCounts[ncName] = (ncCounts[ncName] || 0) + 1;
 
-                        // Agrupamento de Ativas por Responsável
                         if (d.status !== 'Concluído') {
                             let resp = d.responsible || 'Outro / Não Definido';
                             if (!activeByResp[resp]) activeByResp[resp] = [];
@@ -1024,7 +1025,6 @@
             }
         });
 
-        // 1. Renderiza Top 5 Recorrências
         const sortedNCs = Object.entries(ncCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
         const topContainer = document.getElementById('top-nc-container');
         if (sortedNCs.length === 0) {
@@ -1047,13 +1047,11 @@
             }).join('');
         }
 
-        // 2. Renderiza Prioridade por Responsável (Gravidade > Tempo)
         const respContainer = document.getElementById('resp-priority-container');
         if (Object.keys(activeByResp).length === 0) {
             respContainer.innerHTML = '<p style="font-size:0.8rem; color:#666;">Nenhuma pendência ativa para exibição.</p>';
         } else {
             respContainer.innerHTML = Object.keys(activeByResp).map(resp => {
-                // Ordenação: Gravidade maior primeiro. Se igual, Mais antigo (timestamp menor) primeiro.
                 activeByResp[resp].sort((a, b) => {
                     let weightA = severityWeight[a.severity] || 1;
                     let weightB = severityWeight[b.severity] || 1;
