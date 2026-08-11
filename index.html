@@ -979,17 +979,20 @@ const checklist = [
         });
     }
 
-    function sendWhatsAppSummary() {
-        if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
+    async function sendWhatsAppSummary() {
+    if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
 
-        Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
+    Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
 
-        let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
-        text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
-        text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+    let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
+    text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
+    text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
 
-        let count = 0;
-        Object.keys(pendingNCs).forEach(key => {
+    let imageFiles = [];
+    let count = 0;
+
+    for (const key of Object.keys(pendingNCs)) {
+        if (pendingNCs[key] && pendingNCs[key].length > 0) {
             const lastUnderscoreIndex = key.lastIndexOf('_');
             const roomKey = key.substring(0, lastUnderscoreIndex);
             const itemId = key.substring(lastUnderscoreIndex + 1);
@@ -998,37 +1001,63 @@ const checklist = [
             const itemObj = checklist.find(i => i.id === itemId);
             const itemName = itemObj ? itemObj.cleanName : 'Item';
 
-            if (pendingNCs[key] && pendingNCs[key].length > 0) {
-                pendingNCs[key].forEach(nc => {
-                    count++;
-                    const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
-                    
-                    let days = parseInt(nc.businessDays);
-                    let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
+            for (const nc of pendingNCs[key]) {
+                count++;
+                const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
+                let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
+                let obsText = nc.obs ? ` (${nc.obs})` : '';
 
-                    let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
-                    let obsText = nc.obs ? ` (${nc.obs})` : '';
-                    let pendenciaDesc = (optsText + obsText).trim() || 'Pendência não detalhada';
+                let days = parseInt(nc.businessDays);
+                let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
 
-                    text += `*${count}. ${roomName} - ${itemName}*\n`;
-                    text += `• Pendência: ${pendenciaDesc}\n`;
-                    text += `• Responsável: ${resp || 'Não definido'}\n`;
-                    text += `• Data Início: ${nc.startDate || 'Sem data'}\n`;
-                    text += `• Prazo Execução: ${nc.businessDays ? nc.businessDays + ' dias úteis' : 'A definir'}`;
-                    if (deadlineDate) text += ` (Prazo Final: ${deadlineDate})`;
-                    text += `\n• Severidade: ${nc.severity || 'Baixa'}\n\n`;
-                });
+                text += `*${count}. ${roomName} - ${itemName}*\n`;
+                text += `• Pendência: ${(optsText + obsText).trim() || 'Sem detalhes'}\n`;
+                text += `• Responsável: ${resp || 'A definir'}\n`;
+                text += `• Data Início: ${nc.startDate || 'Sem data'}\n`;
+                text += `• Prazo Execução: ${nc.businessDays ? nc.businessDays + ' dias úteis' : 'A definir'}`;
+                if (deadlineDate) text += ` (Prazo Final: ${deadlineDate})`;
+                text += `\n• Severidade: ${nc.severity || 'Baixa'}\n\n`;
+
+                // Converte as imagens base64 em arquivos para o compartilhamento nativo
+                if (nc.photos && nc.photos.length > 0) {
+                    for (let i = 0; i < nc.photos.length; i++) {
+                        if (nc.photos[i].startsWith('data:image')) {
+                            try {
+                                const blob = await (await fetch(nc.photos[i])).blob();
+                                const file = new File([blob], `apto${selectedUnitNum}_item${count}_foto${i + 1}.jpg`, { type: 'image/jpeg' });
+                                imageFiles.push(file);
+                            } catch (e) {
+                                console.error("Erro ao converter foto:", e);
+                            }
+                        }
+                    }
+                }
             }
-        });
-
-        if (count === 0) {
-            text += `✅ *UNIDADE 100% APROVADA - SEM PENDÊNCIAS*`;
         }
-
-        const encoded = encodeURIComponent(text);
-        window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
     }
 
+    if (count === 0) text += `✅ *UNIDADE 100% APROVADA - SEM PENDÊNCIAS*`;
+
+    // 1. Tenta o Compartilhamento Nativo do Celular (Envia Texto + Imagens no WhatsApp)
+    if (navigator.canShare && imageFiles.length > 0) {
+        try {
+            if (navigator.canShare({ files: imageFiles })) {
+                await navigator.share({
+                    title: `Vistoria Apto ${selectedUnitNum}`,
+                    text: text,
+                    files: imageFiles
+                });
+                return;
+            }
+        } catch (err) {
+            console.log("Compartilhamento nativo cancelado ou não suportado, usando envio padrão por link.");
+        }
+    }
+
+    // 2. Fallback: Envio direto por link (Somente Texto se estiver no PC ou se o dispositivo não suportar envio de fotos direto)
+    const encoded = encodeURIComponent(text);
+    window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+}
     function updateTaskScheduleFromCalendar(unitNum, historyIndex, detailIndex) {
         const historyKey = `unit_${unitNum}`;
         if (!dbUnitsCache[historyKey] || !dbUnitsCache[historyKey][historyIndex]) return;
