@@ -297,16 +297,18 @@
     };
 
     // Sequência ordenada pelo fluxo real de execução da obra
-    const checklist = [
-        { id: "eletrica", name: "1. Tubulações, Tomadas, Interruptores e Plafons", cleanName: "Instalações Elétricas e Iluminação", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Ponto Sem Energia / Fio Solto", "Plafon Não Liga / Danificado", "Quadro de Disjuntores Incompleto", "Outros"] },
-        { id: "hidra", name: "2. Tubulações, Louças, Metais e Sifão", cleanName: "Instalações Hidráulicas e Louças/Metais", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
-        { id: "ac", name: "3. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura de Climatização", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] },
-        { id: "piso", name: "4. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
-        { id: "bancada", name: "5. Bancadas, Soleiras e Peitoris", cleanName: "Marmoraria / Bancadas e Soleiras", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
-        { id: "esquadria", name: "6. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias e Vidraçaria", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
-        { id: "portas", name: "7. Portas de Madeira e Alizares", cleanName: "Esquadrias de Madeira", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
-        { id: "pintura", name: "8. Emassamento, Lixamento e Pintura", cleanName: "Pintura e Acabamento de Parede/Teto", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] }
-    ];
+    // 1. Checklist atualizada com novos termos e inclusão do Forro de Gesso
+const checklist = [
+    { id: "eletrica", name: "1. Tubulações, Tomadas, Interruptores e Luminárias", cleanName: "Instalações Elétricas e Iluminação", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Adicionar ou Retirar Módulo", "Adicionar ou Retirar Ponto", "Ponto Sem Energia / Fio Solto", "Luminária Não Liga / Danificada", "Quadro de Disjuntores Incompleto", "Outros"] },
+    { id: "hidra", name: "2. Tubulações, Louças, Metais e Sifão", cleanName: "Instalações Hidráulicas e Louças/Metais", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Instalar Torneira e Engate", "Instalar Grelha e Porta Grelha", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
+    { id: "gesso", name: "3. Forro e Sancas de Gesso", cleanName: "Gesso e Sancas", options: ["Fissura / Trinca na Chapa ou Junta", "Desnível / Placa Oca / Abulada", "Falta Tabica / Junta de Dilatação Deficiente", "Abertura / Recorte Incorreto para Luminária", "Marcas de Parafuso / Rebarbas Expostas", "Falta Emassamento / Rejunte no Gesso", "Umidade / Mofo / Mancha amarelada", "Outros"] },
+    { id: "ac", name: "4. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura de Climatização", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] },
+    { id: "piso", name: "5. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
+    { id: "bancada", name: "6. Bancadas, Soleiras e Peitoris", cleanName: "Marmoraria / Bancadas e Soleiras", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
+    { id: "esquadria", name: "7. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias e Vidraçaria", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
+    { id: "portas", name: "8. Portas de Madeira e Alizares", cleanName: "Esquadrias de Madeira", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
+    { id: "pintura", name: "9. Emassamento, Lixamento e Pintura", cleanName: "Pintura e Acabamento de Parede/Teto", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] }
+]
 
     var pendingNCs = {};
     let selectedFloorNum = null;
@@ -511,39 +513,44 @@
     }
 
     function buildInspectionForm() {
-        ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
-            const container = document.getElementById(roomId);
-            container.innerHTML = '';
+    ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
+        const container = document.getElementById(roomId);
+        if (!container) return;
+        container.innerHTML = '';
 
-            checklist.forEach(item => {
-                const key = `${roomId}_${item.id}`;
-                if (!pendingNCs[key]) pendingNCs[key] = [];
+        checklist.forEach(item => {
+            // Oculta o item de Ar-Condicionado (ac) no Banheiro e na Varanda
+            if (item.id === 'ac' && (roomId === 'room-bath' || roomId === 'room-balcony')) {
+                return;
+            }
 
-                let hasPending = pendingNCs[key].length > 0;
-                let ncBoxesHTML = renderNCBoxes(key, item);
+            const key = `${roomId}_${item.id}`;
+            if (!pendingNCs[key]) pendingNCs[key] = [];
 
-                let btnOkClass = 'btn-neutral';
-                let btnNokClass = hasPending ? 'btn-nok-active' : 'btn-neutral';
+            let hasPending = pendingNCs[key].length > 0;
+            let ncBoxesHTML = renderNCBoxes(key, item);
 
-                container.innerHTML += `
-                    <div class="item-card" id="card_${key}">
-                        <div class="item-header">
-                            <span class="item-title">${item.name}</span>
-                            <div>
-                                <button class="btn-status ${btnOkClass}" id="btn_ok_${key}" onclick="setItemStatus('${key}', 'OK', '${item.id}')">Conforme ✓</button>
-                                <button class="btn-status ${btnNokClass}" id="btn_nok_${key}" onclick="setItemStatus('${key}', 'NOK', '${item.id}')">Não Conforme ✕</button>
-                            </div>
+            let btnOkClass = 'btn-neutral';
+            let btnNokClass = hasPending ? 'btn-nok-active' : 'btn-neutral';
+
+            container.innerHTML += `
+                <div class="item-card" id="card_${key}">
+                    <div class="item-header">
+                        <span class="item-title">${item.name}</span>
+                        <div>
+                            <button class="btn-status ${btnOkClass}" id="btn_ok_${key}" onclick="setItemStatus('${key}', 'OK', '${item.id}')">Conforme ✓</button>
+                            <button class="btn-status ${btnNokClass}" id="btn_nok_${key}" onclick="setItemStatus('${key}', 'NOK', '${item.id}')">Não Conforme ✕</button>
                         </div>
-                        <div id="nc_container_${key}">${ncBoxesHTML}</div>
-                        <button class="btn-add-nc" id="btn_add_${key}" style="display:${hasPending ? 'block' : 'none'};" onclick="addNC('${key}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
                     </div>
-                `;
-            });
+                    <div id="nc_container_${key}">${ncBoxesHTML}</div>
+                    <button class="btn-add-nc" id="btn_add_${key}" style="display:${hasPending ? 'block' : 'none'};" onclick="addNC('${key}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
+                </div>
+            `;
         });
+    });
 
-        Object.keys(pendingNCs).forEach(key => restaurarValoresInputs(key));
-    }
-
+    Object.keys(pendingNCs).forEach(key => restaurarValoresInputs(key));
+}
     function renderNCBoxes(key, itemObj) {
         if (!pendingNCs[key] || pendingNCs[key].length === 0) return '';
 
