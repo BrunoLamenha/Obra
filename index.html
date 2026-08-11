@@ -1262,21 +1262,28 @@ function renderSidebarTasks(unassignedTasks, calendarEvents) {
 
     let unassignedHTML = unassignedTasks.length === 0 
         ? '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência sem data.</p>'
-        : unassignedTasks.map(t => `
-            <div class="fc-task-card fc-draggable-task" 
-                 style="border-left-color:${t.color}; cursor:grab;"
-                 data-unit-key="${t.unitKey}"
-                 data-nc-index="${t.ncIndex}"
-                 data-days="${t.days}"
-                 data-color="${t.color}">
-                <strong>Apto ${t.unit}</strong> — ${t.item}<br>
-                <span style="color:#64748b; font-size:0.7rem;">${t.resp} | Prazo: ${t.days} dia(s)</span>
+        : unassignedTasks.map((t, idx) => `
+            <div style="background:#fff; border:1px solid #cbd5e1; border-left:5px solid ${t.color}; padding:8px; border-radius:6px; margin-bottom:8px; font-size:0.78rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>Apto ${t.unit}</strong>
+                    <span style="background:${t.color}; color:white; padding:1px 5px; border-radius:3px; font-size:0.68rem;">${t.resp}</span>
+                </div>
+                <div style="margin-top:3px; font-weight:600; color:#334155;">${t.item}</div>
+                <div style="color:#64748b; font-size:0.72rem; margin-bottom:6px;">Prazo: ${t.days} dia(s)</div>
+                
+                <!-- Campos de Escolha de Data -->
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                    <input type="date" id="input-date-${t.unitKey}-${t.ncIndex}" style="padding:4px; font-size:0.75rem; border:1px solid #ccc; border-radius:4px; flex:1;">
+                    <button onclick="assignTaskDateFromInput('${t.unitKey}', ${t.ncIndex})" style="background:#28a745; color:white; border:none; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.72rem; cursor:pointer;">
+                        📅 Agendar
+                    </button>
+                </div>
             </div>
         `).join('');
 
     container.innerHTML = `
         <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📋 Aguardando Agendamento (${unassignedTasks.length})</h4>
-        <div id="unassigned-tasks-list" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px;">
+        <div id="unassigned-tasks-list" style="max-height: 280px; overflow-y: auto; margin-bottom: 15px;">
             ${unassignedHTML}
         </div>
         <hr style="border:0; border-top:1px dashed #cbd5e1; margin:10px 0;">
@@ -1327,6 +1334,17 @@ function showDayInSidebar(dateStr, events, unassignedTasks) {
             </div>
         `;
     }
+}
+// Lança a data escolhida direto no Firebase e recarrega o calendário
+async function assignTaskDateFromInput(unitKey, ncIndex) {
+    const dateInput = document.getElementById(`input-date-${unitKey}-${ncIndex}`);
+    if (!dateInput || !dateInput.value) {
+        alert('Por favor, escolha uma data de início antes de agendar.');
+        return;
+    }
+
+    const selectedDate = dateInput.value; // Formato YYYY-MM-DD
+    await updateTaskStartDate(unitKey, ncIndex, selectedDate);
 }
 </script>
 
