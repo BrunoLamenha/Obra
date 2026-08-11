@@ -954,52 +954,56 @@
     }
 
     function sendWhatsAppSummary() {
-        if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
+    if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
 
-        Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
+    Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
 
-        let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
-        text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
-        text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+    let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
+    text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
+    text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
 
-        let count = 0;
-        Object.keys(pendingNCs).forEach(key => {
-            const roomKey = key.split('_')[0] + '_' + key.split('_')[1];
-            const roomId = key.replace(`${roomKey}_`, '');
-            const itemObj = checklist.find(i => i.id === roomId);
+    let count = 0;
+    Object.keys(pendingNCs).forEach(key => {
+        // Extrai corretamente o ID do cômodo (antes do último underline) e o ID do item (após o último underline)
+        const lastUnderscoreIndex = key.lastIndexOf('_');
+        const roomKey = key.substring(0, lastUnderscoreIndex);
+        const itemId = key.substring(lastUnderscoreIndex + 1);
 
-            if (pendingNCs[key] && pendingNCs[key].length > 0) {
-                pendingNCs[key].forEach(nc => {
-                    let hasOpts = nc.selectedOpts && nc.selectedOpts.length > 0;
-                    let hasObs = nc.obs && nc.obs.trim() !== '';
+        const roomName = roomNames[roomKey] || 'Ambiente';
+        const itemObj = checklist.find(i => i.id === itemId);
+        const itemName = itemObj ? itemObj.cleanName : 'Item';
 
-                    if (hasOpts || hasObs) {
-                        count++;
-                        const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
-                        
-                        let days = parseInt(nc.businessDays);
-                        let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
+        if (pendingNCs[key] && pendingNCs[key].length > 0) {
+            pendingNCs[key].forEach(nc => {
+                let hasOpts = nc.selectedOpts && nc.selectedOpts.length > 0;
+                let hasObs = nc.obs && nc.obs.trim() !== '';
 
-                        text += `*${count}. ${roomNames[roomKey]} - ${itemObj ? itemObj.cleanName : ''}*\n`;
-                        text += `• Pendência: ${nc.selectedOpts.join(', ')} ${nc.obs ? '(' + nc.obs + ')' : ''}\n`;
-                        text += `• Responsável: ${resp || 'Não definido'}\n`;
-                        text += `• Data Início: ${nc.startDate || 'Sem data'}\n`;
-                        text += `• Prazo Execução: ${nc.businessDays ? nc.businessDays + ' dias úteis' : 'A definir'}`;
-                        if (deadlineDate) text += ` (Prazo Final: ${deadlineDate})`;
-                        text += `\n• Severidade: ${nc.severity || 'Baixa'}\n\n`;
-                    }
-                });
-            }
-        });
+                if (hasOpts || hasObs) {
+                    count++;
+                    const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
+                    
+                    let days = parseInt(nc.businessDays);
+                    let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
 
-        if (count === 0) {
-            text += `✅ *UNIDADE 100% APROVADA - SEM PENDÊNCIAS*`;
+                    text += `*${count}. ${roomName} - ${itemName}*\n`;
+                    text += `• Pendência: ${nc.selectedOpts.join(', ')} ${nc.obs ? '(' + nc.obs + ')' : ''}\n`;
+                    text += `• Responsável: ${resp || 'Não definido'}\n`;
+                    text += `• Data Início: ${nc.startDate || 'Sem data'}\n`;
+                    text += `• Prazo Execução: ${nc.businessDays ? nc.businessDays + ' dias úteis' : 'A definir'}`;
+                    if (deadlineDate) text += ` (Prazo Final: ${deadlineDate})`;
+                    text += `\n• Severidade: ${nc.severity || 'Baixa'}\n\n`;
+                }
+            });
         }
+    });
 
-        const encoded = encodeURIComponent(text);
-        window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+    if (count === 0) {
+        text += `✅ *UNIDADE 100% APROVADA - SEM PENDÊNCIAS*`;
     }
 
+    const encoded = encodeURIComponent(text);
+    window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+}
     function updateTaskScheduleFromCalendar(unitNum, historyIndex, detailIndex) {
         const historyKey = `unit_${unitNum}`;
         if (!dbUnitsCache[historyKey] || !dbUnitsCache[historyKey][historyIndex]) return;
