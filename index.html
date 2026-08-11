@@ -635,99 +635,65 @@
         }
     }
 
-    function addNC(fullId, itemId, prevData = null) {
-        ncCounters[fullId]++;
-        const count = ncCounters[fullId];
-        const container = document.getElementById(`nc_container_${fullId}`);
-        const itemObj = checklist.find(i => i.id === itemId);
-        const ncBoxId = `nc_${fullId}_${count}`;
+ // --- COPIE E SUBSTITUA DAQUI ---
+function salvarEstadoAtualInput(key) {
+    if (!pendingNCs[key]) return;
+    pendingNCs[key].forEach((nc, index) => {
+        const obsEl = document.getElementById(`obs_${key}_${index}`);
+        const respEl = document.getElementById(`resp_${key}_${index}`);
+        if (obsEl) nc.obs = obsEl.value;
+        if (respEl) nc.resp = respEl.value;
 
-        let optsHtml = '';
-        itemObj.options.forEach((opt) => {
-            const isChecked = prevData && prevData.details && prevData.details.some(d => d.includes(opt));
-            optsHtml += `
-                <label class="chk-label">
-                    <input type="checkbox" value="${opt}" ${isChecked ? 'checked' : ''} onchange="toggleOtherInput('${ncBoxId}', this)"> ${opt}
-                </label>
-            `;
+        nc.selectedOpts = [];
+        document.querySelectorAll(`.chk_${key}_${index}:checked`).forEach(chk => {
+            nc.selectedOpts.push(chk.value);
         });
+    });
+}
 
-        const isOtherChecked = prevData && prevData.details && prevData.details.some(d => d.startsWith('Outros:'));
-        const otherValText = isOtherChecked ? prevData.details.find(d => d.startsWith('Outros:')).replace('Outros: ', '') : '';
+function addNC(key, itemId) {
+    // 1. Preserva o que já foi marcado/digitado antes de adicionar uma nova linha
+    salvarEstadoAtualInput(key);
 
-        const respValue = prevData ? prevData.resp : '';
-        const isCustomResp = respValue && respValue.startsWith('Outro');
-        const customRespText = prevData && prevData.respCustom ? prevData.respCustom : '';
+    const itemObj = checklist.find(i => i.id === itemId);
+    if (!pendingNCs[key]) pendingNCs[key] = [];
+    
+    pendingNCs[key].push({
+        id: Date.now(),
+        selectedOpts: [],
+        obs: '',
+        resp: 'Pintura / Emassamento'
+    });
 
-        const boxHtml = `
-            <div class="nc-box" id="${ncBoxId}" data-item-id="${itemId}">
-                <div class="nc-header">
-                    <span>PENDÊNCIA #${count}</span>
-                    <button type="button" class="btn-remove" onclick="removeNC('${ncBoxId}', '${fullId}')">Remover ✕</button>
-                </div>
-                
-                <label>Selecione as falhas encontradas:</label>
-                <div class="checklist-group">
-                    ${optsHtml}
-                </div>
-                
-                <div id="other-input-container-${ncBoxId}" style="display: ${isOtherChecked ? 'block' : 'none'}; margin-top: 5px;">
-                    <label>Especifique outro motivo:</label>
-                    <input type="text" class="nc-other-input" placeholder="Descreva a pendência..." value="${otherValText}">
-                </div>
+    document.getElementById(`nc_container_${key}`).innerHTML = renderNCBoxes(key, itemObj);
+    restaurarValoresInputs(key);
+}
 
-                <label>Responsável Pela Correção <span style="color:red;">*</span>:</label>
-                <select class="nc-resp" onchange="toggleOtherRespField('${ncBoxId}', this)">
-                    <option value="" ${!respValue ? 'selected' : ''} disabled>Escolher...</option>
-                    <option ${respValue === 'Pintura / Emassamento' ? 'selected' : ''}>Pintura / Emassamento</option>
-                    <option ${respValue === 'Marmoraria / Graniteiro' ? 'selected' : ''}>Marmoraria / Graniteiro</option>
-                    <option ${respValue === 'Instalações Hidráulicas' ? 'selected' : ''}>Instalações Hidráulicas</option>
-                    <option ${respValue === 'Eletricista' ? 'selected' : ''}>Eletricista</option>
-                    <option ${respValue === 'Marcenaria / Portas de Madeira' ? 'selected' : ''}>Marcenaria / Portas de Madeira</option>
-                    <option ${respValue === 'Esquadrias de Alumínio / Vidros' ? 'selected' : ''}>Esquadrias de Alumínio / Vidros</option>
-                    <option ${respValue === 'Piso e Revestimento' ? 'selected' : ''}>Piso e Revestimento</option>
-                    <option ${respValue === 'Gesso / Sancas' ? 'selected' : ''}>Gesso / Sancas</option>
-                    <option ${isCustomResp || respValue === 'Outro' ? 'selected' : ''} value="Outro">Outro</option>
-                </select>
+function removeNC(key, index, itemId) {
+    salvarEstadoAtualInput(key);
+    pendingNCs[key].splice(index, 1);
+    const itemObj = checklist.find(i => i.id === itemId);
+    document.getElementById(`nc_container_${key}`).innerHTML = renderNCBoxes(key, itemObj);
+    restaurarValoresInputs(key);
+}
 
-                <div id="other-resp-container-${ncBoxId}" style="display:${isCustomResp || respValue === 'Outro' ? 'block' : 'none'}; margin-top:6px;">
-                    <label style="color:#004a8f;">Especifique o Responsável / Empresa:</label>
-                    <input type="text" class="nc-resp-other-input" placeholder="Ex: Serralheria / Empreiteiro X" value="${customRespText}">
-                </div>
+function restaurarValoresInputs(key) {
+    if (!pendingNCs[key]) return;
+    pendingNCs[key].forEach((nc, index) => {
+        const obsEl = document.getElementById(`obs_${key}_${index}`);
+        const respEl = document.getElementById(`resp_${key}_${index}`);
+        if (obsEl && nc.obs) obsEl.value = nc.obs;
+        if (respEl && nc.resp) respEl.value = nc.resp;
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <div>
-                        <label>Prazo Estimado (Dias):</label>
-                        <input type="number" class="nc-days" value="${prevData && prevData.days ? prevData.days : '3'}" min="1" onchange="updateSuggestedStartDate('${ncBoxId}')">
-                    </div>
-                    <div>
-                        <label>Data de Início Prevista:</label>
-                        <input type="date" class="nc-start-date" value="${prevData && prevData.startDateRaw ? prevData.startDateRaw : ''}">
-                    </div>
-                </div>
-
-                <div class="photo-area">
-                    <label>📷 Foto da Pendência:</label>
-                    <input type="file" accept="image/*" capture="environment" onchange="previewPhoto(this, '${ncBoxId}')">
-                    <img id="img-preview-${ncBoxId}" class="photo-preview" src="${prevData && prevData.photo ? prevData.photo : ''}" style="display: ${prevData && prevData.photo ? 'block' : 'none'};">
-                </div>
-            </div>
-        `;
-
-        container.innerHTML += boxHtml;
-    }
-
-    function toggleOtherInput(boxId, chk) {
-        if (chk.value === 'Outros') {
-            const container = document.getElementById(`other-input-container-${boxId}`);
-            if (container) container.style.display = chk.checked ? 'block' : 'none';
+        if (nc.selectedOpts) {
+            nc.selectedOpts.forEach(val => {
+                const chk = document.querySelector(`.chk_${key}_${index}[value="${val}"]`);
+                if (chk) chk.checked = true;
+            });
         }
-    }
-
-    function removeNC(boxId, fullId) {
-        const el = document.getElementById(boxId);
-        if (el) el.remove();
-    }
+    });
+}
+// --- ATÉ AQUI ---
 
     function updateSuggestedStartDate(ncBoxId) {
         const box = document.getElementById(ncBoxId);
