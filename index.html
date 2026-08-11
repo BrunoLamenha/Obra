@@ -314,16 +314,145 @@
     };
 
     // Sequência reordenada em ordem cronológica comum de execução em obra predial:
+// 1. Array de checklist reordenado com IDs padronizados
 const checklist = [
     { id: "eletrica", name: "1. Tubulações, Tomadas, Interruptores e Plafons", cleanName: "Instalações Elétricas e Iluminação", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Ponto Sem Energia / Fio Solto", "Plafon Não Liga / Danificado", "Quadro de Disjuntores Incompleto", "Outros"] },
     { id: "hidra", name: "2. Tubulações, Louças, Metais e Sifão", cleanName: "Instalações Hidráulicas e Louças/Metais", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
     { id: "ac", name: "3. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura de Climatização", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] },
-    { id: "piso", name: "4. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Ceramic/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
+    { id: "piso", name: "4. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
     { id: "bancada", name: "5. Bancadas, Soleiras e Peitoris", cleanName: "Marmoraria / Bancadas e Soleiras", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
     { id: "esquadria", name: "6. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias e Vidraçaria", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
     { id: "portas", name: "7. Portas de Madeira e Alizares", cleanName: "Esquadrias de Madeira", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
     { id: "pintura", name: "8. Emassamento, Lixamento e Pintura", cleanName: "Pintura e Acabamento de Parede/Teto", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] }
 ];
+
+// 2. Renderização das opções da pendência
+function renderNCBoxes(key, itemObj) {
+    if (!pendingNCs[key] || pendingNCs[key].length === 0) return '';
+
+    if (!itemObj) {
+        const lastUnderscoreIndex = key.lastIndexOf('_');
+        const itemId = key.substring(lastUnderscoreIndex + 1);
+        itemObj = checklist.find(i => i.id === itemId);
+    }
+
+    if (!itemObj || !itemObj.options) return '';
+
+    return pendingNCs[key].map((nc, index) => {
+        const chkBoxes = itemObj.options.map(opt => `
+            <label class="chk-label">
+                <input type="checkbox" class="chk_${key}_${index}" value="${opt}" onchange="salvarEstadoAtualInput('${key}')"> ${opt}
+            </label>
+        `).join('');
+
+        return `
+            <div class="nc-box">
+                <div class="nc-header">
+                    <span>PENDÊNCIA #${index + 1}</span>
+                    <div>
+                        <button class="btn-sanar" onclick="sanarNC('${key}', ${index}, '${itemObj.id}')">✓ Sanar / Concluir</button>
+                        <button class="btn-remove" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
+                    </div>
+                </div>
+                <div class="checklist-group">${chkBoxes}</div>
+                
+                <div class="grid-two" style="margin-top: 5px;">
+                    <div>
+                        <label>Responsável / Subempreiteiro: <span style="color:red;">*</span></label>
+                        <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
+                            <option value="" disabled selected>Escolha o Responsável...</option>
+                            <option value="Pintura / Emassamento">Pintura / Emassamento</option>
+                            <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
+                            <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
+                            <option value="Eletricista">Eletricista</option>
+                            <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
+                            <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
+                            <option value="Piso e Revestimento">Piso e Revestimento</option>
+                            <option value="Gesso / Sancas">Gesso / Sancas</option>
+                            <option value="Serralharia / Portões">Serralharia / Portões</option>
+                            <option value="Impermeabilização">Impermeabilização</option>
+                            <option value="Limpeza Pós-Obra">Limpeza Pós-Obra</option>
+                            <option value="Gás Encanado">Gás Encanado</option>
+                            <option value="Outro">Outro (Especifique)</option>
+                        </select>
+                        <input type="text" id="resp_other_${key}_${index}" placeholder="Digite o responsável..." style="display:none; margin-top:6px;" oninput="salvarEstadoAtualInput('${key}')">
+                    </div>
+                    
+                    <div class="grid-two">
+                        <div>
+                            <label>Data Início:</label>
+                            <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                        </div>
+                        <div>
+                            <label>Prazo (Dias Úteis):</label>
+                            <input type="number" id="days_${key}_${index}" min="1" placeholder="A definir" value="${nc.businessDays || ''}" oninput="salvarEstadoAtualInput('${key}')">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-two" style="margin-top: 5px;">
+                    <div>
+                        <label>Status do Reparo:</label>
+                        <select id="status_${key}_${index}" onchange="handleStatusChange('${key}', ${index}, '${itemObj.id}')">
+                            <option value="Aguardando">Aguardando Início</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Concluído">Concluído / Sanado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Gravidade / Severidade:</label>
+                        <select id="sev_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                            <option value="Baixa">Baixa (Estética / Limpeza)</option>
+                            <option value="Média">Média (Funcional)</option>
+                            <option value="Alta">Alta / Crítica (Urgente / Vazamento)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top: 5px;">
+                    <label>Observação Técnica:</label>
+                    <input type="text" id="obs_${key}_${index}" placeholder="Descreva a pendência com precisão..." oninput="salvarEstadoAtualInput('${key}')">
+                </div>
+
+                <div class="photo-area">
+                    <label style="margin:0 0 6px 0; color:#004a8f;">📷 Anexar Foto(s) da Pendência:</label>
+                    <input type="file" accept="image/*" multiple capture="environment" onchange="handleMultiplePhotos(this, '${key}', ${index})">
+                    <div class="photo-gallery" id="gallery_${key}_${index}"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 3. Adiciona pendência e renderiza as opções imediatamente
+function addNC(key, itemId) {
+    salvarEstadoAtualInput(key);
+
+    if (!pendingNCs[key]) pendingNCs[key] = [];
+
+    pendingNCs[key].push({
+        id: Date.now(),
+        selectedOpts: [],
+        obs: '',
+        resp: '',
+        respOther: '',
+        startDate: '',
+        businessDays: '',
+        status: 'Aguardando',
+        severity: 'Baixa',
+        photos: []
+    });
+
+    const itemObj = checklist.find(i => i.id === itemId);
+    const container = document.getElementById(`nc_container_${key}`);
+    if (container) {
+        container.innerHTML = renderNCBoxes(key, itemObj);
+        restaurarValoresInputs(key);
+    }
+    
+    const btnAdd = document.getElementById(`btn_add_${key}`);
+    if (btnAdd) btnAdd.style.display = 'block';
+}
 
     var pendingNCs = {};
     let selectedFloorNum = null;
