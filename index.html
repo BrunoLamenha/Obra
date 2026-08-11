@@ -1361,13 +1361,14 @@ function renderInteractiveCalendar() {
                         
                         let deadline = d.deadlineDate || (d.scheduledFor && d.businessDays ? addBusinessDays(d.scheduledFor, parseInt(d.businessDays)) : null);
                         let serviceColor = respColors[respName] || '#004a8f';
+                        const cardDomId = `task_card_${unitNum}_${hIndex}_${dIndex}`;
 
                         // 1. CARDS DE CONFIGURAÇÃO DE PRAZO (LATERAL ESQUERDA)
                         unassignedHTML += `
-                            <div class="fc-task-card" style="background:#fff; border:1px solid #cbd5e1; border-left: 4px solid ${serviceColor}; padding:10px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                            <div class="fc-task-card" id="${cardDomId}" style="background:#fff; border:1px solid #cbd5e1; border-left: 5px solid ${serviceColor}; padding:10px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition: all 0.3s ease;">
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
                                     <div>
-                                        <strong style="color:${serviceColor};">Apto ${unitNum}</strong> - ${d.item}<br>
+                                        <strong style="color:${serviceColor}; font-size:0.9rem;">Apto ${unitNum}</strong> - ${d.item}<br>
                                         <small style="color:#dc2626; font-weight:bold;">${d.nonConformity}</small><br>
                                         <small><strong>Resp:</strong> ${respName}</small>
                                     </div>
@@ -1400,7 +1401,7 @@ function renderInteractiveCalendar() {
                             </div>
                         `;
 
-                        // 2. MONTAGEM DAS TAGS NO CALENDÁRIO E LISTA DE ATIVIDADES
+                        // 2. MONTAGEM DAS TAGS NO CALENDÁRIO E DA LISTA DETALHADA
                         if (d.scheduledFor) {
                             let endDateIso = null;
                             if (deadline && deadline.includes('/')) {
@@ -1408,10 +1409,10 @@ function renderInteractiveCalendar() {
                                 endDateIso = `${parts[2]}-${parts[1]}-${parts[0]}`;
                             }
 
-                            // Tag no Calendário
+                            // Tag Limpa no Calendário: Apenas "APTO X" com a cor do serviço
                             events.push({
-                                id: `${unitNum}_${hIndex}_${dIndex}`,
-                                title: `APTO ${unitNum}: ${d.nonConformity}`,
+                                id: cardDomId,
+                                title: `APTO ${unitNum}`,
                                 start: d.scheduledFor,
                                 end: endDateIso || d.scheduledFor,
                                 backgroundColor: serviceColor,
@@ -1419,15 +1420,15 @@ function renderInteractiveCalendar() {
                                 textColor: '#ffffff'
                             });
 
-                            // Item para a Lista de Atividades Agendadas
+                            // Lista Detalhada com evento Clicável
                             scheduledTasksHTML += `
-                                <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #e2e8f0; border-left:5px solid ${serviceColor}; padding:8px 12px; border-radius:6px; margin-bottom:6px; font-size:0.8rem;">
+                                <div onclick="highlightTaskCard('${cardDomId}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #e2e8f0; border-left:6px solid ${serviceColor}; padding:10px 12px; border-radius:6px; margin-bottom:8px; font-size:0.82rem; transition: transform 0.15s ease;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
                                     <div>
-                                        <span style="background:${serviceColor}; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold; margin-right:6px;">APTO ${unitNum}</span>
-                                        <strong>${respName}</strong> — <span style="color:#475569;">${d.item}: ${d.nonConformity}</span>
+                                        <span style="background:${serviceColor}; color:#fff; padding:3px 7px; border-radius:4px; font-size:0.75rem; font-weight:bold; margin-right:8px;">APTO ${unitNum}</span>
+                                        <strong>${respName}</strong> — <span style="color:#334155;">${d.item}: <strong>${d.nonConformity}</strong></span>
                                     </div>
-                                    <div style="text-align:right; font-size:0.75rem; color:#64748b;">
-                                        📅 Início: <strong>${d.scheduledFor}</strong> | Prazo Final: <strong style="color:#d97706;">${deadline || 'N/A'}</strong>
+                                    <div style="text-align:right; font-size:0.78rem; color:#64748b; white-space:nowrap; margin-left:10px;">
+                                        📅 Início: <strong>${d.scheduledFor}</strong> | Prazo Limite: <strong style="color:#d97706;">${deadline || 'N/A'}</strong>
                                     </div>
                                 </div>
                             `;
@@ -1438,7 +1439,6 @@ function renderInteractiveCalendar() {
         }
     });
 
-    // Renderiza a lista lateral e a lista de atividades no HTML
     document.getElementById('unassigned-tasks-list').innerHTML = unassignedHTML || '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência pendente.</p>';
     
     const activityListEl = document.getElementById('scheduled-activities-list');
@@ -1458,11 +1458,36 @@ function renderInteractiveCalendar() {
         },
         events: events,
         eventClick: function(info) {
-            alert(`📌 ${info.event.title}\n📅 Início: ${info.event.start.toLocaleDateString('pt-BR')}`);
+            // Ao clicar no bloco do calendário, leva direto à não conformidade na lista lateral
+            if (info.event.id) {
+                highlightTaskCard(info.event.id);
+            }
         }
     });
     
     fullCalendarInstance.render();
+}
+
+// Função para rolar a tela e destacar visualmente o card da Não Conformidade
+function highlightTaskCard(cardId) {
+    const el = document.getElementById(cardId);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Aplica efeito de piscar/destaque
+        const originalBg = el.style.backgroundColor;
+        const originalTransform = el.style.transform;
+
+        el.style.backgroundColor = '#fef08a'; // Amarelo de destaque
+        el.style.transform = 'scale(1.03)';
+        el.style.boxShadow = '0 0 12px rgba(0,0,0,0.2)';
+
+        setTimeout(() => {
+            el.style.backgroundColor = originalBg;
+            el.style.transform = originalTransform;
+            el.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+        }, 1500);
+    }
 }
 
     function exportToExcelXLSX() {
