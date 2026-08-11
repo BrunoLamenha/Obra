@@ -8,7 +8,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
     <meta name="theme-color" content="#004a8f">
 
-    <!-- FullCalendar JS + Drag and Drop -->
+    <!-- FullCalendar JS -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <!-- SheetJS CDN para Exportação em XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -28,6 +28,7 @@
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .grid-map { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
         .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .grid-three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
         
         .btn { padding: 10px; background: #eee; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; }
         .btn.active { outline: 3px solid #000; font-weight: 900; }
@@ -81,17 +82,10 @@
         .history-card { background: #fff; border: 1px solid #ddd; border-left: 5px solid var(--primary); border-radius: 6px; padding: 12px; margin-bottom: 12px; font-size: 0.85rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .history-card.latest { border-left-color: var(--success); background: #f4fff6; border-top: 2px solid var(--success); }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 999; }
-        .modal-card { background: #fff; border-radius: 8px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 18px; position: relative; }
-
         .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; text-align: center; }
         .kpi-card h5 { font-size: 0.72rem; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
         .kpi-card .kpi-num { font-size: 1.3rem; font-weight: bold; color: #0f172a; }
-
-        .badge-sev-baixa { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
-        .badge-sev-media { background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
-        .badge-sev-alta { background: #fee2e2; color: #b91c1c; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
     </style>
 
     <!-- SDKs do Firebase -->
@@ -196,7 +190,7 @@
         </div>
     </div>
 
-    <!-- ABA 2: MAPA GERAL DA OBRA & INDICADORES (KPIs) -->
+    <!-- ABA 2: MAPA GERAL DA OBRA & INDICADORES -->
     <div id="tab-mapa" class="no-print" style="display:none;">
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
@@ -213,12 +207,6 @@
             </div>
 
             <h4 style="font-size:0.85rem; color:var(--primary); margin-bottom:8px;">🗺️ Visão Geral dos Pavimentos</h4>
-            <div class="legend-box" style="margin-bottom:12px;">
-                <div class="legend-item"><div class="legend-dot" style="background:#28a745;"></div> Aprovado</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#dc3545;"></div> Pendente</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#fff; border:1px solid #ccc;"></div> Não Vistoriado</div>
-            </div>
-
             <div id="map-container"></div>
         </div>
 
@@ -254,8 +242,8 @@
             </div>
 
             <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 250px; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px;" id="external-events-container">
-                    <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📋 Aguardando Agendamento</h4>
+                <div style="flex: 1; min-width: 280px; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px;" id="external-events-container">
+                    <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">⏳ Pendências em Aberto / Prazos</h4>
                     <div id="unassigned-tasks-list"></div>
                 </div>
 
@@ -336,7 +324,6 @@
         document.getElementById('inspector-card').innerHTML = `
             <h3>👤 Responsável Confirmado</h3>
             <p style="font-size:0.9rem; margin-top:5px;"><strong>Vistoriador:</strong> ${inspectorName}</p>
-            <p style="font-size:0.8rem; color:#004a8f; margin-top:3px;">📱 <strong>Aparelho Registrado:</strong> ${deviceDetails}</p>
         `;
         document.getElementById('floor-card').style.display = 'block';
     }
@@ -360,6 +347,19 @@
                 renderInteractiveCalendar();
             }
         }).catch(err => console.log("Carregando do banco local"));
+    }
+
+    function addBusinessDays(dateStr, days) {
+        if (!dateStr || isNaN(days) || days <= 0) return null;
+        let date = new Date(dateStr + 'T00:00:00');
+        let added = 0;
+        while (added < days) {
+            date.setDate(date.getDate() + 1);
+            if (date.getDay() !== 0 && date.getDay() !== 6) { // Ignora Sábado (6) e Domingo (0)
+                added++;
+            }
+        }
+        return date.toLocaleDateString('pt-BR');
     }
 
     function setFloor(f, el) {
@@ -499,6 +499,7 @@
             const respEl = document.getElementById(`resp_${key}_${index}`);
             const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
             const dateEl = document.getElementById(`date_${key}_${index}`);
+            const daysEl = document.getElementById(`days_${key}_${index}`);
             const statusEl = document.getElementById(`status_${key}_${index}`);
             const sevEl = document.getElementById(`sev_${key}_${index}`);
 
@@ -506,6 +507,7 @@
             if (respEl) nc.resp = respEl.value;
             if (respOtherEl) nc.respOther = respOtherEl.value;
             if (dateEl) nc.startDate = dateEl.value;
+            if (daysEl) nc.businessDays = daysEl.value;
             if (statusEl) nc.status = statusEl.value;
             if (sevEl) nc.severity = sevEl.value;
 
@@ -555,6 +557,7 @@
             resp: '',
             respOther: '',
             startDate: '',
+            businessDays: 3,
             status: 'Aguardando',
             severity: 'Baixa',
             photos: []
@@ -677,9 +680,16 @@
                             </select>
                             <input type="text" id="resp_other_${key}_${index}" placeholder="Digite o responsável..." style="display:none; margin-top:6px;" oninput="salvarEstadoAtualInput('${key}')">
                         </div>
-                        <div>
-                            <label>Prazo / Data de Início do Reparo:</label>
-                            <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                        
+                        <div class="grid-two">
+                            <div>
+                                <label>Data Início:</label>
+                                <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                            </div>
+                            <div>
+                                <label>Prazo (Dias Úteis):</label>
+                                <input type="number" id="days_${key}_${index}" min="1" value="${nc.businessDays || 3}" oninput="salvarEstadoAtualInput('${key}')">
+                            </div>
                         </div>
                     </div>
 
@@ -724,6 +734,7 @@
             const respEl = document.getElementById(`resp_${key}_${index}`);
             const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
             const dateEl = document.getElementById(`date_${key}_${index}`);
+            const daysEl = document.getElementById(`days_${key}_${index}`);
             const statusEl = document.getElementById(`status_${key}_${index}`);
             const sevEl = document.getElementById(`sev_${key}_${index}`);
 
@@ -738,6 +749,7 @@
                 }
             }
             if (dateEl && nc.startDate) dateEl.value = nc.startDate;
+            if (daysEl && nc.businessDays) daysEl.value = nc.businessDays;
             if (statusEl && nc.status) statusEl.value = nc.status;
             if (sevEl && nc.severity) sevEl.value = nc.severity;
 
@@ -780,6 +792,8 @@
             pendingNCs[key].forEach(nc => {
                 if (nc.selectedOpts.length > 0 || nc.obs.trim() !== '' || (nc.photos && nc.photos.length > 0)) {
                     totalPendencies++;
+                    let deadlineDate = addBusinessDays(nc.startDate, parseInt(nc.businessDays));
+
                     ncList.push({
                         id: nc.id || Date.now(),
                         room: roomNames[roomKey] || 'Geral',
@@ -790,6 +804,8 @@
                         status: nc.status || 'Aguardando',
                         inspectedAt: nowIso,
                         scheduledFor: nc.startDate || 'Não agendado',
+                        businessDays: nc.businessDays || 3,
+                        deadlineDate: deadlineDate || 'Não calculada',
                         resolvedAt: nc.status === 'Concluído' ? nowIso : null,
                         photos: nc.photos || []
                     });
@@ -828,11 +844,12 @@
         });
     }
 
+    // ENVIO VIA WHATSAPP DIRETO DA TELA DE PREENCHIMENTO
     function sendWhatsAppSummary() {
         if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
         
         let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
-        text += `Vistoriador: ${inspectorName}\n`;
+        text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
         text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
 
         let count = 0;
@@ -843,12 +860,18 @@
             const itemObj = checklist.find(i => i.id === roomId);
 
             pendingNCs[key].forEach(nc => {
-                count++;
-                const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
-                text += `*${count}. ${roomNames[roomKey]} - ${itemObj.cleanName}*\n`;
-                text += `• Pendência: ${nc.selectedOpts.join(', ')} ${nc.obs ? '('+nc.obs+')' : ''}\n`;
-                text += `• Responsável: ${resp || 'Não definido'}\n`;
-                text += `• Severidade: ${nc.severity}\n\n`;
+                if (nc.selectedOpts.length > 0 || nc.obs.trim() !== '') {
+                    count++;
+                    const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
+                    let deadlineDate = addBusinessDays(nc.startDate, parseInt(nc.businessDays));
+
+                    text += `*${count}. ${roomNames[roomKey]} - ${itemObj.cleanName}*\n`;
+                    text += `• Pendência: ${nc.selectedOpts.join(', ')} ${nc.obs ? '('+nc.obs+')' : ''}\n`;
+                    text += `• Responsável: ${resp || 'Não definido'}\n`;
+                    text += `• Data Início: ${nc.startDate || 'Não informada'}\n`;
+                    text += `• Prazo Execução: ${nc.businessDays || 3} dias úteis ${deadlineDate ? '(Prazo Final: ' + deadlineDate + ')' : ''}\n`;
+                    text += `• Severidade: ${nc.severity}\n\n`;
+                }
             });
         });
 
@@ -883,7 +906,7 @@
                 unit: unitNum,
                 history: dbUnitsCache[historyKey]
             }, { merge: true }).then(() => {
-                alert("Serviço marcado como REALIZADO e registrado no histórico!");
+                alert("Serviço marcado como REALIZADO!");
                 updateMapAndKPIs();
                 renderMapGrid();
                 renderInteractiveCalendar();
@@ -992,15 +1015,10 @@
                                 <div style="background:#f1f5f9; padding:6px; border-radius:4px; margin-top:6px; font-size:0.73rem; color:#475569;">
                                     ⏱️ <strong>Linha do Tempo:</strong><br>
                                     📝 <strong>Vistoriado em:</strong> ${d.inspectedAt || h.date}<br>
-                                    📅 <strong>Agendado para:</strong> ${d.scheduledFor || 'Não agendado'}<br>
+                                    📅 <strong>Início Agendado:</strong> ${d.scheduledFor || 'Não agendado'}<br>
+                                    ⏳ <strong>Prazo:</strong> ${d.businessDays || 3} dias úteis ${d.deadlineDate ? '(Prazo Limite: ' + d.deadlineDate + ')' : ''}<br>
                                     ${d.resolvedAt ? `✅ <strong style="color:#16a34a;">Serviço Realizado em:</strong> ${d.resolvedAt}` : '⏳ <strong style="color:#d97706;">Aguardando Conclusão</strong>'}
                                 </div>
-
-                                ${d.photos && d.photos.length > 0 ? `
-                                    <div style="margin-top:6px;">
-                                        ${d.photos.map(p => `<img src="${p}" style="width:45px; height:45px; object-fit:cover; border-radius:4px; margin-right:4px;">`).join('')}
-                                    </div>
-                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -1026,7 +1044,8 @@
                 text += `*${idx + 1}. ${d.room} - ${d.item}*\n`;
                 text += `• Pendência: ${d.nonConformity}\n`;
                 text += `• Responsável: ${d.responsible}\n`;
-                text += `• Agendado para: ${d.scheduledFor || 'Não agendado'}\n`;
+                text += `• Início Agendado: ${d.scheduledFor || 'Não agendado'}\n`;
+                text += `• Prazo: ${d.businessDays || 3} dias úteis ${d.deadlineDate ? '(Limite: ' + d.deadlineDate + ')' : ''}\n`;
                 text += `• Status: ${d.resolvedAt ? '✅ Concluído em ' + d.resolvedAt : '⏳ ' + (d.status || 'Aguardando')}\n\n`;
             });
         } else {
@@ -1041,6 +1060,7 @@
         document.getElementById('history-panel').style.display = 'none';
     }
 
+    // RENDERIZAÇÃO DO CALENDÁRIO & BARRA LATERAL COM PRAZOS DE DIAS ÚTEIS
     function renderInteractiveCalendar() {
         const calendarEl = document.getElementById('calendar');
         if (!calendarEl) return;
@@ -1058,13 +1078,18 @@
                 if (last.details) {
                     last.details.forEach((d, dIndex) => {
                         if ((filterResp === 'TODOS' || d.responsible === filterResp) && d.status !== 'Concluído') {
+                            
+                            let deadline = d.deadlineDate || addBusinessDays(d.scheduledFor, parseInt(d.businessDays));
+
                             unassignedHTML += `
-                                <div class="fc-task-card" style="background:#fff; border:1px solid #ddd; padding:8px; margin-bottom:6px; border-radius:5px;">
+                                <div class="fc-task-card" style="background:#fff; border:1px solid #ddd; padding:8px; margin-bottom:8px; border-radius:5px;">
                                     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                                         <div>
                                             <strong>Apto ${unitNum}</strong> - ${d.item}<br>
-                                            <small style="color:#666;">${d.nonConformity}</small><br>
-                                            <small><strong>Resp:</strong> ${d.responsible}</small>
+                                            <small style="color:#dc2626; font-weight:bold;">${d.nonConformity}</small><br>
+                                            <small><strong>Resp:</strong> ${d.responsible}</small><br>
+                                            <small style="color:#004a8f;">📅 <strong>Início:</strong> ${d.scheduledFor || 'Aguardando'}</small><br>
+                                            <small style="color:#d97706;">⏳ <strong>Prazo:</strong> ${d.businessDays || 3} dias úteis ${deadline ? '(Até ' + deadline + ')' : ''}</small>
                                         </div>
                                         <button onclick="resolveTaskFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
                                                 style="background:#28a745; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; font-weight:bold;">
@@ -1118,28 +1143,11 @@
                             Severidade: d.severity || 'Baixa',
                             Status: d.status || 'Aguardando',
                             'Data Vistoria': d.inspectedAt || h.date,
-                            'Data Agendada': d.scheduledFor || 'N/A',
-                            'Data Realizado': d.resolvedAt || 'Pendente',
-                            'Qtd Fotos': (d.photos) ? d.photos.length : 0
+                            'Data Início': d.scheduledFor || 'N/A',
+                            'Prazo (Dias Úteis)': d.businessDays || 3,
+                            'Data Limite': d.deadlineDate || 'N/A',
+                            'Data Realizado': d.resolvedAt || 'Pendente'
                         });
-                    });
-                } else {
-                    exportData.push({
-                        Unidade: unitNum,
-                        Data: h.date,
-                        Vistoriador: h.inspector,
-                        Tipo: h.category,
-                        Etapa: h.stage,
-                        Ambiente: '100% OK',
-                        Item: 'Nenhum',
-                        'Não Conformidade': 'Sem pendências',
-                        Responsável: 'Nenhum',
-                        Severidade: 'N/A',
-                        Status: 'Concluído',
-                        'Data Vistoria': h.date,
-                        'Data Agendada': 'N/A',
-                        'Data Realizado': h.date,
-                        'Qtd Fotos': 0
                     });
                 }
             });
@@ -1173,10 +1181,6 @@
     function toggle(id) {
         const el = document.getElementById(id);
         el.style.display = el.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function closeDayModal() {
-        document.getElementById('day-modal').style.display = 'none';
     }
 </script>
 </body>
