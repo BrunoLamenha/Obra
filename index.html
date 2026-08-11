@@ -143,16 +143,23 @@
 
     <!-- ABA 1: VISTORIAS -->
     <div id="tab-vistorias" class="no-print">
-        <div class="card" id="inspector-card">
-            <h3>👤 Identificação do Vistoriador</h3>
-            <label>Nome Completo do Engenheiro / Vistoriador:</label>
-            <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha" oninput="localStorage.setItem('vistoria_inspector_name', this.value)">
-
-            <label>Identificação Automática do Aparelho:</label>
-            <div class="device-info-box" id="device-info-text">Carregando dados do dispositivo...</div>
-
-            <button class="btn-confirm-inspector" onclick="confirmInspector()" style="background:var(--success); color:white; border:none; width:100%; padding:12px; border-radius:6px; font-weight:bold; font-size:0.95rem; margin-top:12px; cursor:pointer;">Confirmar & Iniciar Vistoria ✓</button>
+        <div id="inspector-card" class="card">
+    <h3>👤 Identificação do Vistoriador</h3>
+    <div style="margin-top: 10px;">
+        <label for="inspector-name"><strong>Nome Completo do Engenheiro / Vistoriador:</strong></label>
+        <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+    
+    <div style="margin-top: 15px; background: #eef6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px;">
+        <div id="device-info-text" style="font-size: 0.85rem; color: #1e3a8a;">
+            📱 <strong>Identificando dispositivo...</strong>
         </div>
+    </div>
+
+    <button onclick="confirmInspector()" style="width: 100%; margin-top: 15px; background: #28a745; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer;">
+        Confirmar & Iniciar Vistoria ✓
+    </button>
+</div>
 
         <div class="card" id="floor-card" style="display:none;">
             <h3>1. Selecione o Pavimento</h3>
@@ -342,15 +349,16 @@
     };
 
     function detectDevice() {
+    // 1. Gera ou recupera ID único no dispositivo local
     let deviceId = localStorage.getItem('vistoria_device_id');
     if (!deviceId) {
         deviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
         localStorage.setItem('vistoria_device_id', deviceId);
     }
 
+    // 2. Identifica Plataforma
     let platform = "Dispositivo Movel";
     const userAgent = navigator.userAgent;
-
     if (userAgent.indexOf("Android") > -1) platform = "Android";
     else if (userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPad") > -1) platform = "iOS (iPhone/iPad)";
     else if (userAgent.indexOf("Windows") > -1) platform = "Windows PC";
@@ -358,29 +366,29 @@
 
     deviceDetails = `${platform} | ID: ${deviceId}`;
 
-    // Atualiza o texto do dispositivo na tela na hora
+    // 3. ATUALIZA A TELA NA HORA
     const infoEl = document.getElementById('device-info-text');
     if (infoEl) {
         infoEl.innerHTML = `📱 <strong>${platform}</strong><br>🆔 Código Único do Dispositivo: <strong>${deviceId}</strong>`;
     }
 
-    // Tenta resgatar primeiro do LocalStorage (respostas instantâneas)
+    // 4. Preenche o nome do Vistoriador salvo anteriormente (LocalStorage instantâneo)
     const localName = localStorage.getItem('vistoria_inspector_name');
     const nameInput = document.getElementById('inspector-name');
-
     if (localName && nameInput) {
         nameInput.value = localName;
     }
 
-    // Busca do Firebase para sincronizar/garantir se houver registro no banco
+    // 5. Tenta atualizar do Firebase silenciosamente em segundo plano
     if (typeof db !== 'undefined' && db) {
         db.collection('dispositivos').doc(deviceId).get().then(devDoc => {
-            if (devDoc.exists && devDoc.data().lastInspectorName && nameInput) {
-                nameInput.value = devDoc.data().lastInspectorName;
-                localStorage.setItem('vistoria_inspector_name', devDoc.data().lastInspectorName);
+            if (devDoc.exists && devDoc.data() && devDoc.data().lastInspectorName) {
+                const firebaseName = devDoc.data().lastInspectorName;
+                if (nameInput) nameInput.value = firebaseName;
+                localStorage.setItem('vistoria_inspector_name', firebaseName);
             }
         }).catch(err => {
-            console.log("Sincronização de dispositivo em segundo plano:", err);
+            console.log("Consulta silenciosa ao Firebase:", err);
         });
     }
 }
