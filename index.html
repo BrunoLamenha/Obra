@@ -267,16 +267,6 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="day-modal">
-    <div class="modal-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:8px;">
-            <h3 id="modal-date-title" style="font-size:1rem; color:var(--primary);">Tarefas do Dia</h3>
-            <button onclick="closeDayModal()" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; font-weight:bold; cursor:pointer;">✕</button>
-        </div>
-        <div id="modal-task-list" style="margin-top:12px; font-size:0.85rem;"></div>
-    </div>
-</div>
-
 <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBqtptEp5QjIOoAjwx0wT--cswUhSvcsGM",
@@ -472,14 +462,28 @@
         salvarEstadoAtualInput(key);
     }
 
-    // Regra 2: Caso o status mude para Concluído/Sanado, pede confirmação e passa para Conforme
     function handleStatusChange(key, index, itemId) {
         const statusEl = document.getElementById(`status_${key}_${index}`);
         if (statusEl && statusEl.value === 'Concluído') {
-            const confirmAction = confirm("Confirma que esta pendência foi sanada? O item será alterado para CONFORME.");
+            const confirmAction = confirm("Confirma que apenas ESTA pendência foi sanada?");
             if (confirmAction) {
-                removeNC(key, index, itemId);
-                setItemStatus(key, 'OK', itemId);
+                pendingNCs[key].splice(index, 1);
+                
+                const itemObj = checklist.find(i => i.id === itemId);
+                const container = document.getElementById(`nc_container_${key}`);
+                if (container) {
+                    container.innerHTML = renderNCBoxes(key, itemObj);
+                    restaurarValoresInputs(key);
+                }
+
+                if (pendingNCs[key].length === 0) {
+                    const btnOk = document.getElementById(`btn_ok_${key}`);
+                    const btnNok = document.getElementById(`btn_nok_${key}`);
+                    const btnAdd = document.getElementById(`btn_add_${key}`);
+                    if (btnOk) btnOk.className = "btn-status btn-ok-active";
+                    if (btnNok) btnNok.className = "btn-status btn-neutral";
+                    if (btnAdd) btnAdd.style.display = 'none';
+                }
                 return;
             } else {
                 statusEl.value = 'Aguardando';
@@ -548,7 +552,7 @@
             id: Date.now(),
             selectedOpts: [],
             obs: '',
-            resp: '', // Força o vistoriador a escolher
+            resp: '',
             respOther: '',
             startDate: '',
             status: 'Aguardando',
@@ -693,7 +697,7 @@
                             <select id="sev_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
                                 <option value="Baixa">Baixa (Estética / Limpeza)</option>
                                 <option value="Média">Média (Funcional)</option>
-                                <option value="Alta">Alta / Crítica (Urgente / Leaking)</option>
+                                <option value="Alta">Alta / Crítica (Urgente / Vazamento)</option>
                             </select>
                         </div>
                     </div>
@@ -749,7 +753,6 @@
     }
 
     function generateTechnicalPDF() {
-        // Validação no topo: Força a escolha de um Responsável em todas as pendências
         let hasMissingResp = false;
         Object.keys(pendingNCs).forEach(key => {
             salvarEstadoAtualInput(key);
@@ -767,6 +770,7 @@
 
         let totalPendencies = 0;
         let ncList = [];
+        const nowIso = new Date().toLocaleString('pt-BR');
 
         Object.keys(pendingNCs).forEach(key => {
             const roomKey = key.split('_')[0] + '_' + key.split('_')[1];
@@ -777,13 +781,16 @@
                 if (nc.selectedOpts.length > 0 || nc.obs.trim() !== '' || (nc.photos && nc.photos.length > 0)) {
                     totalPendencies++;
                     ncList.push({
+                        id: nc.id || Date.now(),
                         room: roomNames[roomKey] || 'Geral',
                         item: itemObj ? itemObj.cleanName : 'Item',
                         nonConformity: nc.selectedOpts.join(', ') + (nc.obs ? ` (${nc.obs})` : ''),
                         responsible: nc.resp === 'Outro' ? nc.respOther : nc.resp,
-                        startDate: nc.startDate || 'Não informada',
-                        status: nc.status || 'Aguardando',
                         severity: nc.severity || 'Baixa',
+                        status: nc.status || 'Aguardando',
+                        inspectedAt: nowIso,
+                        scheduledFor: nc.startDate || 'Não agendado',
+                        resolvedAt: nc.status === 'Concluído' ? nowIso : null,
                         photos: nc.photos || []
                     });
                 }
@@ -811,17 +818,16 @@
             unit: selectedUnitNum,
             history: dbUnitsCache[historyKey]
         }, { merge: true }).then(() => {
-            alert(`Vistoria da Unidade ${selectedUnitNum} finalizada com sucesso! Total de Pendências: ${totalPendencies}`);
+            alert(`Vistoria da Unidade ${selectedUnitNum} finalizada! Pendências ativas: ${totalPendencies}`);
             loadAllUnitsData();
             document.getElementById('btn-next').style.display = 'block';
         }).catch(err => {
-            alert(`Vistoria salva localmente no seu dispositivo!`);
+            alert(`Vistoria salva localmente no dispositivo!`);
             loadAllUnitsData();
             document.getElementById('btn-next').style.display = 'block';
         });
     }
 
-    // Função para Envio do Resumo via WhatsApp
     function sendWhatsAppSummary() {
         if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
         
@@ -852,6 +858,37 @@
 
         const encoded = encodeURIComponent(text);
         window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+    }
+
+    function resolveTaskFromCalendar(unitNum, historyIndex, detailIndex) {
+        const confirmAction = confirm(`Marcar a pendência do Apto ${unitNum} como SANADA / REALIZADA?`);
+        if (!confirmAction) return;
+
+        const historyKey = `unit_${unitNum}`;
+        if (dbUnitsCache[historyKey] && dbUnitsCache[historyKey][historyIndex]) {
+            let record = dbUnitsCache[historyKey][historyIndex];
+            let itemDetail = record.details[detailIndex];
+
+            itemDetail.status = 'Concluído';
+            itemDetail.resolvedAt = new Date().toLocaleString('pt-BR');
+
+            const activeCount = record.details.filter(d => d.status !== 'Concluído').length;
+            record.pendenciesCount = activeCount;
+            if (activeCount === 0) {
+                record.status = '100_ok';
+            }
+
+            localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
+            db.collection('vistorias').doc(historyKey).set({
+                unit: unitNum,
+                history: dbUnitsCache[historyKey]
+            }, { merge: true }).then(() => {
+                alert("Serviço marcado como REALIZADO e registrado no histórico!");
+                updateMapAndKPIs();
+                renderMapGrid();
+                renderInteractiveCalendar();
+            });
+        }
     }
 
     function startNextUnit() {
@@ -920,36 +957,84 @@
         const title = document.getElementById('history-unit-title');
         const content = document.getElementById('history-content');
 
-        title.innerText = `Histórico de Vistorias: Apto ${num}`;
+        title.innerText = `Histórico Completo: Apto ${num}`;
         panel.style.display = 'block';
 
         if (history.length === 0) {
-            content.innerHTML = '<p>Nenhuma vistoria realizada nesta unidade ainda.</p>';
+            content.innerHTML = '<p style="padding:10px;">Nenhuma vistoria realizada nesta unidade ainda.</p>';
             return;
         }
 
-        content.innerHTML = history.slice().reverse().map((h, i) => `
+        let html = `
+            <div style="margin-bottom:12px; display:flex; gap:8px;">
+                <button onclick="sendWhatsAppSummaryFromHistory(${num})" style="flex:1; background:#25d366; color:white; border:none; padding:8px; border-radius:5px; font-weight:bold; font-size:0.8rem; cursor:pointer;">
+                    📲 Enviar Resumo no WhatsApp
+                </button>
+                <button onclick="window.print()" style="flex:1; background:#17a2b8; color:white; border:none; padding:8px; border-radius:5px; font-weight:bold; font-size:0.8rem; cursor:pointer;">
+                    📄 Imprimir / Salvar PDF
+                </button>
+            </div>
+        `;
+
+        html += history.slice().reverse().map((h, i) => `
             <div class="history-card ${i === 0 ? 'latest' : ''}">
-                <strong>Data:</strong> ${h.date} | <strong>Vistoriador:</strong> ${h.inspector}<br>
+                <strong>Data do Registro:</strong> ${h.date} | <strong>Vistoriador:</strong> ${h.inspector}<br>
                 <strong>Tipo:</strong> ${h.category} - ${h.stage}<br>
-                <strong>Pendências:</strong> ${h.pendenciesCount}
+                <strong>Pendências Abertas:</strong> ${h.pendenciesCount}
                 ${h.details && h.details.length > 0 ? `
-                    <ul style="margin-top:5px; padding-left:18px;">
+                    <div style="margin-top:8px;">
                         ${h.details.map(d => `
-                            <li style="margin-bottom:6px;">
-                                <strong>${d.room} - ${d.item}:</strong> ${d.nonConformity} [${d.responsible}]
-                                <span class="badge-sev-${(d.severity || 'baixa').toLowerCase()}">${d.severity || 'Baixa'}</span>
+                            <div style="background:#fff; border:1px solid #e2e8f0; padding:8px; border-radius:6px; margin-bottom:6px; font-size:0.8rem;">
+                                <div><strong>${d.room} - ${d.item}</strong></div>
+                                <div style="color:#e11d48; margin:2px 0;">${d.nonConformity}</div>
+                                <div><strong>Resp:</strong> ${d.responsible} | <strong>Status:</strong> ${d.status || 'Aguardando'}</div>
+                                
+                                <div style="background:#f1f5f9; padding:6px; border-radius:4px; margin-top:6px; font-size:0.73rem; color:#475569;">
+                                    ⏱️ <strong>Linha do Tempo:</strong><br>
+                                    📝 <strong>Vistoriado em:</strong> ${d.inspectedAt || h.date}<br>
+                                    📅 <strong>Agendado para:</strong> ${d.scheduledFor || 'Não agendado'}<br>
+                                    ${d.resolvedAt ? `✅ <strong style="color:#16a34a;">Serviço Realizado em:</strong> ${d.resolvedAt}` : '⏳ <strong style="color:#d97706;">Aguardando Conclusão</strong>'}
+                                </div>
+
                                 ${d.photos && d.photos.length > 0 ? `
-                                    <div style="margin-top:4px;">
-                                        ${d.photos.map(p => `<img src="${p}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; margin-right:4px;">`).join('')}
+                                    <div style="margin-top:6px;">
+                                        ${d.photos.map(p => `<img src="${p}" style="width:45px; height:45px; object-fit:cover; border-radius:4px; margin-right:4px;">`).join('')}
                                     </div>
                                 ` : ''}
-                            </li>
+                            </div>
                         `).join('')}
-                    </ul>
-                ` : '<p style="color:#28a745; margin-top:3px;"><strong>100% Aprovado</strong></p>'}
+                    </div>
+                ` : '<p style="color:#28a745; margin-top:5px;"><strong>✅ 100% Aprovado e Conforme</strong></p>'}
             </div>
         `).join('');
+
+        content.innerHTML = html;
+    }
+
+    function sendWhatsAppSummaryFromHistory(num) {
+        const historyKey = `unit_${num}`;
+        const history = dbUnitsCache[historyKey] || [];
+        if (history.length === 0) return;
+
+        const last = history[history.length - 1];
+        let text = `*HISTÓRICO DE VISTORIA - APTO ${num}*\n`;
+        text += `Vistoriador: ${last.inspector}\n`;
+        text += `Última Vistoria: ${last.date}\n\n`;
+
+        if (last.details && last.details.length > 0) {
+            last.details.forEach((d, idx) => {
+                text += `*${idx + 1}. ${d.room} - ${d.item}*\n`;
+                text += `• Pendência: ${d.nonConformity}\n`;
+                text += `• Responsável: ${d.responsible}\n`;
+                text += `• Agendado para: ${d.scheduledFor || 'Não agendado'}\n`;
+                text += `• Status: ${d.resolvedAt ? '✅ Concluído em ' + d.resolvedAt : '⏳ ' + (d.status || 'Aguardando')}\n\n`;
+            });
+        } else {
+            text += `✅ *UNIDADE 100% APROVADA / CONFORME*`;
+        }
+
+        const encoded = encodeURIComponent(text);
+        window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
     }
 
     function closeHistory() {
@@ -968,14 +1053,24 @@
             const unitNum = key.replace('unit_', '');
             const history = dbUnitsCache[key] || [];
             if (history.length > 0) {
-                const last = history[history.length - 1];
+                const hIndex = history.length - 1;
+                const last = history[hIndex];
                 if (last.details) {
-                    last.details.forEach(d => {
-                        if (filterResp === 'TODOS' || d.responsible === filterResp) {
+                    last.details.forEach((d, dIndex) => {
+                        if ((filterResp === 'TODOS' || d.responsible === filterResp) && d.status !== 'Concluído') {
                             unassignedHTML += `
-                                <div class="fc-task-card">
-                                    <strong>Apto ${unitNum}</strong>: ${d.item}<br>
-                                    <small>${d.nonConformity}</small>
+                                <div class="fc-task-card" style="background:#fff; border:1px solid #ddd; padding:8px; margin-bottom:6px; border-radius:5px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                        <div>
+                                            <strong>Apto ${unitNum}</strong> - ${d.item}<br>
+                                            <small style="color:#666;">${d.nonConformity}</small><br>
+                                            <small><strong>Resp:</strong> ${d.responsible}</small>
+                                        </div>
+                                        <button onclick="resolveTaskFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
+                                                style="background:#28a745; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; font-weight:bold;">
+                                            ✓ Sanar
+                                        </button>
+                                    </div>
                                 </div>
                             `;
                         }
@@ -984,7 +1079,7 @@
             }
         });
 
-        document.getElementById('unassigned-tasks-list').innerHTML = unassignedHTML || '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência para agendar.</p>';
+        document.getElementById('unassigned-tasks-list').innerHTML = unassignedHTML || '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência pendente.</p>';
 
         if (fullCalendarInstance) fullCalendarInstance.destroy();
 
@@ -1022,6 +1117,9 @@
                             Responsável: d.responsible,
                             Severidade: d.severity || 'Baixa',
                             Status: d.status || 'Aguardando',
+                            'Data Vistoria': d.inspectedAt || h.date,
+                            'Data Agendada': d.scheduledFor || 'N/A',
+                            'Data Realizado': d.resolvedAt || 'Pendente',
                             'Qtd Fotos': (d.photos) ? d.photos.length : 0
                         });
                     });
@@ -1038,6 +1136,9 @@
                         Responsável: 'Nenhum',
                         Severidade: 'N/A',
                         Status: 'Concluído',
+                        'Data Vistoria': h.date,
+                        'Data Agendada': 'N/A',
+                        'Data Realizado': h.date,
                         'Qtd Fotos': 0
                     });
                 }
