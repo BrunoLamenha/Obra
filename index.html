@@ -347,49 +347,58 @@
     loadAllUnitsData();
 };
     
-   function detectDevice() {
-    // 1. Gera ou recupera ID único no dispositivo local
-    let deviceId = localStorage.getItem('vistoria_device_id');
-    if (!deviceId) {
-        deviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-        localStorage.setItem('vistoria_device_id', deviceId);
+  function detectDevice() {
+    try {
+        let deviceId = localStorage.getItem('vistoria_device_id');
+        if (!deviceId) {
+            deviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            localStorage.setItem('vistoria_device_id', deviceId);
+        }
+
+        let platform = "Dispositivo Movel";
+        const userAgent = navigator.userAgent || "";
+        if (userAgent.indexOf("Android") > -1) platform = "Android";
+        else if (userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPad") > -1) platform = "iOS (iPhone/iPad)";
+        else if (userAgent.indexOf("Windows") > -1) platform = "Windows PC";
+        else if (userAgent.indexOf("Mac") > -1) platform = "Mac";
+
+        deviceDetails = platform + " | ID: " + deviceId;
+
+        // Escreve na tela na mesma hora
+        const infoEl = document.getElementById('device-info-text');
+        if (infoEl) {
+            infoEl.innerHTML = "📱 <strong>" + platform + "</strong><br>🆔 Código Único do Dispositivo: <strong>" + deviceId + "</strong>";
+        }
+
+        // Resgata o nome salvo localmente
+        const localName = localStorage.getItem('vistoria_inspector_name');
+        const nameInput = document.getElementById('inspector-name');
+        if (localName && nameInput) {
+            nameInput.value = localName;
+        }
+
+        // Busca em segundo plano no Firebase
+        if (typeof db !== 'undefined' && db) {
+            db.collection('dispositivos').doc(deviceId).get().then(function(devDoc) {
+                if (devDoc.exists && devDoc.data() && devDoc.data().lastInspectorName) {
+                    const firebaseName = devDoc.data().lastInspectorName;
+                    if (nameInput) nameInput.value = firebaseName;
+                    localStorage.setItem('vistoria_inspector_name', firebaseName);
+                }
+            }).catch(function(err) {
+                console.warn("Aviso Firebase:", err);
+            });
+        }
+    } catch (e) {
+        console.error("Erro ao detectar dispositivo:", e);
     }
+}
 
-    // 2. Identifica Plataforma
-    let platform = "Dispositivo Movel";
-    const userAgent = navigator.userAgent;
-    if (userAgent.indexOf("Android") > -1) platform = "Android";
-    else if (userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPad") > -1) platform = "iOS (iPhone/iPad)";
-    else if (userAgent.indexOf("Windows") > -1) platform = "Windows PC";
-    else if (userAgent.indexOf("Mac") > -1) platform = "Mac";
-
-    deviceDetails = `${platform} | ID: ${deviceId}`;
-
-    // 3. ATUALIZA A TELA NA HORA
-    const infoEl = document.getElementById('device-info-text');
-    if (infoEl) {
-        infoEl.innerHTML = `📱 <strong>${platform}</strong><br>🆔 Código Único do Dispositivo: <strong>${deviceId}</strong>`;
-    }
-
-    // 4. Preenche o nome do Vistoriador salvo anteriormente (LocalStorage instantâneo)
-    const localName = localStorage.getItem('vistoria_inspector_name');
-    const nameInput = document.getElementById('inspector-name');
-    if (localName && nameInput) {
-        nameInput.value = localName;
-    }
-
-    // 5. Tenta atualizar do Firebase silenciosamente em segundo plano
-    if (typeof db !== 'undefined' && db) {
-        db.collection('dispositivos').doc(deviceId).get().then(devDoc => {
-            if (devDoc.exists && devDoc.data() && devDoc.data().lastInspectorName) {
-                const firebaseName = devDoc.data().lastInspectorName;
-                if (nameInput) nameInput.value = firebaseName;
-                localStorage.setItem('vistoria_inspector_name', firebaseName);
-            }
-        }).catch(err => {
-            console.log("Consulta silenciosa ao Firebase:", err);
-        });
-    }
+// Executa assim que a estrutura do HTML estiver pronta
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', detectDevice);
+} else {
+    detectDevice();
 }
 
     function switchTab(tab) {
