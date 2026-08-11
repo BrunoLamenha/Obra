@@ -77,6 +77,10 @@
         .history-card.latest { border-left-color: var(--success); background: #f4fff6; border-top: 2px solid var(--success); }
         .history-tag-latest { background: var(--success); color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-left: 6px; }
 
+        .timeline-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; margin-top: 10px; }
+        .timeline-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; font-size: 0.78rem; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }
+        .timeline-date { background: #004a8f; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 0.7rem; white-space: nowrap; }
+
         @media print {
             @page { size: landscape; margin: 1cm; }
             body { background: #fff !important; padding: 0 !important; }
@@ -250,18 +254,18 @@
     };
 
     const checklist = [
-        { id: "bancada", name: "1. Bancadas, Soleiras e Peitoris", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
-        { id: "piso", name: "2. Contrapiso e Revestimentos / Rodapés", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
-        { id: "pintura", name: "3. Pintura e Emassamento", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] },
-        { id: "hidra", name: "4. Metais, Louças e Sifão", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
-        { id: "portas", name: "5. Portas de Madeira e Alizares", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
-        { id: "esquadria", name: "6. Esquadrias de Alumínio, Vidros e Vedações", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
-        { id: "eletrica", name: "7. Tomadas, Interruptores e Plafons", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Ponto Sem Energia / Fio Solto", "Plafon Não Liga / Danificado", "Quadro de Disjuntores Incompleto", "Outros"] },
-        { id: "ac", name: "8. Infraestrutura / Aparelho Ar-Condicionado", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"], hasAC: true }
+        { id: "bancada", name: "1. Bancadas, Soleiras e Peitoris", cleanName: "Bancadas, Soleiras e Peitoris", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
+        { id: "piso", name: "2. Contrapiso e Revestimentos / Rodapés", cleanName: "Contrapiso e Revestimentos / Rodapés", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
+        { id: "pintura", name: "3. Pintura e Emassamento", cleanName: "Pintura e Emassamento", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] },
+        { id: "hidra", name: "4. Metais, Louças e Sifão", cleanName: "Metais, Louças e Sifão", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
+        { id: "portas", name: "5. Portas de Madeira e Alizares", cleanName: "Portas de Madeira e Alizares", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
+        { id: "esquadria", name: "6. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias de Alumínio, Vidros e Vedações", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
+        { id: "eletrica", name: "7. Tomadas, Interruptores e Plafons", cleanName: "Tomadas, Interruptores e Plafons", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Ponto Sem Energia / Fio Solto", "Plafon Não Liga / Danificado", "Quadro de Disjuntores Incompleto", "Outros"] },
+        { id: "ac", name: "8. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura / Aparelho Ar-Condicionado", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"], hasAC: true }
     ];
 
     let ncCounters = {};
-    let itemStatusMap = {}; // Guarda o status atual dos itens para controlar mudanças e alertas
+    let itemStatusMap = {}; 
     let selectedFloorNum = null;
     let selectedUnitNum = null;
     let selectedCategory = "";
@@ -275,7 +279,6 @@
         loadAllUnitsData();
     };
 
-    // Gera/recupera ID do aparelho e detecta dados do sistema
     function detectDevice() {
         let deviceId = localStorage.getItem('vistoria_device_id');
         if (!deviceId) {
@@ -460,7 +463,6 @@
                 if (lastInsp.pendencies) {
                     prevPendings = lastInsp.pendencies.filter(p => p.fullId === fullId);
                 }
-                // Se o item estava na vistoria anterior e não tinha pendência, estava OK
                 if (lastInsp.allInspectedItems) {
                     const prevItemInfo = lastInsp.allInspectedItems.find(i => i.fullId === fullId);
                     if (prevItemInfo && prevItemInfo.status === 'OK') {
@@ -469,12 +471,11 @@
                 }
             }
 
-            // Define o estado inicial trazido da vistoria anterior em caso de revistoria
-            let initialStatus = 'NEUTRAL';
+            let initialStatus = 'UNINSPECTED';
             if (selectedStage.includes('Revistoria')) {
                 if (prevPendings.length > 0) {
                     initialStatus = 'NOK';
-                } else {
+                } else if (isPrevOK) {
                     initialStatus = 'OK';
                 }
             }
@@ -510,7 +511,6 @@
                 </div>
             `;
 
-            // Se vinha com pendência, reconstrói o box de pendência
             if (prevPendings.length > 0 && selectedStage.includes('Revistoria')) {
                 setTimeout(() => {
                     prevPendings.forEach(p => {
@@ -525,14 +525,13 @@
         const targetStatus = isOk ? 'OK' : 'NOK';
         const currentData = itemStatusMap[fullId] || {};
 
-        // ALERTA DE CONFIRMAÇÃO SE TENTAR MUDAR UM STATUS QUE JÁ VEIO MARCADO DA VISTORIA ANTERIOR
-        if (selectedStage.includes('Revistoria') && currentData.originalStatus !== 'NEUTRAL' && currentData.originalStatus !== targetStatus) {
+        if (selectedStage.includes('Revistoria') && currentData.originalStatus !== 'UNINSPECTED' && currentData.originalStatus !== targetStatus) {
             const de = currentData.originalStatus === 'OK' ? 'APROVADO (OK)' : 'PENDENTE';
             const para = targetStatus === 'OK' ? 'APROVADO (OK)' : 'PENDENTE';
             const confirmChange = confirm(`⚠️ ALERTA DE ALTERAÇÃO DE REVISTORIA:\n\nEste item estava registrado como "${de}" na vistoria anterior.\n\nTem certeza que deseja alterar o estado para "${para}"?`);
             
             if (!confirmChange) {
-                return; // Cancela a alteração
+                return;
             }
         }
 
@@ -691,24 +690,25 @@
                 const itemCard = document.getElementById(fullId);
                 if (!itemCard) return;
 
-                const statusInfo = itemStatusMap[fullId] || { status: 'NEUTRAL' };
-                const isNok = statusInfo.status === 'NOK';
-                const isOk = statusInfo.status === 'OK';
+                const statusInfo = itemStatusMap[fullId] || { status: 'UNINSPECTED' };
+                
+                // Registra apenas itens efetivamente vistoriados (OK ou NOK)
+                if (statusInfo.status === 'OK' || statusInfo.status === 'NOK') {
+                    allInspectedItems.push({
+                        fullId: fullId,
+                        room: roomName,
+                        cleanName: item.cleanName,
+                        status: statusInfo.status
+                    });
+                }
 
-                allInspectedItems.push({
-                    fullId: fullId,
-                    room: roomName,
-                    itemName: item.name,
-                    status: isNok ? 'NOK' : (isOk ? 'OK' : 'NÃO VISTORIADO')
-                });
-
-                if (isNok) {
+                if (statusInfo.status === 'NOK') {
                     const ncBoxes = itemCard.querySelectorAll('.nc-box');
                     ncBoxes.forEach(box => {
                         pendingCount++;
                         const itemId = box.getAttribute('data-item-id');
                         const boxId = box.id;
-                        const itemObj = checklist.find(i => i.id === itemId) || { name: 'Item de Vistoria' };
+                        const itemObj = checklist.find(i => i.id === itemId) || { cleanName: 'Item de Vistoria' };
                         
                         let selectedOpts = [];
                         box.querySelectorAll('.checklist-group input[type="checkbox"]:checked').forEach(chk => {
@@ -734,7 +734,7 @@
                         currentPendencies.push({
                             fullId: fullId,
                             room: roomName,
-                            item: itemObj.name,
+                            item: itemObj.cleanName,
                             details: selectedOpts,
                             resp: respVal,
                             days: daysVal,
@@ -746,7 +746,7 @@
                         rowsHTML += `
                             <tr>
                                 <td style="font-weight:bold;">${roomName}</td>
-                                <td>${itemObj.name}</td>
+                                <td>${itemObj.cleanName}</td>
                                 <td>${selectedOpts.length > 0 ? selectedOpts.map(o => `• ${o}`).join('<br>') : 'Pendência apontada sem detalhes'}</td>
                                 <td style="text-align:center;">${hasPhoto ? `<img src="${photoSrc}" class="pdf-img">` : '<span style="color:#888;">Sem foto</span>'}</td>
                                 <td>${respVal}</td>
@@ -888,20 +888,55 @@
             historyContent.innerHTML = reversedHistory.map((item, index) => {
                 const isLatest = index === 0;
 
-                // Agrupa itens inspecionados para exibir no histórico
+                // 1. FILTRA EXCLUSIVAMENTE OS ITENS QUE FORAM CLICADOS/APROVADOS
                 let inspectedSummaryHTML = '';
                 if (item.allInspectedItems && item.allInspectedItems.length > 0) {
                     const okItems = item.allInspectedItems.filter(i => i.status === 'OK');
                     const nokItems = item.allInspectedItems.filter(i => i.status === 'NOK');
 
+                    const okNames = okItems.map(i => `${i.cleanName} (${i.room})`);
+                    const nokNames = nokItems.map(i => `${i.cleanName} (${i.room})`);
+
                     inspectedSummaryHTML = `
                         <div style="margin-top:8px; background:#fff; padding:8px; border-radius:5px; border:1px solid #e2e8f0; font-size:0.8rem;">
                             <strong>Resumo Geral dos Itens Vistoriados:</strong>
                             <div style="margin-top:4px; color:#28a745;">
-                                <strong>✓ Aprovados (${okItems.length}):</strong> ${okItems.map(i => i.itemName.split('.')[1] || i.itemName).join(', ') || 'Nenhum'}
+                                <strong>✓ Aprovados (${okItems.length}):</strong> ${okNames.length > 0 ? okNames.join(', ') : '<span style="color:#666;">Nenhum item marcado como OK</span>'}
                             </div>
                             <div style="margin-top:4px; color:#dc3545;">
-                                <strong>✗ Pendentes (${nokItems.length}):</strong> ${nokItems.map(i => i.itemName.split('.')[1] || i.itemName).join(', ') || 'Nenhum'}
+                                <strong>✗ Pendentes (${nokItems.length}):</strong> ${nokNames.length > 0 ? nokNames.join(', ') : '<span style="color:#666;">Nenhum</span>'}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // 2. MONTA CRONOGRAMA DE AÇÃO DA VISTORIA
+                let timelineHTML = '';
+                if (item.pendencies && item.pendencies.length > 0) {
+                    const timelineItems = item.pendencies.map(p => {
+                        return {
+                            dateStr: p.startDate || 'Sem Data Defined',
+                            rawDate: p.startDateRaw || '9999-99-99',
+                            room: p.room,
+                            item: p.item,
+                            resp: p.resp,
+                            days: p.days
+                        };
+                    }).sort((a,b) => a.rawDate.localeCompare(b.rawDate));
+
+                    timelineHTML = `
+                        <div class="timeline-box">
+                            <strong style="font-size:0.8rem; color:#004a8f;">📅 Cronograma de Ação & Prazos das Correções:</strong>
+                            <div style="margin-top:6px;">
+                                ${timelineItems.map(t => `
+                                    <div class="timeline-item">
+                                        <span class="timeline-date">${t.dateStr}</span>
+                                        <div>
+                                            <strong>[${t.room}]</strong> ${t.item} — <span style="color:#d97706; font-weight:bold;">Prazo: ${t.days} dia(s)</span><br>
+                                            <span style="color:#64748b;">Resp: ${t.resp}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
                         </div>
                     `;
@@ -937,6 +972,8 @@
                                 </ul>
                             </div>
                         ` : ''}
+
+                        ${timelineHTML}
                     </div>
                 `;
             }).join('');
