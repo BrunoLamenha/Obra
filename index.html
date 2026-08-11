@@ -146,7 +146,7 @@
         <div class="card" id="inspector-card">
             <h3>👤 Identificação do Vistoriador</h3>
             <label>Nome Completo do Engenheiro / Vistoriador:</label>
-            <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha">
+            <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha" oninput="localStorage.setItem('vistoria_inspector_name', this.value)">
 
             <label>Identificação Automática do Aparelho:</label>
             <div class="device-info-box" id="device-info-text">Carregando dados do dispositivo...</div>
@@ -335,12 +335,13 @@
     let dbUnitsCache = {};
     let fullCalendarInstance = null;
 
-    window.onload = () => {
-        detectDevice();
-        loadAllUnitsData();
+   window.onload = async () => {
+    await detectDevice();
+    loadAllUnitsData();
+};
     };
 
-    function detectDevice() {
+    async function detectDevice() {
     let deviceId = localStorage.getItem('vistoria_device_id');
     if (!deviceId) {
         deviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
@@ -356,17 +357,26 @@
     else if (userAgent.indexOf("Mac") > -1) platform = "Mac";
 
     deviceDetails = `${platform} | ID: ${deviceId}`;
-    
+
     const infoEl = document.getElementById('device-info-text');
-    if(infoEl) {
+    if (infoEl) {
         infoEl.innerHTML = `📱 <strong>${platform}</strong><br>🆔 Código Único do Dispositivo: <strong>${deviceId}</strong>`;
     }
 
-    // --- NOVO: Carrega o último nome salvo, se existir ---
-    const savedName = localStorage.getItem('vistoria_inspector_name');
-    if (savedName) {
-        const nameInput = document.getElementById('inspector-name');
-        if (nameInput) nameInput.value = savedName;
+    // --- BUSCA NO FIREBASE O ÚLTIMO NOME REGISTRADO NESTE DISPOSITIVO ---
+    try {
+        const devDoc = await db.collection('dispositivos').doc(deviceId).get();
+        if (devDoc.exists) {
+            const devData = devDoc.data();
+            if (devData && devData.lastInspectorName) {
+                const nameInput = document.getElementById('inspector-name');
+                if (nameInput) {
+                    nameInput.value = devData.lastInspectorName;
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Erro ao buscar informações do dispositivo no Firebase:", err);
     }
 }
 
@@ -398,19 +408,35 @@
         }
     }
 
-    function confirmInspector() {
-        const nameInput = document.getElementById('inspector-name').value.trim();
-        if (!nameInput) { alert('Por favor, informe o nome do vistoriador.'); return; }
+  async function confirmInspector() {
+    const nameInput = document.getElementById('inspector-name').value.trim();
+    if (!nameInput) { alert('Por favor, informe o nome do vistoriador.'); return; }
 
-        inspectorName = nameInput;
-        document.getElementById('inspector-card').style.background = '#eef6ff';
-        document.getElementById('inspector-card').innerHTML = `
-            <h3>👤 Responsável Confirmado</h3>
-            <p style="font-size:0.9rem; margin-top:5px;"><strong>Vistoriador:</strong> ${inspectorName}</p>
-            <p style="font-size:0.8rem; color:#004a8f; margin-top:3px;">📱 <strong>Aparelho Registrado:</strong> ${deviceDetails}</p>
-        `;
-        document.getElementById('floor-card').style.display = 'block';
+    const deviceId = localStorage.getItem('vistoria_device_id');
+
+    // --- SALVA E SINCRONIZA NO FIREBASE PARA ESTE DISPOSITIVO ---
+    if (deviceId) {
+        try {
+            await db.collection('dispositivos').doc(deviceId).set({
+                deviceId: deviceId,
+                lastInspectorName: nameInput,
+                platformDetails: deviceDetails,
+                lastAccess: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        } catch (err) {
+            console.error("Erro ao salvar dados do dispositivo no Firebase:", err);
+        }
     }
+
+    inspectorName = nameInput;
+    document.getElementById('inspector-card').style.background = '#eef6ff';
+    document.getElementById('inspector-card').innerHTML = `
+        <h3>👤 Responsável Confirmado</h3>
+        <p style="font-size:0.9rem; margin-top:5px;"><strong>Vistoriador:</strong> ${inspectorName}</p>
+        <p style="font-size:0.8rem; color:#004a8f; margin-top:3px;">📱 <strong>Aparelho Registrado:</strong> ${deviceDetails}</p>
+    `;
+    document.getElementById('floor-card').style.display = 'block';
+}
 
     function setFloor(f, el) {
         selectedFloorNum = f;
