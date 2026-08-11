@@ -1132,72 +1132,45 @@ function assignTaskDateFromInput(unitKey, ncIndex, originalDays) {
                     const respKey = Object.keys(respColors).find(r => nc.resp.includes(r)) || 'Outro';
                     const color = respColors[respKey] || '#dc2626';
 
-                    if (nc.startDateRaw) {
-                        eventsList.push({
-                            title: `Apto ${unitKey.replace('unit_', '')} - ${nc.item}`,
-                            start: nc.startDateRaw,
-                            backgroundColor: color,
-                            borderColor: color,
-                            extendedProps: {
-                                unitKey: unitKey,
-                                room: nc.room,
-                                resp: nc.resp,
-                                days: nc.days,
-                                details: nc.details
-                            }
-                        });
-                    } else {
-                        // Card com inputs interativos para agendamento direto
-                        unassignedList.innerHTML += `
-                            <div class="fc-task-card" style="border-left-color:${color}; background:#fff; padding:10px; margin-bottom:10px; border-radius:6px; border-width:1px 1px 1px 5px;">
-                                <strong>Apto ${unitKey.replace('unit_', '')} - ${nc.room}</strong><br>
-                                <small>${nc.item}</small><br>
-                                <span style="font-size:0.75rem; color:#004a8f;"><strong>Resp:</strong> ${nc.resp}</span>
-                                
-                                <div style="margin-top:8px; display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
-                                    <div>
-                                        <label style="font-size:0.7rem; margin:0;">Prazo (dias):</label>
-                                        <input type="number" id="input-days-${unitKey}-${ncIndex}" value="${nc.days || 3}" min="1" style="padding:4px; font-size:0.78rem;">
-                                    </div>
-                                    <div>
-                                        <label style="font-size:0.7rem; margin:0;">Data Início:</label>
-                                        <input type="date" id="input-date-${unitKey}-${ncIndex}" style="padding:4px; font-size:0.78rem;">
-                                    </div>
-                                </div>
-                                <button onclick="assignTaskDateFromInput('${unitKey}', ${ncIndex}, ${nc.days || 3})" style="width:100%; margin-top:8px; background:#004a8f; color:white; border:none; padding:6px; border-radius:4px; font-weight:bold; font-size:0.75rem; cursor:pointer;">
-                                    📅 Confirmar Agendamento
-                                </button>
-                            </div>
-                        `;
-                    }
-                });
+           // Garante que a nota de alteração vá nos dados estendidos do evento
+        if (nc.startDateRaw) {
+            eventsList.push({
+                title: `Apto ${unitKey.replace('unit_', '')} - ${nc.item}`,
+                start: nc.startDateRaw,
+                backgroundColor: color,
+                borderColor: color,
+                extendedProps: {
+                    unitKey: unitKey,
+                    room: nc.room,
+                    resp: nc.resp,
+                    days: nc.days,
+                    details: nc.details,
+                    daysUpdatedNote: nc.daysUpdatedNote || ''
+                }
+            });
+        }
+
+        // ...
+
+        fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'pt-br',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,listWeek'
+            },
+            events: eventsList,
+            dateClick: function(info) {
+                openDayModal(info.dateStr, eventsList);
+            },
+            eventClick: function(info) {
+                // Clique direto em qualquer item da Lista ou Calendário
+                openTaskDetailModal(info.event.extendedProps, info.event.title, info.event.startStr);
             }
-        }
-    });
+        });
 
-    if (unassignedList.innerHTML === '') {
-        unassignedList.innerHTML = '<p style="font-size:0.75rem; color:#888;">Todas as pendências possuem data definida!</p>';
-    }
-
-    const calendarEl = document.getElementById('calendar');
-    if (fullCalendarInstance) fullCalendarInstance.destroy();
-
-    fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'pt-br',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,listWeek'
-        },
-        events: eventsList,
-        dateClick: function(info) {
-            openDayModal(info.dateStr, eventsList);
-        }
-    });
-
-    fullCalendarInstance.render();
-}
+        fullCalendarInstance.render();
 
     function openDayModal(dateStr, eventsList) {
         const modal = document.getElementById('day-modal');
@@ -1228,7 +1201,58 @@ function assignTaskDateFromInput(unitKey, ncIndex, originalDays) {
 
         modal.style.display = 'flex';
     }
+function openTaskDetailModal(props, titleStr, dateStr) {
+    const modal = document.getElementById('day-modal');
+    const title = document.getElementById('modal-date-title');
+    const list = document.getElementById('modal-task-list');
 
+    let formattedDate = dateStr;
+    if (dateStr && dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    title.innerText = `Detalhes da Pendência - ${formattedDate}`;
+
+    let detailsListHtml = '';
+    if (props.details && props.details.length > 0) {
+        detailsListHtml = '<ul style="margin-left: 18px; margin-top: 4px;">';
+        props.details.forEach(d => {
+            detailsListHtml += `<li>${d}</li>`;
+        });
+        detailsListHtml += '</ul>';
+    } else {
+        detailsListHtml = '<em>Nenhuma falha específica selecionada.</em>';
+    }
+
+    let obsNoteHtml = '';
+    if (props.daysUpdatedNote) {
+        obsNoteHtml = `
+            <div style="margin-top: 10px; background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 8px; border-radius: 4px; font-size: 0.8rem;">
+                📌 <strong>Observação / Alteração:</strong><br>${props.daysUpdatedNote}
+            </div>
+        `;
+    }
+
+    list.innerHTML = `
+        <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
+            <h4 style="color:#004a8f; margin-bottom:8px; font-size:1rem;">${titleStr}</h4>
+            <p style="margin-bottom:4px;"><strong>Ambiente:</strong> ${props.room || 'Não informado'}</p>
+            <p style="margin-bottom:4px;"><strong>Responsável:</strong> ${props.resp || 'Não informado'}</p>
+            <p style="margin-bottom:8px;"><strong>Prazo Estimado:</strong> ${props.days || '-'} dia(s)</p>
+            
+            <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px;">
+                <strong>Falhas Encontradas:</strong>
+                ${detailsListHtml}
+            </div>
+
+            ${obsNoteHtml}
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+    
     function closeDayModal() {
         document.getElementById('day-modal').style.display = 'none';
     }
