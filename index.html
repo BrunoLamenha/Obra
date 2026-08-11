@@ -151,9 +151,9 @@
     </div>
     
     <div style="margin-top: 15px; background: #eef6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px;">
-        <div id="device-info-text" style="font-size: 0.85rem; color: #1e3a8a;">
-            📱 <strong>Identificando dispositivo...</strong>
-        </div>
+        <<div class="device-info-box" id="device-info-text">
+    📱 <strong>Dispositivo Detectado</strong>
+</div>
     </div>
 
     <button onclick="confirmInspector()" style="width: 100%; margin-top: 15px; background: #28a745; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer;">
@@ -347,7 +347,7 @@
     loadAllUnitsData();
 };
     
-  function detectDevice() {
+ function detectDevice() {
     try {
         let deviceId = localStorage.getItem('vistoria_device_id');
         if (!deviceId) {
@@ -364,70 +364,37 @@
 
         deviceDetails = platform + " | ID: " + deviceId;
 
-        // Escreve na tela na mesma hora
+        // Atualização direta do DOM
         const infoEl = document.getElementById('device-info-text');
         if (infoEl) {
             infoEl.innerHTML = "📱 <strong>" + platform + "</strong><br>🆔 Código Único do Dispositivo: <strong>" + deviceId + "</strong>";
         }
 
-        // Resgata o nome salvo localmente
+        // Puxa o nome local imediatamente
         const localName = localStorage.getItem('vistoria_inspector_name');
         const nameInput = document.getElementById('inspector-name');
-        if (localName && nameInput) {
+        if (localName && nameInput && !nameInput.value) {
             nameInput.value = localName;
         }
 
-        // Busca em segundo plano no Firebase
+        // Busca opcional em background no Firebase
         if (typeof db !== 'undefined' && db) {
             db.collection('dispositivos').doc(deviceId).get().then(function(devDoc) {
                 if (devDoc.exists && devDoc.data() && devDoc.data().lastInspectorName) {
                     const firebaseName = devDoc.data().lastInspectorName;
-                    if (nameInput) nameInput.value = firebaseName;
+                    if (nameInput && !nameInput.value) nameInput.value = firebaseName;
                     localStorage.setItem('vistoria_inspector_name', firebaseName);
                 }
-            }).catch(function(err) {
-                console.warn("Aviso Firebase:", err);
-            });
+            }).catch(function(e) { console.log("Firebase sync silent:", e); });
         }
-    } catch (e) {
-        console.error("Erro ao detectar dispositivo:", e);
+    } catch (err) {
+        console.error("Erro em detectDevice:", err);
     }
 }
 
-// Executa assim que a estrutura do HTML estiver pronta
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', detectDevice);
-} else {
-    detectDevice();
-}
-
-    function switchTab(tab) {
-        document.getElementById('tab-vistorias-btn').classList.toggle('active', tab === 'vistorias');
-        document.getElementById('tab-mapa-btn').classList.toggle('active', tab === 'mapa');
-        document.getElementById('tab-cronograma-btn').classList.toggle('active', tab === 'cronograma');
-
-        document.getElementById('tab-vistorias').style.display = tab === 'vistorias' ? 'block' : 'none';
-        document.getElementById('tab-mapa').style.display = tab === 'mapa' ? 'block' : 'none';
-        document.getElementById('tab-cronograma').style.display = tab === 'cronograma' ? 'block' : 'none';
-
-        if(tab === 'mapa') renderFullMap();
-        if(tab === 'cronograma') renderInteractiveCalendar();
-    }
-
-    async function loadAllUnitsData() {
-        try {
-            db.collection('vistorias_unidades').onSnapshot(snapshot => {
-                dbUnitsCache = {};
-                snapshot.forEach(doc => {
-                    dbUnitsCache[doc.id] = doc.data().history || [];
-                });
-                if (document.getElementById('tab-mapa').style.display === 'block') renderFullMap();
-                if (document.getElementById('tab-cronograma').style.display === 'block') renderInteractiveCalendar();
-            });
-        } catch (e) {
-            console.error("Erro ao carregar dados em nuvem:", e);
-        }
-    }
+// Garante chamada em qualquer cenário de carregamento
+detectDevice();
+document.addEventListener("DOMContentLoaded", detectDevice);
 
   function confirmInspector() {
     const nameInput = document.getElementById('inspector-name').value.trim();
