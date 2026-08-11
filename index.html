@@ -94,6 +94,85 @@
         .badge-alta { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
         .badge-media { background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
         .badge-baixa { background: #e0f2fe; color: #075985; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        /* Ajuste de responsividade para celular no Calendário e Lista de Atividades */
+
+/* 1. Header do FullCalendar em telas pequenas */
+.fc-header-toolbar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    justify-content: center !important;
+    margin-bottom: 10px !important;
+}
+
+.fc-toolbar-chunk {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.fc-toolbar-title {
+    font-size: 1.1rem !important;
+    text-align: center;
+}
+
+.fc-button {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+}
+
+/* 2. Ajuste fino nas tags do calendário para não cortar o texto */
+.fc-event-title {
+    font-size: 0.68rem !important;
+    font-weight: bold !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    padding: 0 2px !important;
+}
+
+/* 3. Estilização responsiva dos cards da Lista Cronológica */
+.activity-card {
+    display: flex;
+    flex-direction: column; /* Empilha no mobile para não espremer */
+    gap: 6px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+@media (min-width: 600px) {
+    .activity-card {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.activity-badge {
+    display: inline-block;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: bold;
+    color: #fff;
+    white-space: nowrap;
+    margin-right: 6px;
+}
+
+.activity-dates {
+    font-size: 0.75rem;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid #f1f5f9;
+}
     </style>
 
     <!-- SDKs do Firebase -->
@@ -1450,16 +1529,20 @@ function renderInteractiveCalendar() {
                             });
 
                             // Lista Detalhada com evento Clicável
-                            scheduledTasksHTML += `
-                                <div onclick="highlightTaskCard('${cardDomId}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #e2e8f0; border-left:6px solid ${serviceColor}; padding:10px 12px; border-radius:6px; margin-bottom:8px; font-size:0.82rem; transition: transform 0.15s ease;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
-                                    <div>
-                                        <span style="background:${serviceColor}; color:#fff; padding:3px 7px; border-radius:4px; font-size:0.75rem; font-weight:bold; margin-right:8px;">APTO ${unitNum}</span>
-                                        <strong>${respName}</strong> — <span style="color:#334155;">${d.item}: <strong>${d.nonConformity}</strong></span>
-                                    </div>
-                                    <div style="text-align:right; font-size:0.78rem; color:#64748b; white-space:nowrap; margin-left:10px;">
-                                        📅 Início: <strong>${d.scheduledFor}</strong> | Prazo Limite: <strong style="color:#d97706;">${deadline || 'N/A'}</strong>
-                                    </div>
-                                </div>
+                           // Lista Detalhada com layout responsivo (não vasa mais da tela)
+scheduledTasksHTML += `
+    <div class="activity-card" onclick="highlightTaskCard('${cardDomId}')" style="border-left: 6px solid ${serviceColor};">
+        <div>
+            <span class="activity-badge" style="background:${serviceColor};">APTO ${unitNum}</span>
+            <strong>${respName}</strong><br>
+            <span style="color:#334155;">${d.item}: <strong>${d.nonConformity}</strong></span>
+        </div>
+        <div class="activity-dates">
+            📅 Início: <strong>${d.scheduledFor}</strong><br>
+            ⏳ Prazo Limite: <strong style="color:#d97706;">${deadline || 'Não definida'}</strong>
+        </div>
+    </div>
+`;
                             `;
                         }
                     }
