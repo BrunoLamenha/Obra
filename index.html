@@ -876,6 +876,7 @@ function restaurarValoresInputs(key) {
         const historyKey = `unit_${selectedUnitNum}`;
         let existingHistory = dbUnitsCache[historyKey] || [];
         existingHistory.push(inspectionRecord);
+        localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
 
         try {
             db.collection('vistorias_unidades').doc(historyKey).set({
