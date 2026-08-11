@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vistoria Interna de Obra - Cloud</title>
+    <title>Vistoria Interna de Obra - Cloud Pro</title>
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
     <meta name="theme-color" content="#004a8f">
@@ -14,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
-        :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ccc; --success: #28a745; --danger: #dc3545; }
+        :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ccc; --success: #28a745; --danger: #dc3545; --warning: #ffc107; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { background: var(--bg); padding: 12px; color: #333; }
         .container { max-width: 950px; margin: 0 auto; }
@@ -58,7 +58,6 @@
         label { font-size: 0.8rem; font-weight: bold; display: block; margin-top: 8px; color: #444; }
         input, select { width: 100%; padding: 8px; margin-top: 2px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
         
-        /* Galeria de Fotos */
         .photo-area { margin-top: 10px; padding: 10px; background: #fff; border: 1px dashed var(--border); border-radius: 6px; text-align: center; }
         .photo-gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .photo-container { position: relative; width: 75px; height: 75px; }
@@ -67,12 +66,11 @@
 
         .btn-add-nc { background: #007bff; color: white; border: none; padding: 10px 12px; border-radius: 5px; font-weight: bold; font-size: 0.85rem; margin-top: 10px; cursor: pointer; width: 100%; }
         .btn-export { width: 100%; padding: 15px; background: #17a2b8; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
+        .btn-whatsapp { width: 100%; padding: 12px; background: #25d366; color: white; font-size: 0.95rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-next-unit { width: 100%; padding: 14px; background: #28a745; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: none; }
 
         .accordion { width: 100%; padding: 12px; background: #eef4fa; border: 1px solid #b8daff; border-radius: 6px; font-weight: bold; color: var(--primary); text-align: left; margin-top: 10px; cursor: pointer; }
         .content { display: none; padding-top: 10px; }
-        
-        .badge { display: inline-block; background: #ffc107; color: #000; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: bold; margin-left: 5px; }
 
         .legend-box { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: 0.75rem; justify-content: center; }
         .legend-item { display: flex; align-items: center; gap: 4px; background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; }
@@ -91,21 +89,9 @@
         .kpi-card h5 { font-size: 0.72rem; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
         .kpi-card .kpi-num { font-size: 1.3rem; font-weight: bold; color: #0f172a; }
 
-        @media print {
-            @page { size: landscape; margin: 1cm; }
-            body { background: #fff !important; padding: 0 !important; }
-            .no-print, #app-content { display: none !important; }
-            #print-report { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
-        }
-
-        #print-report { display: none; background: #fff; padding: 10px; font-family: Arial, sans-serif; color: #333; }
-        .pdf-header-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #004a8f; }
-        .pdf-header-table td { padding: 6px 10px; border: 1px solid #cccccc; font-size: 12px; }
-        .pdf-header-title { background: #004a8f; color: #ffffff; font-weight: bold; text-align: center; font-size: 16px; padding: 8px !important; }
-        .pdf-nc-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; }
-        .pdf-nc-table th { background: #eef4fa; color: #333333; padding: 6px; border: 1px solid #cccccc; text-align: left; font-weight: bold; }
-        .pdf-nc-table td { padding: 6px; border: 1px solid #cccccc; vertical-align: top; line-height: 1.3; }
-        .pdf-img { max-width: 90px; max-height: 90px; margin: 2px; border: 1px solid #ccc; border-radius: 4px; display: inline-block; }
+        .badge-sev-baixa { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
+        .badge-sev-media { background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
+        .badge-sev-alta { background: #fee2e2; color: #b91c1c; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
     </style>
 
     <!-- SDKs do Firebase -->
@@ -117,7 +103,7 @@
 <div class="container" id="app-content">
     <header class="no-print">
         <h2>Vistoria Interna de Obra</h2>
-        <p style="font-size:0.8rem;">Controle Técnico de Qualidade & Nuvem</p>
+        <p style="font-size:0.8rem;">Controle Técnico de Qualidade & Nuvem Pro</p>
     </header>
 
     <!-- Navegação por Abas -->
@@ -204,7 +190,8 @@
                 <div class="content" id="room-balcony"></div>
             </div>
 
-            <button class="btn-export" onclick="generateTechnicalPDF()">📄 Finalizar & Salvar no Banco (PDF Paisagem)</button>
+            <button class="btn-export" onclick="generateTechnicalPDF()">📄 Finalizar & Salvar Vistoria</button>
+            <button class="btn-whatsapp" onclick="sendWhatsAppSummary()">📲 Enviar Resumo das Pendências por WhatsApp</button>
             <button class="btn-next-unit" id="btn-next" onclick="startNextUnit()">➡️ Próxima Unidade</button>
         </div>
     </div>
@@ -289,8 +276,6 @@
         <div id="modal-task-list" style="margin-top:12px; font-size:0.85rem;"></div>
     </div>
 </div>
-
-<div id="print-report"></div>
 
 <script>
     const firebaseConfig = {
@@ -473,25 +458,60 @@
         });
     }
 
-   function salvarEstadoAtualInput(key) {
-    if (!pendingNCs[key]) return;
-    pendingNCs[key].forEach((nc, index) => {
-        const obsEl = document.getElementById(`obs_${key}_${index}`);
-        const respEl = document.getElementById(`resp_${key}_${index}`);
-        const dateEl = document.getElementById(`date_${key}_${index}`);
+    function toggleOutroResp(key, index) {
+        const select = document.getElementById(`resp_${key}_${index}`);
+        const otherInput = document.getElementById(`resp_other_${key}_${index}`);
+        if (select && otherInput) {
+            if (select.value === 'Outro') {
+                otherInput.style.display = 'block';
+            } else {
+                otherInput.style.display = 'none';
+                otherInput.value = '';
+            }
+        }
+        salvarEstadoAtualInput(key);
+    }
+
+    // Regra 2: Caso o status mude para Concluído/Sanado, pede confirmação e passa para Conforme
+    function handleStatusChange(key, index, itemId) {
         const statusEl = document.getElementById(`status_${key}_${index}`);
+        if (statusEl && statusEl.value === 'Concluído') {
+            const confirmAction = confirm("Confirma que esta pendência foi sanada? O item será alterado para CONFORME.");
+            if (confirmAction) {
+                removeNC(key, index, itemId);
+                setItemStatus(key, 'OK', itemId);
+                return;
+            } else {
+                statusEl.value = 'Aguardando';
+            }
+        }
+        salvarEstadoAtualInput(key);
+    }
 
-        if (obsEl) nc.obs = obsEl.value;
-        if (respEl) nc.resp = respEl.value;
-        if (dateEl) nc.startDate = dateEl.value;
-        if (statusEl) nc.status = statusEl.value;
+    function salvarEstadoAtualInput(key) {
+        if (!pendingNCs[key]) return;
+        pendingNCs[key].forEach((nc, index) => {
+            const obsEl = document.getElementById(`obs_${key}_${index}`);
+            const respEl = document.getElementById(`resp_${key}_${index}`);
+            const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
+            const dateEl = document.getElementById(`date_${key}_${index}`);
+            const statusEl = document.getElementById(`status_${key}_${index}`);
+            const sevEl = document.getElementById(`sev_${key}_${index}`);
 
-        nc.selectedOpts = [];
-        document.querySelectorAll(`.chk_${key}_${index}:checked`).forEach(chk => {
-            nc.selectedOpts.push(chk.value);
+            if (obsEl) nc.obs = obsEl.value;
+            if (respEl) nc.resp = respEl.value;
+            if (respOtherEl) nc.respOther = respOtherEl.value;
+            if (dateEl) nc.startDate = dateEl.value;
+            if (statusEl) nc.status = statusEl.value;
+            if (sevEl) nc.severity = sevEl.value;
+
+            nc.selectedOpts = [];
+            document.querySelectorAll(`.chk_${key}_${index}:checked`).forEach(chk => {
+                nc.selectedOpts.push(chk.value);
+            });
         });
-    });
-}
+    }
+
     function setItemStatus(key, status, itemId) {
         const btnOk = document.getElementById(`btn_ok_${key}`);
         const btnNok = document.getElementById(`btn_nok_${key}`);
@@ -528,8 +548,12 @@
             id: Date.now(),
             selectedOpts: [],
             obs: '',
-            resp: 'Pintura / Emassamento',
-            photos: [] // Array para guardar múltiplas fotos em Base64
+            resp: '', // Força o vistoriador a escolher
+            respOther: '',
+            startDate: '',
+            status: 'Aguardando',
+            severity: 'Baixa',
+            photos: []
         });
 
         const itemObj = checklist.find(i => i.id === itemId);
@@ -564,7 +588,6 @@
         }
     }
 
-    // Função para tratar o upload e adição de MÚLTIPLAS FOTOS
     function handleMultiplePhotos(input, key, index) {
         if (!input.files || input.files.length === 0) return;
         salvarEstadoAtualInput(key);
@@ -589,7 +612,6 @@
         });
     }
 
-    // Remove uma foto específica do array
     function removePhoto(key, ncIndex, photoIndex) {
         salvarEstadoAtualInput(key);
         if (pendingNCs[key] && pendingNCs[key][ncIndex] && pendingNCs[key][ncIndex].photos) {
@@ -598,7 +620,6 @@
         }
     }
 
-    // Renderiza a galeria de fotos na tela
     function renderGallery(key, index) {
         const galleryEl = document.getElementById(`gallery_${key}_${index}`);
         if (!galleryEl) return;
@@ -613,162 +634,136 @@
         `).join('');
     }
 
-function toggleOutroResp(key, index) {
-    const select = document.getElementById(`resp_${key}_${index}`);
-    const otherInput = document.getElementById(`resp_other_${key}_${index}`);
-    if (select && otherInput) {
-        if (select.value === 'Outro') {
-            otherInput.style.display = 'block';
-        } else {
-            otherInput.style.display = 'none';
-            otherInput.value = '';
-        }
-    }
-    salvarEstadoAtualInput(key);
-}
+    function renderNCBoxes(key, itemObj) {
+        if (!pendingNCs[key] || pendingNCs[key].length === 0) return '';
 
-function salvarEstadoAtualInput(key) {
-    if (!pendingNCs[key]) return;
-    pendingNCs[key].forEach((nc, index) => {
-        const obsEl = document.getElementById(`obs_${key}_${index}`);
-        const respEl = document.getElementById(`resp_${key}_${index}`);
-        const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
-        const dateEl = document.getElementById(`date_${key}_${index}`);
-        const statusEl = document.getElementById(`status_${key}_${index}`);
+        return pendingNCs[key].map((nc, index) => {
+            const chkBoxes = itemObj.options.map(opt => `
+                <label class="chk-label">
+                    <input type="checkbox" class="chk_${key}_${index}" value="${opt}" onchange="salvarEstadoAtualInput('${key}')"> ${opt}
+                </label>
+            `).join('');
 
-        if (obsEl) nc.obs = obsEl.value;
-        if (respEl) nc.resp = respEl.value;
-        if (respOtherEl) nc.respOther = respOtherEl.value;
-        if (dateEl) nc.startDate = dateEl.value;
-        if (statusEl) nc.status = statusEl.value;
-
-        nc.selectedOpts = [];
-        document.querySelectorAll(`.chk_${key}_${index}:checked`).forEach(chk => {
-            nc.selectedOpts.push(chk.value);
-        });
-    });
-}
-
-function renderNCBoxes(key, itemObj) {
-    if (!pendingNCs[key] || pendingNCs[key].length === 0) return '';
-
-    return pendingNCs[key].map((nc, index) => {
-        const chkBoxes = itemObj.options.map(opt => `
-            <label class="chk-label">
-                <input type="checkbox" class="chk_${key}_${index}" value="${opt}" onchange="salvarEstadoAtualInput('${key}')"> ${opt}
-            </label>
-        `).join('');
-
-        return `
-            <div class="nc-box">
-                <div class="nc-header">
-                    <span>PENDÊNCIA #${index + 1}</span>
-                    <button class="btn-remove" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
-                </div>
-                <div class="checklist-group">${chkBoxes}</div>
-                
-                <div class="grid-two" style="margin-top: 5px;">
-                    <div>
-                        <label>Responsável / Subempreiteiro: <span style="color:red;">*</span></label>
-                        <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
-                            <option value="" disabled selected>Escolha o Responsável...</option>
-                            <option value="Pintura / Emassamento">Pintura / Emassamento</option>
-                            <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
-                            <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
-                            <option value="Eletricista">Eletricista</option>
-                            <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
-                            <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
-                            <option value="Piso e Revestimento">Piso e Revestimento</option>
-                            <option value="Gesso / Sancas">Gesso / Sancas</option>
-                            <option value="Serralharia / Portões">Serralharia / Portões</option>
-                            <option value="Impermeabilização">Impermeabilização</option>
-                            <option value="Limpeza Pós-Obra">Limpeza Pós-Obra</option>
-                            <option value="Gás Encanado">Gás Encanado</option>
-                            <option value="Outro">Outro (Especifique)</option>
-                        </select>
-                        <input type="text" id="resp_other_${key}_${index}" placeholder="Digite o responsável..." style="display:none; margin-top:6px;" oninput="salvarEstadoAtualInput('${key}')">
+            return `
+                <div class="nc-box">
+                    <div class="nc-header">
+                        <span>PENDÊNCIA #${index + 1}</span>
+                        <button class="btn-remove" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
                     </div>
-                    <div>
-                        <label>Prazo / Data de Início do Reparo:</label>
-                        <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                    <div class="checklist-group">${chkBoxes}</div>
+                    
+                    <div class="grid-two" style="margin-top: 5px;">
+                        <div>
+                            <label>Responsável / Subempreiteiro: <span style="color:red;">*</span></label>
+                            <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
+                                <option value="" disabled selected>Escolha o Responsável...</option>
+                                <option value="Pintura / Emassamento">Pintura / Emassamento</option>
+                                <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
+                                <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
+                                <option value="Eletricista">Eletricista</option>
+                                <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
+                                <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
+                                <option value="Piso e Revestimento">Piso e Revestimento</option>
+                                <option value="Gesso / Sancas">Gesso / Sancas</option>
+                                <option value="Serralharia / Portões">Serralharia / Portões</option>
+                                <option value="Impermeabilização">Impermeabilização</option>
+                                <option value="Limpeza Pós-Obra">Limpeza Pós-Obra</option>
+                                <option value="Gás Encanado">Gás Encanado</option>
+                                <option value="Outro">Outro (Especifique)</option>
+                            </select>
+                            <input type="text" id="resp_other_${key}_${index}" placeholder="Digite o responsável..." style="display:none; margin-top:6px;" oninput="salvarEstadoAtualInput('${key}')">
+                        </div>
+                        <div>
+                            <label>Prazo / Data de Início do Reparo:</label>
+                            <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                        </div>
                     </div>
-                </div>
 
-                <div class="grid-two" style="margin-top: 5px;">
-                    <div>
-                        <label>Status do Reparo:</label>
-                        <select id="status_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
-                            <option value="Aguardando">Aguardando Início</option>
-                            <option value="Em Andamento">Em Andamento</option>
-                            <option value="Concluído">Concluído / Sanado</option>
-                        </select>
+                    <div class="grid-two" style="margin-top: 5px;">
+                        <div>
+                            <label>Status do Reparo:</label>
+                            <select id="status_${key}_${index}" onchange="handleStatusChange('${key}', ${index}, '${itemObj.id}')">
+                                <option value="Aguardando">Aguardando Início</option>
+                                <option value="Em Andamento">Em Andamento</option>
+                                <option value="Concluído">Concluído / Sanado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Gravidade / Severidade:</label>
+                            <select id="sev_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                                <option value="Baixa">Baixa (Estética / Limpeza)</option>
+                                <option value="Média">Média (Funcional)</option>
+                                <option value="Alta">Alta / Crítica (Urgente / Leaking)</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
+
+                    <div style="margin-top: 5px;">
                         <label>Observação Técnica:</label>
-                        <input type="text" id="obs_${key}_${index}" placeholder="Descreva a pendência..." oninput="salvarEstadoAtualInput('${key}')">
+                        <input type="text" id="obs_${key}_${index}" placeholder="Descreva a pendência com precisão..." oninput="salvarEstadoAtualInput('${key}')">
+                    </div>
+
+                    <div class="photo-area">
+                        <label style="margin:0 0 6px 0; color:#004a8f;">📷 Anexar Foto(s) da Pendência:</label>
+                        <input type="file" accept="image/*" multiple capture="environment" onchange="handleMultiplePhotos(this, '${key}', ${index})">
+                        <div class="photo-gallery" id="gallery_${key}_${index}"></div>
                     </div>
                 </div>
+            `;
+        }).join('');
+    }
 
-                <div class="photo-area">
-                    <label style="margin:0 0 6px 0; color:#004a8f;">📷 Anexar Foto(s) da Pendência:</label>
-                    <input type="file" accept="image/*" multiple capture="environment" onchange="handleMultiplePhotos(this, '${key}', ${index})">
-                    <div class="photo-gallery" id="gallery_${key}_${index}"></div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
+    function restaurarValoresInputs(key) {
+        if (!pendingNCs[key]) return;
+        pendingNCs[key].forEach((nc, index) => {
+            const obsEl = document.getElementById(`obs_${key}_${index}`);
+            const respEl = document.getElementById(`resp_${key}_${index}`);
+            const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
+            const dateEl = document.getElementById(`date_${key}_${index}`);
+            const statusEl = document.getElementById(`status_${key}_${index}`);
+            const sevEl = document.getElementById(`sev_${key}_${index}`);
 
-function restaurarValoresInputs(key) {
-    if (!pendingNCs[key]) return;
-    pendingNCs[key].forEach((nc, index) => {
-        const obsEl = document.getElementById(`obs_${key}_${index}`);
-        const respEl = document.getElementById(`resp_${key}_${index}`);
-        const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
-        const dateEl = document.getElementById(`date_${key}_${index}`);
-        const statusEl = document.getElementById(`status_${key}_${index}`);
-
-        if (obsEl && nc.obs) obsEl.value = nc.obs;
-        if (respEl && nc.resp) {
-            respEl.value = nc.resp;
-            if (nc.resp === 'Outro') {
-                if (respOtherEl) {
-                    respOtherEl.style.display = 'block';
-                    if (nc.respOther) respOtherEl.value = nc.respOther;
+            if (obsEl && nc.obs) obsEl.value = nc.obs;
+            if (respEl && nc.resp) {
+                respEl.value = nc.resp;
+                if (nc.resp === 'Outro') {
+                    if (respOtherEl) {
+                        respOtherEl.style.display = 'block';
+                        if (nc.respOther) respOtherEl.value = nc.respOther;
+                    }
                 }
             }
-        }
-        if (dateEl && nc.startDate) dateEl.value = nc.startDate;
-        if (statusEl && nc.status) statusEl.value = nc.status;
+            if (dateEl && nc.startDate) dateEl.value = nc.startDate;
+            if (statusEl && nc.status) statusEl.value = nc.status;
+            if (sevEl && nc.severity) sevEl.value = nc.severity;
 
-        if (nc.selectedOpts) {
-            nc.selectedOpts.forEach(val => {
-                const chk = document.querySelector(`.chk_${key}_${index}[value="${val}"]`);
-                if (chk) chk.checked = true;
-            });
-        }
+            if (nc.selectedOpts) {
+                nc.selectedOpts.forEach(val => {
+                    const chk = document.querySelector(`.chk_${key}_${index}[value="${val}"]`);
+                    if (chk) chk.checked = true;
+                });
+            }
 
-        renderGallery(key, index);
-    });
-}
+            renderGallery(key, index);
+        });
+    }
 
     function generateTechnicalPDF() {
-        // Adicione no topo da função generateTechnicalPDF():
-let hasMissingResp = false;
-Object.keys(pendingNCs).forEach(key => {
-    salvarEstadoAtualInput(key);
-    pendingNCs[key].forEach(nc => {
-        if (!nc.resp || nc.resp === "" || (nc.resp === "Outro" && !nc.respOther?.trim())) {
-            hasMissingResp = true;
-        }
-    });
-});
+        // Validação no topo: Força a escolha de um Responsável em todas as pendências
+        let hasMissingResp = false;
+        Object.keys(pendingNCs).forEach(key => {
+            salvarEstadoAtualInput(key);
+            pendingNCs[key].forEach(nc => {
+                if (!nc.resp || nc.resp === "" || (nc.resp === "Outro" && (!nc.respOther || !nc.respOther.trim()))) {
+                    hasMissingResp = true;
+                }
+            });
+        });
 
-if (hasMissingResp) {
-    alert("Por favor, selecione um Responsável/Subempreiteiro para todas as pendências antes de finalizar!");
-    return;
-}
-        Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
+        if (hasMissingResp) {
+            alert("Por favor, escolha um Responsável / Subempreiteiro para todas as pendências antes de finalizar!");
+            return;
+        }
 
         let totalPendencies = 0;
         let ncList = [];
@@ -785,7 +780,10 @@ if (hasMissingResp) {
                         room: roomNames[roomKey] || 'Geral',
                         item: itemObj ? itemObj.cleanName : 'Item',
                         nonConformity: nc.selectedOpts.join(', ') + (nc.obs ? ` (${nc.obs})` : ''),
-                        responsible: nc.resp,
+                        responsible: nc.resp === 'Outro' ? nc.respOther : nc.resp,
+                        startDate: nc.startDate || 'Não informada',
+                        status: nc.status || 'Aguardando',
+                        severity: nc.severity || 'Baixa',
                         photos: nc.photos || []
                     });
                 }
@@ -817,10 +815,43 @@ if (hasMissingResp) {
             loadAllUnitsData();
             document.getElementById('btn-next').style.display = 'block';
         }).catch(err => {
-            alert(`Vistoria salva localmente no seu celular!`);
+            alert(`Vistoria salva localmente no seu dispositivo!`);
             loadAllUnitsData();
             document.getElementById('btn-next').style.display = 'block';
         });
+    }
+
+    // Função para Envio do Resumo via WhatsApp
+    function sendWhatsAppSummary() {
+        if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
+        
+        let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
+        text += `Vistoriador: ${inspectorName}\n`;
+        text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+
+        let count = 0;
+        Object.keys(pendingNCs).forEach(key => {
+            salvarEstadoAtualInput(key);
+            const roomKey = key.split('_')[0] + '_' + key.split('_')[1];
+            const roomId = key.replace(`${roomKey}_`, '');
+            const itemObj = checklist.find(i => i.id === roomId);
+
+            pendingNCs[key].forEach(nc => {
+                count++;
+                const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
+                text += `*${count}. ${roomNames[roomKey]} - ${itemObj.cleanName}*\n`;
+                text += `• Pendência: ${nc.selectedOpts.join(', ')} ${nc.obs ? '('+nc.obs+')' : ''}\n`;
+                text += `• Responsável: ${resp || 'Não definido'}\n`;
+                text += `• Severidade: ${nc.severity}\n\n`;
+            });
+        });
+
+        if (count === 0) {
+            text += `✅ *UNIDADE 100% APROVADA - SEM PENDÊNCIAS*`;
+        }
+
+        const encoded = encodeURIComponent(text);
+        window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
     }
 
     function startNextUnit() {
@@ -905,8 +936,9 @@ if (hasMissingResp) {
                 ${h.details && h.details.length > 0 ? `
                     <ul style="margin-top:5px; padding-left:18px;">
                         ${h.details.map(d => `
-                            <li>
+                            <li style="margin-bottom:6px;">
                                 <strong>${d.room} - ${d.item}:</strong> ${d.nonConformity} [${d.responsible}]
+                                <span class="badge-sev-${(d.severity || 'baixa').toLowerCase()}">${d.severity || 'Baixa'}</span>
                                 ${d.photos && d.photos.length > 0 ? `
                                     <div style="margin-top:4px;">
                                         ${d.photos.map(p => `<img src="${p}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; margin-right:4px;">`).join('')}
@@ -988,6 +1020,8 @@ if (hasMissingResp) {
                             Item: d.item,
                             'Não Conformidade': d.nonConformity,
                             Responsável: d.responsible,
+                            Severidade: d.severity || 'Baixa',
+                            Status: d.status || 'Aguardando',
                             'Qtd Fotos': (d.photos) ? d.photos.length : 0
                         });
                     });
@@ -1002,6 +1036,8 @@ if (hasMissingResp) {
                         Item: 'Nenhum',
                         'Não Conformidade': 'Sem pendências',
                         Responsável: 'Nenhum',
+                        Severidade: 'N/A',
+                        Status: 'Concluído',
                         'Qtd Fotos': 0
                     });
                 }
