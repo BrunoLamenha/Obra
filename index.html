@@ -82,11 +82,9 @@
 
         .btn-view-pdf { background: #004a8f; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 0.8rem; cursor: pointer; margin-top: 10px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; }
 
-        /* Estilos do Drag & Drop e Calendário */
         .fc-task-card { background: #fff; border: 1px solid #cbd5e1; border-left: 5px solid #004a8f; padding: 8px; border-radius: 5px; margin-bottom: 8px; font-size: 0.78rem; cursor: grab; }
         .fc-task-card:active { cursor: grabbing; }
 
-        /* Estilo do Modal de Tarefas do Dia */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 999; }
         .modal-card { background: #fff; border-radius: 8px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 18px; position: relative; }
 
@@ -107,19 +105,9 @@
         .pdf-nc-table td { padding: 6px; border: 1px solid #cccccc; vertical-align: top; line-height: 1.3; }
         .pdf-img { max-width: 110px; max-height: 110px; display: block; margin: 0 auto; border: 1px solid #ccc; border-radius: 4px; }
         .pdf-signatures { margin-top: 25px; width: 320px; margin-left: auto; margin-right: auto; text-align: center; border-top: 1px solid #000000; padding-top: 5px; font-size: 11px; }
-   /* Limpa os eventos na grade para mostrar blocos de cor legíveis */
-.fc-event {
-    border-radius: 4px !important;
-    padding: 2px 4px !important;
-    font-size: 0.72rem !important;
-    font-weight: bold !important;
-    cursor: pointer !important;
-}
-.fc-event-title {
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-}
+
+        .fc-event { border-radius: 4px !important; padding: 2px 4px !important; font-size: 0.72rem !important; font-weight: bold !important; cursor: pointer !important; }
+        .fc-event-title { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
     </style>
 
     <!-- SDKs do Firebase -->
@@ -144,22 +132,22 @@
     <!-- ABA 1: VISTORIAS -->
     <div id="tab-vistorias" class="no-print">
         <div id="inspector-card" class="card">
-    <h3>👤 Identificação do Vistoriador</h3>
-    <div style="margin-top: 10px;">
-        <label for="inspector-name"><strong>Nome Completo do Engenheiro / Vistoriador:</strong></label>
-        <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
-    </div>
-    
-    <div style="margin-top: 15px; background: #eef6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px;">
-        <<div class="device-info-box" id="device-info-text">
-    📱 <strong>Dispositivo Detectado</strong>
-</div>
-    </div>
+            <h3>👤 Identificação do Vistoriador</h3>
+            <div style="margin-top: 10px;">
+                <label for="inspector-name"><strong>Nome Completo do Engenheiro / Vistoriador:</strong></label>
+                <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            
+            <div style="margin-top: 15px; background: #eef6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px;">
+                <div class="device-info-box" id="device-info-text">
+                    📱 <strong>Dispositivo Detectado</strong>
+                </div>
+            </div>
 
-    <button onclick="confirmInspector()" style="width: 100%; margin-top: 15px; background: #28a745; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer;">
-        Confirmar & Iniciar Vistoria ✓
-    </button>
-</div>
+            <button onclick="confirmInspector()" style="width: 100%; margin-top: 15px; background: #28a745; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer;">
+                Confirmar & Iniciar Vistoria ✓
+            </button>
+        </div>
 
         <div class="card" id="floor-card" style="display:none;">
             <h3>1. Selecione o Pavimento</h3>
@@ -257,15 +245,11 @@
             <div class="legend-box" id="resp-legend-box"></div>
 
             <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
-                <!-- Painel de Tarefas para Arrastar -->
                 <div style="flex: 1; min-width: 250px; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px;" id="external-events-container">
                     <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📋 Aguardando Agendamento</h4>
-                    <div id="unassigned-tasks-list">
-                        <!-- Itens dinâmicos -->
-                    </div>
+                    <div id="unassigned-tasks-list"></div>
                 </div>
 
-                <!-- Calendário -->
                 <div style="flex: 3; min-width: 320px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
                     <div id="calendar"></div>
                 </div>
@@ -311,7 +295,7 @@
         'Esquadrias de Alumínio / Vidros': '#0891b2',
         'Piso e Revestimento': '#ca8a04',
         'Gesso / Sancas': '#475569',
-        'Outros': '#dc2626'
+        'Outro': '#dc2626'
     };
 
     const roomNames = {
@@ -342,90 +326,83 @@
     let dbUnitsCache = {};
     let fullCalendarInstance = null;
 
-   window.onload = function() {
-    detectDevice();
-    loadAllUnitsData();
-};
-    
- function detectDevice() {
-    try {
-        // 1. Pega ou cria o ID do dispositivo
-        let deviceId = localStorage.getItem('vistoria_device_id');
-        if (!deviceId) {
-            deviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-            localStorage.setItem('vistoria_device_id', deviceId);
+    window.onload = function() {
+        detectDevice();
+        loadAllUnitsData();
+    };
+
+    function detectDevice() {
+        try {
+            let deviceId = localStorage.getItem('vistoria_device_id');
+            if (!deviceId) {
+                deviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+                localStorage.setItem('vistoria_device_id', deviceId);
+            }
+
+            let platform = "Dispositivo Móvel";
+            var userAgent = navigator.userAgent || "";
+            if (userAgent.indexOf("Android") > -1) platform = "Android";
+            else if (userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPad") > -1) platform = "iOS (iPhone/iPad)";
+            else if (userAgent.indexOf("Windows") > -1) platform = "Windows PC";
+            else if (userAgent.indexOf("Mac") > -1) platform = "Mac";
+
+            deviceDetails = platform + " | ID: " + deviceId;
+
+            var infoEl = document.getElementById('device-info-text');
+            if (infoEl) {
+                infoEl.innerHTML = "📱 <strong>" + platform + "</strong><br>🆔 Código Único do Dispositivo: <strong>" + deviceId + "</strong>";
+            }
+
+            var localName = localStorage.getItem('vistoria_inspector_name');
+            var nameInput = document.getElementById('inspector-name');
+            if (localName && nameInput && !nameInput.value) {
+                nameInput.value = localName;
+            }
+
+            if (typeof db !== 'undefined' && db) {
+                db.collection('dispositivos').doc(deviceId).get()
+                    .then(function(devDoc) {
+                        if (devDoc.exists && devDoc.data() && devDoc.data().lastInspectorName) {
+                            var firebaseName = devDoc.data().lastInspectorName;
+                            if (nameInput && !nameInput.value) nameInput.value = firebaseName;
+                            localStorage.setItem('vistoria_inspector_name', firebaseName);
+                        }
+                    })
+                    .catch(function(e) { 
+                        console.log("Busca silenciosa Firebase:", e); 
+                    });
+            }
+        } catch (err) {
+            console.error("Erro na detecção:", err);
         }
-
-        // 2. Identifica o sistema operacional
-        let platform = "Dispositivo Móvel";
-        var userAgent = navigator.userAgent || "";
-        if (userAgent.indexOf("Android") > -1) platform = "Android";
-        else if (userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPad") > -1) platform = "iOS (iPhone/iPad)";
-        else if (userAgent.indexOf("Windows") > -1) platform = "Windows PC";
-        else if (userAgent.indexOf("Mac") > -1) platform = "Mac";
-
-        deviceDetails = platform + " | ID: " + deviceId;
-
-        // 3. ATUALIZA A TELA NA NA HORA
-        var infoEl = document.getElementById('device-info-text');
-        if (infoEl) {
-            infoEl.innerHTML = "📱 <strong>" + platform + "</strong><br>🆔 Código Único do Dispositivo: <strong>" + deviceId + "</strong>";
-        }
-
-        // 4. Preenche o último nome salvo localmente
-        var localName = localStorage.getItem('vistoria_inspector_name');
-        var nameInput = document.getElementById('inspector-name');
-        if (localName && nameInput && !nameInput.value) {
-            nameInput.value = localName;
-        }
-
-        // 5. Busca no Firebase em segundo plano (sem travar a tela)
-        if (typeof db !== 'undefined' && db) {
-            db.collection('dispositivos').doc(deviceId).get()
-                .then(function(devDoc) {
-                    if (devDoc.exists && devDoc.data() && devDoc.data().lastInspectorName) {
-                        var firebaseName = devDoc.data().lastInspectorName;
-                        if (nameInput && !nameInput.value) nameInput.value = firebaseName;
-                        localStorage.setItem('vistoria_inspector_name', firebaseName);
-                    }
-                })
-                .catch(function(e) { 
-                    console.log("Busca em segundo plano indisponível:", e); 
-                });
-        }
-    } catch (err) {
-        console.error("Erro na detecção do dispositivo:", err);
-    }
-}
-
-  function confirmInspector() {
-    const nameInput = document.getElementById('inspector-name').value.trim();
-    if (!nameInput) { alert('Por favor, informe o nome do vistoriador.'); return; }
-
-    const deviceId = localStorage.getItem('vistoria_device_id');
-
-    // 1. Salva imediatamente no navegador local
-    localStorage.setItem('vistoria_inspector_name', nameInput);
-
-    // 2. Salva e sincroniza no Firebase em segundo plano
-    if (deviceId && typeof db !== 'undefined' && db) {
-        db.collection('dispositivos').doc(deviceId).set({
-            deviceId: deviceId,
-            lastInspectorName: nameInput,
-            platformDetails: deviceDetails,
-            lastAccess: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(err => console.error("Erro ao sincronizar dispositivo no Firebase:", err));
     }
 
-    inspectorName = nameInput;
-    document.getElementById('inspector-card').style.background = '#eef6ff';
-    document.getElementById('inspector-card').innerHTML = `
-        <h3>👤 Responsável Confirmado</h3>
-        <p style="font-size:0.9rem; margin-top:5px;"><strong>Vistoriador:</strong> ${inspectorName}</p>
-        <p style="font-size:0.8rem; color:#004a8f; margin-top:3px;">📱 <strong>Aparelho Registrado:</strong> ${deviceDetails}</p>
-    `;
-    document.getElementById('floor-card').style.display = 'block';
-}
+    function confirmInspector() {
+        const nameInput = document.getElementById('inspector-name').value.trim();
+        if (!nameInput) { alert('Por favor, informe o nome do vistoriador.'); return; }
+
+        const deviceId = localStorage.getItem('vistoria_device_id');
+        localStorage.setItem('vistoria_inspector_name', nameInput);
+
+        if (deviceId && typeof db !== 'undefined' && db) {
+            db.collection('dispositivos').doc(deviceId).set({
+                deviceId: deviceId,
+                lastInspectorName: nameInput,
+                platformDetails: deviceDetails,
+                lastAccess: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).catch(err => console.error("Erro ao sincronizar dispositivo:", err));
+        }
+
+        inspectorName = nameInput;
+        document.getElementById('inspector-card').style.background = '#eef6ff';
+        document.getElementById('inspector-card').innerHTML = `
+            <h3>👤 Responsável Confirmado</h3>
+            <p style="font-size:0.9rem; margin-top:5px;"><strong>Vistoriador:</strong> ${inspectorName}</p>
+            <p style="font-size:0.8rem; color:#004a8f; margin-top:3px;">📱 <strong>Aparelho Registrado:</strong> ${deviceDetails}</p>
+        `;
+        document.getElementById('floor-card').style.display = 'block';
+    }
+
     function setFloor(f, el) {
         selectedFloorNum = f;
         document.querySelectorAll('#floors .btn').forEach(b => b.classList.remove('active'));
@@ -514,10 +491,8 @@
             const existingHistory = dbUnitsCache[historyKey] || [];
             
             if (selectedStage === 'Revistoria') {
-                revisionCount = existingHistory.length;
+                let revisionCount = existingHistory.length;
                 selectedStage = `${revisionCount}ª Revistoria`;
-            } else {
-                revisionCount = 1;
             }
 
             document.getElementById('unit-title').innerHTML = `Unidade ${selectedUnitNum} <span class="badge">${selectedCategory}</span> <span class="badge" style="background:#17a2b8; color:#fff;">${selectedStage}</span>`;
@@ -539,914 +514,683 @@
             ncCounters[fullId] = 0;
 
             let prevPendings = [];
-            let isPrevOK = false;
 
             if (history && history.length > 0) {
                 const lastInsp = history[history.length - 1];
                 if (lastInsp.pendencies) {
                     prevPendings = lastInsp.pendencies.filter(p => p.fullId === fullId);
                 }
-                if (lastInsp.allInspectedItems) {
-                    const prevItemInfo = lastInsp.allInspectedItems.find(i => i.fullId === fullId);
-                    if (prevItemInfo && prevItemInfo.status === 'OK') {
-                        isPrevOK = true;
-                    }
-                }
             }
 
-            let initialStatus = 'UNINSPECTED';
-            if (selectedStage.includes('Revistoria')) {
-                if (prevPendings.length > 0) {
-                    initialStatus = 'NOK';
-                } else if (isPrevOK) {
-                    initialStatus = 'OK';
-                }
-            }
-            itemStatusMap[fullId] = { status: initialStatus, originalStatus: initialStatus };
-
-            let historyNoticeHTML = '';
-            if (prevPendings.length > 0) {
-                historyNoticeHTML = prevPendings.map((p, idx) => `
-                    <div style="background:#fff3cd; border:1px solid #ffeeba; padding:6px 10px; border-radius:4px; margin-top:6px; font-size:0.78rem; color:#856404;">
-                        ⚠️ <strong>Pendência Registrada Anteriormente:</strong> ${p.details.join(', ')} (Início: ${p.startDate || 'Sem data'} | Prazo: ${p.days} dias | Resp: ${p.resp})
-                    </div>
-                `).join('');
-            } else if (selectedStage.includes('Revistoria') && isPrevOK) {
-                historyNoticeHTML = `
-                    <div style="background:#e6f4ea; border:1px solid #ceedd5; padding:6px 10px; border-radius:4px; margin-top:6px; font-size:0.78rem; color:#1e7e34;">
-                        ✓ Item aprovado na vistoria anterior.
-                    </div>
-                `;
-            }
-
-            c.innerHTML += `
-                <div class="item-card" id="${fullId}">
+            let html = `
+                <div class="item-card" id="card_${fullId}">
                     <div class="item-header">
                         <span class="item-title">${item.name}</span>
                         <div>
-                            <button class="btn-status ${initialStatus === 'OK' ? 'btn-ok-active' : 'btn-neutral'}" id="btn-ok-${fullId}" onclick="setStatus('${fullId}', true)">✓ OK</button>
-                            <button class="btn-status ${initialStatus === 'NOK' ? 'btn-nok-active' : 'btn-neutral'}" id="btn-nok-${fullId}" onclick="setStatus('${fullId}', false)">✗ Pendente</button>
+                            <button type="button" class="btn-status btn-neutral" id="btn_ok_${fullId}" onclick="setItemStatus('${fullId}', 'OK')">Conforme ✓</button>
+                            <button type="button" class="btn-status btn-neutral" id="btn_nok_${fullId}" onclick="setItemStatus('${fullId}', 'NOK')">Não Conforme ✕</button>
                         </div>
                     </div>
-                    ${historyNoticeHTML}
-                    <div class="nc-list" id="nc-list-${fullId}"></div>
-                    <button class="btn-add-nc" id="btn-add-${fullId}" onclick="addNC('${fullId}', '${item.id}')" style="${initialStatus === 'NOK' ? 'display:block;' : 'display:none;'}">+ Adicionar Ponto / Não Conformidade</button>
+                    <div id="nc_container_${fullId}"></div>
+                    <button type="button" class="btn-add-nc" id="btn_add_${fullId}" onclick="addNC('${fullId}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
                 </div>
             `;
+            c.innerHTML += html;
 
-            if (prevPendings.length > 0 && selectedStage.includes('Revistoria')) {
+            if (prevPendings.length > 0) {
                 setTimeout(() => {
-                    prevPendings.forEach(p => {
-                        addNC(fullId, item.id, p);
+                    setItemStatus(fullId, 'NOK');
+                    const container = document.getElementById(`nc_container_${fullId}`);
+                    if(container) container.innerHTML = '';
+                    prevPendings.forEach(pData => {
+                        addNC(fullId, item.id, pData);
                     });
                 }, 50);
             }
         });
     }
 
-    function setStatus(fullId, isOk) {
-        const targetStatus = isOk ? 'OK' : 'NOK';
-        const currentData = itemStatusMap[fullId] || {};
+    function setItemStatus(fullId, status) {
+        itemStatusMap[fullId] = status;
+        const btnOk = document.getElementById(`btn_ok_${fullId}`);
+        const btnNok = document.getElementById(`btn_nok_${fullId}`);
+        const addBtn = document.getElementById(`btn_add_${fullId}`);
+        const container = document.getElementById(`nc_container_${fullId}`);
 
-        if (selectedStage.includes('Revistoria') && currentData.originalStatus !== 'UNINSPECTED' && currentData.originalStatus !== targetStatus) {
-            const de = currentData.originalStatus === 'OK' ? 'APROVADO (OK)' : 'PENDENTE';
-            const para = targetStatus === 'OK' ? 'APROVADO (OK)' : 'PENDENTE';
-            const confirmChange = confirm(`⚠️ ALERTA DE ALTERAÇÃO DE REVISTORIA:\n\nEste item estava registrado como "${de}" na vistoria anterior.\n\nTem certeza que deseja alterar o estado para "${para}"?`);
-            
-            if (!confirmChange) return;
-        }
-
-        itemStatusMap[fullId].status = targetStatus;
-
-        const btnOk = document.getElementById(`btn-ok-${fullId}`);
-        const btnNok = document.getElementById(`btn-nok-${fullId}`);
-        const btnAdd = document.getElementById(`btn-add-${fullId}`);
-        const ncList = document.getElementById(`nc-list-${fullId}`);
-
-        if (isOk) {
+        if (status === 'OK') {
             btnOk.className = "btn-status btn-ok-active";
             btnNok.className = "btn-status btn-neutral";
-            btnAdd.style.display = 'none';
-            ncList.innerHTML = '';
+            addBtn.style.display = "none";
+            container.innerHTML = "";
             ncCounters[fullId] = 0;
         } else {
             btnNok.className = "btn-status btn-nok-active";
             btnOk.className = "btn-status btn-neutral";
-            btnAdd.style.display = 'block';
+            addBtn.style.display = "block";
             if (ncCounters[fullId] === 0) {
-                const baseItemId = fullId.split('_')[1];
-                addNC(fullId, baseItemId);
+                const itemId = fullId.split('_').slice(1).join('_');
+                addNC(fullId, itemId);
+            }
+        }
+    }
+
+    function toggleOtherRespField(boxId, selectEl) {
+        const container = document.getElementById(`other-resp-container-${boxId}`);
+        if (container) {
+            if (selectEl.value === 'Outro') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
             }
         }
     }
 
     function addNC(fullId, itemId, prevData = null) {
-        ncCounters[fullId] = (ncCounters[fullId] || 0) + 1;
+        ncCounters[fullId]++;
         const count = ncCounters[fullId];
-        const ncList = document.getElementById(`nc-list-${fullId}`);
-        if(!ncList) return;
-        
-        const ncBoxId = `nc-${fullId}-${count}`;
-        const itemObj = checklist.find(i => i.id === itemId) || { options: ["Falha de Acabamento", "Outros"] };
+        const container = document.getElementById(`nc_container_${fullId}`);
+        const itemObj = checklist.find(i => i.id === itemId);
+        const ncBoxId = `nc_${fullId}_${count}`;
 
-        let checkboxesHTML = itemObj.options.map((opt) => {
-            const isChecked = prevData && prevData.details && prevData.details.includes(opt) ? 'checked' : '';
-            return `
+        let optsHtml = '';
+        itemObj.options.forEach((opt, idx) => {
+            const isChecked = prevData && prevData.details && prevData.details.some(d => d.includes(opt));
+            optsHtml += `
                 <label class="chk-label">
-                    <input type="checkbox" value="${opt}" ${isChecked} onchange="toggleOtherField('${ncBoxId}', this, '${opt}')"> ${opt}
+                    <input type="checkbox" value="${opt}" ${isChecked ? 'checked' : ''} onchange="toggleOtherInput('${ncBoxId}', this)"> ${opt}
                 </label>
             `;
-        }).join('');
+        });
 
-        const div = document.createElement('div');
-        div.className = 'nc-box';
-        div.id = ncBoxId;
-        div.setAttribute('data-item-id', itemId);
-        div.setAttribute('data-full-id', fullId);
-        div.innerHTML = `
-            <div class="nc-header">
-                <span>PONTO / PENDÊNCIA #${count}</span>
-                <button class="btn-remove" onclick="removeNC('${ncBoxId}')">Remover ✕</button>
-            </div>
-            
-            <label>Selecione as não conformidades identificadas:</label>
-            <div class="checklist-group">${checkboxesHTML}</div>
+        const isOtherChecked = prevData && prevData.details && prevData.details.some(d => d.startsWith('Outros:'));
+        const otherValText = isOtherChecked ? prevData.details.find(d => d.startsWith('Outros:')).replace('Outros: ', '') : '';
 
-            <div id="other-field-${ncBoxId}" style="display:none;">
-                <label style="color:var(--danger);">Descreva a opção "Outros" / Observação Exata:</label>
-                <input type="text" class="nc-other-input" placeholder="Ex: Trinca perto da tomada no lado direito">
-            </div>
+        const respValue = prevData ? prevData.resp : '';
+        const isCustomResp = respValue && respValue.startsWith('Outro');
+        const customRespText = prevData && prevData.respCustom ? prevData.respCustom : '';
 
-            <label>Responsável Pela Correção:</label>
-            // Substitua o trecho da seleção do responsável dentro da função addNC por este:
-<label>Responsável Pela Correção <span style="color:red;">*</span>:</label>
-<select class="nc-resp" onchange="toggleOtherRespField('${ncBoxId}', this)">
-    <option value="" ${!prevData || !prevData.resp ? 'selected' : ''} disabled>Escolher...</option>
-    <option ${prevData && prevData.resp === 'Pintura / Emassamento' ? 'selected' : ''}>Pintura / Emassamento</option>
-    <option ${prevData && prevData.resp === 'Marmoraria / Graniteiro' ? 'selected' : ''}>Marmoraria / Graniteiro</option>
-    <option ${prevData && prevData.resp === 'Instalações Hidráulicas' ? 'selected' : ''}>Instalações Hidráulicas</option>
-    <option ${prevData && prevData.resp === 'Eletricista' ? 'selected' : ''}>Eletricista</option>
-    <option ${prevData && prevData.resp === 'Marcenaria / Portas de Madeira' ? 'selected' : ''}>Marcenaria / Portas de Madeira</option>
-    <option ${prevData && prevData.resp === 'Esquadrias de Alumínio / Vidros' ? 'selected' : ''}>Esquadrias de Alumínio / Vidros</option>
-    <option ${prevData && prevData.resp === 'Piso e Revestimento' ? 'selected' : ''}>Piso e Revestimento</option>
-    <option ${prevData && prevData.resp === 'Gesso / Sancas' ? 'selected' : ''}>Gesso / Sancas</option>
-    <option ${prevData && prevData.resp === 'Outro' || (prevData && prevData.respCustom) ? 'selected' : ''} value="Outro">Outro</option>
-</select>
-
-<div id="other-resp-container-${ncBoxId}" style="display:${prevData && (prevData.resp === 'Outro' || prevData.respCustom) ? 'block' : 'none'}; margin-top:6px;">
-    <label style="color:#004a8f;">Especifique o Responsável / Empresa:</label>
-    <input type="text" class="nc-resp-other-input" placeholder="Ex: Serralheria / Empreiteiro X" value="${prevData && prevData.respCustom ? prevData.respCustom : ''}">
-</div>
-            
-            <div class="grid-two">
-                <div>
-                    <label>Data de Início do Serviço:</label>
-                    <input type="date" class="nc-start-date" value="${prevData ? prevData.startDateRaw || '' : ''}" onchange="checkDateNotice('${ncBoxId}', this)">
-                    <div class="date-notice" id="notice-${ncBoxId}">⚠️ Sem data definida</div>
+        const boxHtml = `
+            <div class="nc-box" id="${ncBoxId}" data-item-id="${itemId}">
+                <div class="nc-header">
+                    <span>PENDÊNCIA #${count}</span>
+                    <button type="button" class="btn-remove" onclick="removeNC('${ncBoxId}', '${fullId}')">Remover ✕</button>
                 </div>
-                <div>
-                    <label>Prazo Execução (Dias):</label>
-                    <input type="number" placeholder="Ex: 3" class="nc-days" value="${prevData ? prevData.days : ''}">
+                
+                <label>Selecione as falhas encontradas:</label>
+                <div class="checklist-group">
+                    ${optsHtml}
                 </div>
-            </div>
+                
+                <div id="other-input-container-${ncBoxId}" style="display: ${isOtherChecked ? 'block' : 'none'}; margin-top: 5px;">
+                    <label>Especifique outro motivo:</label>
+                    <input type="text" class="nc-other-input" placeholder="Descreva a pendência..." value="${otherValText}">
+                </div>
 
-            <div class="photo-area">
-                <label style="margin-top:0;">📷 Foto da Pendência / Não Conformidade:</label>
-                <input type="file" accept="image/*" capture="environment" onchange="previewPhoto('${ncBoxId}', this)">
-                <img id="img-preview-${ncBoxId}" class="photo-preview" src="${prevData && prevData.photo ? prevData.photo : ''}" style="${prevData && prevData.photo ? 'display:block;' : ''}">
+                <label>Responsável Pela Correção <span style="color:red;">*</span>:</label>
+                <select class="nc-resp" onchange="toggleOtherRespField('${ncBoxId}', this)">
+                    <option value="" ${!respValue ? 'selected' : ''} disabled>Escolher...</option>
+                    <option ${respValue === 'Pintura / Emassamento' ? 'selected' : ''}>Pintura / Emassamento</option>
+                    <option ${respValue === 'Marmoraria / Graniteiro' ? 'selected' : ''}>Marmoraria / Graniteiro</option>
+                    <option ${respValue === 'Instalações Hidráulicas' ? 'selected' : ''}>Instalações Hidráulicas</option>
+                    <option ${respValue === 'Eletricista' ? 'selected' : ''}>Eletricista</option>
+                    <option ${respValue === 'Marcenaria / Portas de Madeira' ? 'selected' : ''}>Marcenaria / Portas de Madeira</option>
+                    <option ${respValue === 'Esquadrias de Alumínio / Vidros' ? 'selected' : ''}>Esquadrias de Alumínio / Vidros</option>
+                    <option ${respValue === 'Piso e Revestimento' ? 'selected' : ''}>Piso e Revestimento</option>
+                    <option ${respValue === 'Gesso / Sancas' ? 'selected' : ''}>Gesso / Sancas</option>
+                    <option ${isCustomResp || respValue === 'Outro' ? 'selected' : ''} value="Outro">Outro</option>
+                </select>
+
+                <div id="other-resp-container-${ncBoxId}" style="display:${isCustomResp || respValue === 'Outro' ? 'block' : 'none'}; margin-top:6px;">
+                    <label style="color:#004a8f;">Especifique o Responsável / Empresa:</label>
+                    <input type="text" class="nc-resp-other-input" placeholder="Ex: Serralheria / Empreiteiro X" value="${customRespText}">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div>
+                        <label>Prazo Estimado (Dias):</label>
+                        <input type="number" class="nc-days" value="${prevData && prevData.days ? prevData.days : '3'}" min="1" onchange="updateSuggestedStartDate('${ncBoxId}')">
+                    </div>
+                    <div>
+                        <label>Data de Início Prevista:</label>
+                        <input type="date" class="nc-start-date" value="${prevData && prevData.startDateRaw ? prevData.startDateRaw : ''}">
+                    </div>
+                </div>
+
+                <div class="photo-area">
+                    <label>📷 Foto da Pendência:</label>
+                    <input type="file" accept="image/*" capture="environment" onchange="previewPhoto(this, '${ncBoxId}')">
+                    <img id="img-preview-${ncBoxId}" class="photo-preview" src="${prevData && prevData.photo ? prevData.photo : ''}" style="display: ${prevData && prevData.photo ? 'block' : 'none'};">
+                </div>
             </div>
         `;
-        ncList.appendChild(div);
 
-        const dateInput = div.querySelector('.nc-start-date');
-        checkDateNotice(ncBoxId, dateInput);
+        container.innerHTML += boxHtml;
     }
 
-    function checkDateNotice(boxId, input) {
-        const notice = document.getElementById(`notice-${boxId}`);
-        if(notice) notice.style.display = input.value ? 'none' : 'block';
+    function toggleOtherInput(boxId, chk) {
+        if (chk.value === 'Outros') {
+            const container = document.getElementById(`other-input-container-${boxId}`);
+            if (container) container.style.display = chk.checked ? 'block' : 'none';
+        }
     }
 
-    function previewPhoto(boxId, input) {
-        const preview = document.getElementById(`img-preview-${boxId}`);
+    function removeNC(boxId, fullId) {
+        const el = document.getElementById(boxId);
+        if (el) el.remove();
+    }
+
+    function updateSuggestedStartDate(ncBoxId) {
+        const box = document.getElementById(ncBoxId);
+        if (!box) return;
+        const daysInput = box.querySelector('.nc-days');
+        const startDateInput = box.querySelector('.nc-start-date');
+        
+        if (daysInput && startDateInput && !startDateInput.value) {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            startDateInput.value = `${yyyy}-${mm}-${dd}`;
+        }
+    }
+
+    function previewPhoto(input, boxId) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-            }
+                const img = document.getElementById(`img-preview-${boxId}`);
+                if (img) {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
+            };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    function toggleOtherField(boxId, checkbox, optName) {
-        if (optName === 'Outros') {
-            const otherDiv = document.getElementById(`other-field-${boxId}`);
-            if(otherDiv) otherDiv.style.display = checkbox.checked ? 'block' : 'none';
+    function toggle(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-vistorias').style.display = 'none';
+        document.getElementById('tab-mapa').style.display = 'none';
+        document.getElementById('tab-cronograma').style.display = 'none';
+
+        if (tabName === 'vistorias') {
+            document.getElementById('tab-vistorias-btn').classList.add('active');
+            document.getElementById('tab-vistorias').style.display = 'block';
+        } else if (tabName === 'mapa') {
+            document.getElementById('tab-mapa-btn').classList.add('active');
+            document.getElementById('tab-mapa').style.display = 'block';
+            renderGeneralMap();
+        } else if (tabName === 'cronograma') {
+            document.getElementById('tab-cronograma-btn').classList.add('active');
+            document.getElementById('tab-cronograma').style.display = 'block';
+            setTimeout(() => { renderInteractiveCalendar(); }, 100);
         }
     }
 
-    function removeNC(boxId) {
-        const box = document.getElementById(boxId);
-        if (box) box.remove();
-    }
-
-    function toggle(id) {
-        const el = document.getElementById(id);
-        if(el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
-    }
-
-    async function generateTechnicalPDF() {
-        const today = new Date().toLocaleDateString('pt-BR');
+    function loadAllUnitsData() {
+        if (typeof db === 'undefined' || !db) return;
         
-        let pendingCount = 0;
+        db.collection('vistorias_unidades').get().then(snapshot => {
+            dbUnitsCache = {};
+            snapshot.forEach(doc => {
+                dbUnitsCache[doc.id] = doc.data().history || [];
+            });
+            if (document.getElementById('tab-mapa').style.display === 'block') {
+                renderGeneralMap();
+            }
+        }).catch(err => {
+            console.error("Erro ao carregar banco em nuvem:", err);
+        });
+    }
+
+    function generateTechnicalPDF() {
+        if (!inspectorName) {
+            alert('Por favor, informe e confirme o nome do vistoriador no topo da página.');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
         let currentPendencies = [];
         let allInspectedItems = [];
+        let pendingCount = 0;
 
-        ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
-            const roomName = roomNames[roomId];
-            const roomEl = document.getElementById(roomId);
-            if (!roomEl) return;
+        try {
+            ['room-dorm', 'room-bath', 'room-balcony'].forEach(cId => {
+                const roomName = roomNames[cId];
+                const c = document.getElementById(cId);
+                const itemCards = c.querySelectorAll('.item-card');
 
-            checklist.forEach(item => {
-                const fullId = `${roomId}_${item.id}`;
-                const itemCard = document.getElementById(fullId);
-                if (!itemCard) return;
+                itemCards.forEach(card => {
+                    const fullId = card.id.replace('card_', '');
+                    const status = itemStatusMap[fullId] || 'OK';
 
-                const statusInfo = itemStatusMap[fullId] || { status: 'UNINSPECTED' };
-                
-                if (statusInfo.status === 'OK' || statusInfo.status === 'NOK') {
                     allInspectedItems.push({
                         fullId: fullId,
                         room: roomName,
-                        cleanName: item.cleanName,
-                        status: statusInfo.status
+                        status: status
                     });
-                }
 
-                if (statusInfo.status === 'NOK') {
-                    const ncBoxes = itemCard.querySelectorAll('.nc-box');
-                    // DENTRO DA FUNÇÃO generateTechnicalPDF():
-ncBoxes.forEach(box => {
-    pendingCount++;
-    const itemId = box.getAttribute('data-item-id');
-    const boxId = box.id;
-    const itemObj = checklist.find(i => i.id === itemId) || { cleanName: 'Item de Vistoria' };
-    
-    let selectedOpts = [];
-    box.querySelectorAll('.checklist-group input[type="checkbox"]:checked').forEach(chk => {
-        selectedOpts.push(chk.value);
-    });
+                    if (status === 'NOK') {
+                        const ncBoxes = card.querySelectorAll('.nc-box');
+                        ncBoxes.forEach(box => {
+                            pendingCount++;
+                            const itemId = box.getAttribute('data-item-id');
+                            const boxId = box.id;
+                            const itemObj = checklist.find(i => i.id === itemId) || { cleanName: 'Item de Vistoria' };
+                            
+                            let selectedOpts = [];
+                            box.querySelectorAll('.checklist-group input[type="checkbox"]:checked').forEach(chk => {
+                                selectedOpts.push(chk.value);
+                            });
 
-    const otherVal = box.querySelector('.nc-other-input')?.value;
-    if (otherVal) selectedOpts.push(`Outros: ${otherVal}`);
+                            const otherVal = box.querySelector('.nc-other-input')?.value;
+                            if (otherVal) selectedOpts.push(`Outros: ${otherVal}`);
 
-    // =========================================================
-    // COLE O ITEM 3 AQUI (Validação do Responsável & Outro)
-    // =========================================================
-    let respVal = box.querySelector('.nc-resp')?.value;
-    const respOtherInput = box.querySelector('.nc-resp-other-input')?.value.trim();
+                            // VALIDAÇÃO RIGOROSA DO RESPONSÁVEL
+                            let respVal = box.querySelector('.nc-resp')?.value;
+                            const respOtherInput = box.querySelector('.nc-resp-other-input')?.value.trim();
 
-    if (!respVal) {
-        alert(`⚠️ Por favor, selecione o Responsável Pela Correção na pendência do ambiente "${roomName}".`);
-        box.querySelector('.nc-resp').focus();
-        throw new Error("Responsável não selecionado"); // Interrompe a execução
-    }
+                            if (!respVal) {
+                                alert(`⚠️ Por favor, selecione o Responsável Pela Correção na pendência do ambiente "${roomName}".`);
+                                box.querySelector('.nc-resp').focus();
+                                throw new Error("Responsável não selecionado");
+                            }
 
-    let customRespNote = '';
-    if (respVal === 'Outro') {
-        if (!respOtherInput) {
-            alert(`⚠️ Por favor, especifique o nome do responsável no campo "Outro" do ambiente "${roomName}".`);
-            box.querySelector('.nc-resp-other-input').focus();
-            throw new Error("Responsável especificado em branco"); // Interrompe a execução
+                            let customRespNote = '';
+                            if (respVal === 'Outro') {
+                                if (!respOtherInput) {
+                                    alert(`⚠️ Por favor, especifique o nome do responsável no campo "Outro" do ambiente "${roomName}".`);
+                                    box.querySelector('.nc-resp-other-input').focus();
+                                    throw new Error("Responsável em branco");
+                                }
+                                customRespNote = respOtherInput;
+                                respVal = `Outro (${respOtherInput})`;
+                            }
+
+                            const daysVal = box.querySelector('.nc-days')?.value || '-';
+                            const startDateRaw = box.querySelector('.nc-start-date')?.value || '';
+                            let startDateFormatted = 'Não definida';
+                            if(startDateRaw) {
+                                const parts = startDateRaw.split('-');
+                                if(parts.length === 3) startDateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                            }
+
+                            const photoSrc = document.getElementById(`img-preview-${boxId}`)?.src || '';
+                            const hasPhoto = photoSrc && photoSrc.startsWith('data:image');
+
+                            currentPendencies.push({
+                                fullId: fullId,
+                                room: roomName,
+                                item: itemObj.cleanName,
+                                details: selectedOpts,
+                                resp: respVal,
+                                respCustom: customRespNote,
+                                days: daysVal,
+                                startDate: startDateFormatted,
+                                startDateRaw: startDateRaw,
+                                photo: hasPhoto ? photoSrc : null
+                            });
+                        });
+                    }
+                });
+            });
+        } catch (e) {
+            return; // Interrompe a execução caso a validação falhe
         }
-        customRespNote = respOtherInput;
-        respVal = `Outro (${respOtherInput})`;
-    }
-    // =========================================================
 
-    const daysVal = box.querySelector('.nc-days')?.value || '-';
-    
-    const startDateRaw = box.querySelector('.nc-start-date')?.value || '';
-    let startDateFormatted = 'Não definida';
-    if(startDateRaw) {
-        const parts = startDateRaw.split('-');
-        if(parts.length === 3) startDateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-
-    const photoSrc = document.getElementById(`img-preview-${boxId}`)?.src || '';
-    const hasPhoto = photoSrc && photoSrc.startsWith('data:image');
-
-    currentPendencies.push({
-        fullId: fullId,
-        room: roomName,
-        item: itemObj.cleanName,
-        details: selectedOpts,
-        resp: respVal,
-        respCustom: customRespNote,
-        days: daysVal,
-        startDate: startDateFormatted,
-        startDateRaw: startDateRaw,
-        photo: hasPhoto ? photoSrc : null
-    });
-});
-
-        const historyKey = `unit_${selectedUnitNum}`;
-        const existingHistory = dbUnitsCache[historyKey] || [];
-        
-        const recordData = {
-            timestamp: Date.now(),
+        const today = new Date().toLocaleDateString('pt-BR');
+        const inspectionRecord = {
             date: today,
-            unitNumber: selectedUnitNum,
-            floorNumber: selectedFloorNum,
-            stage: selectedStage,
-            category: selectedCategory,
+            timestamp: new Date().toISOString(),
             inspector: inspectorName,
             device: deviceDetails,
+            category: selectedCategory,
+            stage: selectedStage,
             pendenciesCount: pendingCount,
             pendencies: currentPendencies,
             allInspectedItems: allInspectedItems
         };
-try {
-    db.collection('vistorias_unidades').doc(historyKey).set({
-        unitNumber: selectedUnitNum,
-        floorNumber: selectedFloorNum,
-        history: existingHistory,
-        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function() {
-        dbUnitsCache[historyKey] = existingHistory;
-    }).catch(function(error) {
-        console.error("Erro ao salvar no banco:", error);
-        alert("⚠️ Atenção: Não foi possível sincronizar com o banco em nuvem.");
-    });
-} catch (e) {
-    console.error("Erro ao executar envio ao Firebase:", e);
-}
-    function renderPDFToPrint(record) {
-        const printContainer = document.getElementById('print-report');
-        const statusGeneral = record.pendenciesCount > 0 
-            ? `<span style="color:#dc3545; font-weight:bold;">REPROVADO (${record.pendenciesCount} pendências)</span>` 
-            : `<span style="color:#28a745; font-weight:bold;">APROVADO (Sem pendências)</span>`;
 
-        let rowsHTML = '';
-        if (record.pendencies && record.pendencies.length > 0) {
-            rowsHTML = record.pendencies.map(p => `
-                <tr>
-                    <td style="font-weight:bold;">${p.room}</td>
-                    <td>${p.item}</td>
-                    <td>${p.details.length > 0 ? p.details.map(o => `• ${o}`).join('<br>') : 'Sem detalhes'}</td>
-                    <td style="text-align:center;">${p.photo ? `<img src="${p.photo}" class="pdf-img">` : '<span style="color:#888;">Sem foto</span>'}</td>
-                    <td>${p.resp}</td>
-                    <td style="text-align:center;">
-                        <strong>Início:</strong> ${p.startDate}<br>
-                        <strong>Prazo:</strong> ${p.days} dias
-                    </td>
-                </tr>
-            `).join('');
+        const historyKey = `unit_${selectedUnitNum}`;
+        let existingHistory = dbUnitsCache[historyKey] || [];
+        existingHistory.push(inspectionRecord);
+
+        // SALVAMENTO SEGURO NO FIREBASE
+        try {
+            db.collection('vistorias_unidades').doc(historyKey).set({
+                unitNumber: selectedUnitNum,
+                floorNumber: selectedFloorNum,
+                history: existingHistory,
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(function() {
+                dbUnitsCache[historyKey] = existingHistory;
+            }).catch(function(error) {
+                console.error("Erro ao salvar no banco:", error);
+                alert("⚠️ Atenção: Não foi possível sincronizar com o banco em nuvem.");
+            });
+        } catch (e) {
+            console.error("Erro no salvamento local:", e);
+        }
+
+        renderPDFView(inspectionRecord);
+        document.getElementById('btn-next').style.display = 'block';
+    }
+
+    function renderPDFView(record) {
+        const printContainer = document.getElementById('print-report');
+        
+        let tableRows = '';
+        if (record.pendenciesCount === 0) {
+            tableRows = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: green; font-weight: bold;">Unidade 100% Aprovada - Nenhum Apontamento Registrado</td></tr>`;
+        } else {
+            record.pendencies.forEach((p, idx) => {
+                const imgHtml = p.photo ? `<img src="${p.photo}" class="pdf-img">` : '<span style="color:#aaa;">Sem Foto</span>';
+                const optsText = p.details.length > 0 ? p.details.join(', ') : 'Sem detalhes';
+
+                tableRows += `
+                    <tr>
+                        <td style="text-align:center; font-weight:bold;">${idx + 1}</td>
+                        <td><strong>${p.room}</strong><br>${p.item}</td>
+                        <td>${optsText}</td>
+                        <td style="text-align:center;">${p.resp}</td>
+                        <td style="text-align:center;"><strong>${p.days} dia(s)</strong><br><small>Início: ${p.startDate}</small></td>
+                        <td style="text-align:center;">${imgHtml}</td>
+                    </tr>
+                `;
+            });
         }
 
         printContainer.innerHTML = `
             <table class="pdf-header-table">
                 <tr>
-                    <td colspan="4" class="pdf-header-title">RELATÓRIO TÉCNICO INTERNO DE VISTORIA</td>
+                    <td colspan="4" class="pdf-header-title">RELATÓRIO TÉCNICO DE VISTORIA INTERNA DE OBRA</td>
                 </tr>
                 <tr>
-                    <td><strong>Data da Vistoria:</strong> ${record.date}</td>
-                    <td><strong>Pavimento / Unidade:</strong> ${record.floorNumber}º Pav - Apto ${record.unitNumber}</td>
-                    <td colspan="2"><strong>Etapa/Ciclo:</strong> ${record.category} (${record.stage})</td>
+                    <td><strong>Unidade:</strong> Apto ${selectedUnitNum}</td>
+                    <td><strong>Pavimento:</strong> ${selectedFloorNum}º Pavimento</td>
+                    <td><strong>Tipo:</strong> ${record.category}</td>
+                    <td><strong>Etapa:</strong> ${record.stage}</td>
                 </tr>
                 <tr>
-                    <td colspan="2"><strong>Responsável Técnico:</strong> ${record.inspector}</td>
-                    <td colspan="2"><strong>Status Técnico:</strong> ${statusGeneral}</td>
+                    <td><strong>Data:</strong> ${record.date}</td>
+                    <td><strong>Vistoriador:</strong> ${record.inspector}</td>
+                    <td colspan="2"><strong>Aparelho:</strong> ${record.device}</td>
                 </tr>
             </table>
 
-            <div class="pdf-section-title">DETALHAMENTO DAS NÃO CONFORMIDADES / PENDÊNCIAS DA OBRA</div>
-
-            ${record.pendenciesCount > 0 ? `
-                <table class="pdf-nc-table">
-                    <thead>
-                        <tr>
-                            <th style="width:16%;">Ambiente</th>
-                            <th style="width:20%;">Item / Serviço</th>
-                            <th style="width:28%;">Não Conformidade Identificada</th>
-                            <th style="width:14%;">Foto do Local</th>
-                            <th style="width:10%;">Responsável</th>
-                            <th style="width:12%;">Início & Prazo</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rowsHTML}</tbody>
-                </table>
-            ` : `
-                <div style="padding: 15px; text-align:center; border:1px solid #cccccc; background:#f9f9f9; color:#28a745; font-weight:bold; margin-bottom:20px;">
-                    ✓ Nenhum ponto de pendência foi identificado nesta vistoria. Unidade Liberada.
-                </div>
-            `}
+            <div class="pdf-section-title">REGISTRO DE APONTAMENTOS & PENDÊNCIAS (${record.pendenciesCount})</div>
+            <table class="pdf-nc-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30px; text-align:center;">#</th>
+                        <th style="width: 180px;">Ambiente / Item</th>
+                        <th>Não Conformidades Detectadas</th>
+                        <th style="width: 140px; text-align:center;">Responsável</th>
+                        <th style="width: 110px; text-align:center;">Prazo / Início</th>
+                        <th style="width: 120px; text-align:center;">Evidência</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
 
             <div class="pdf-signatures">
+                ____________________________________________<br>
                 <strong>${record.inspector}</strong><br>
-                Responsável Técnico<br>
-                <span style="font-size:0.75rem; color:#666;">📱 Autenticado via Dispositivo: ${record.device || 'N/A'}</span>
+                Engenharia / Controle de Qualidade
             </div>
         `;
+
+        window.print();
     }
 
-    function printHistoryPDF(unitNum, historyIndex) {
-        const historyKey = `unit_${unitNum}`;
-        const history = dbUnitsCache[historyKey] || [];
-        const record = history[historyIndex];
+    function startNextUnit() {
+        document.getElementById('inspection-area').style.display = 'none';
+        document.getElementById('type-card').style.display = 'none';
+        document.getElementById('btn-next').style.display = 'none';
         
-        if (record) {
-            renderPDFToPrint(record);
-            window.print();
-        } else {
-            alert('Erro ao carregar o relatório PDF selecionado.');
+        const currentBtn = document.querySelector(`#units .btn.active`);
+        if (currentBtn) {
+            currentBtn.classList.remove('active');
+            const historyKey = `unit_${selectedUnitNum}`;
+            const existingHistory = dbUnitsCache[historyKey] || [];
+            if (existingHistory.length > 0) {
+                const lastInsp = existingHistory[existingHistory.length - 1];
+                currentBtn.className = `btn ${lastInsp.pendenciesCount === 0 ? 'unit-ok' : 'unit-nok'}`;
+            }
         }
+        
+        selectedUnitNum = null;
+        window.scrollTo({ top: 150, behavior: 'smooth' });
     }
 
-    function renderFullMap() {
+    function renderGeneralMap() {
         const container = document.getElementById('map-container');
         container.innerHTML = '';
 
         for (let f = 4; f >= 1; f--) {
-            let unitsHTML = '';
+            let floorHtml = `
+                <div style="margin-bottom:15px;">
+                    <h4 style="font-size:0.85rem; color:var(--primary); margin-bottom:5px;">${f}º Pavimento</h4>
+                    <div class="grid-map">
+            `;
+
             for (let i = 1; i <= 19; i++) {
                 let num = (f * 100) + i;
                 const historyKey = `unit_${num}`;
-                const existingHistory = dbUnitsCache[historyKey] || [];
-                
+                const history = dbUnitsCache[historyKey] || [];
+
                 let statusClass = '';
-                let statusText = `${num}`;
-                if (existingHistory.length > 0) {
-                    const lastInsp = existingHistory[existingHistory.length - 1];
-                    statusClass = lastInsp.pendenciesCount === 0 ? 'unit-ok' : 'unit-nok';
+                let statusText = 'Não Vistoriado';
+
+                if (history.length > 0) {
+                    const lastInsp = history[history.length - 1];
+                    if (lastInsp.pendenciesCount === 0) {
+                        statusClass = 'unit-ok';
+                        statusText = '100% OK';
+                    } else {
+                        statusClass = 'unit-nok';
+                        statusText = `${lastInsp.pendenciesCount} Pend.`;
+                    }
                 }
 
-                unitsHTML += `<div class="map-unit ${statusClass}" onclick="openHistory(${num})">${statusText}</div>`;
+                floorHtml += `
+                    <div class="map-unit ${statusClass}" onclick="openUnitHistory(${num})">
+                        <strong>${num}</strong><br>
+                        <span style="font-size:0.65rem;">${statusText}</span>
+                    </div>
+                `;
             }
 
-            container.innerHTML += `
-                <div style="margin-bottom:15px;">
-                    <h4 style="font-size:0.9rem; color:var(--primary); margin-bottom:4px;">${f}º Pavimento</h4>
-                    <div class="grid-map">${unitsHTML}</div>
-                </div>
-            `;
+            floorHtml += `</div></div>`;
+            container.innerHTML += floorHtml;
         }
     }
 
-    function openHistory(unitNum) {
+    function openUnitHistory(unitNum) {
         const historyKey = `unit_${unitNum}`;
-        const rawHistory = dbUnitsCache[historyKey] || [];
-        const historyPanel = document.getElementById('history-panel');
-        const historyContent = document.getElementById('history-content');
-        
-        document.getElementById('history-unit-title').innerText = `Histórico de Vistorias: Apto ${unitNum}`;
-        
-        if (rawHistory.length === 0) {
-            historyContent.innerHTML = '<p style="font-size:0.85rem; color:#666; text-align:center; padding:15px;">Nenhuma vistoria registrada para esta unidade até o momento.</p>';
+        const history = dbUnitsCache[historyKey] || [];
+        const panel = document.getElementById('history-panel');
+        const title = document.getElementById('history-unit-title');
+        const content = document.getElementById('history-content');
+
+        title.innerText = `Histórico de Vistorias: Apto ${unitNum}`;
+        content.innerHTML = '';
+
+        if (history.length === 0) {
+            content.innerHTML = `<p style="color:#666; font-style:italic;">Nenhuma vistoria registrada para esta unidade até o momento.</p>`;
         } else {
-            const reversedHistory = [...rawHistory].reverse();
-            
-            historyContent.innerHTML = reversedHistory.map((item, index) => {
-                const isLatest = index === 0;
-                const originalIndex = rawHistory.length - 1 - index;
+            history.slice().reverse().forEach((insp, idx) => {
+                const isLatest = idx === 0;
+                let pendText = insp.pendenciesCount === 0 ? '<span style="color:green; font-weight:bold;">100% OK (Sem Pendências)</span>' : `<span style="color:red; font-weight:bold;">${insp.pendenciesCount} Pendência(s)</span>`;
 
-                let inspectedSummaryHTML = '';
-                if (item.allInspectedItems && item.allInspectedItems.length > 0) {
-                    const okItems = item.allInspectedItems.filter(i => i.status === 'OK');
-                    const nokItems = item.allInspectedItems.filter(i => i.status === 'NOK');
-
-                    const okNames = okItems.map(i => `${i.cleanName} (${i.room})`);
-                    const nokNames = nokItems.map(i => `${i.cleanName} (${i.room})`);
-
-                    inspectedSummaryHTML = `
-                        <div style="margin-top:8px; background:#fff; padding:8px; border-radius:5px; border:1px solid #e2e8f0; font-size:0.8rem;">
-                            <strong>Resumo Geral dos Itens Vistoriados:</strong>
-                            <div style="margin-top:4px; color:#28a745;">
-                                <strong>✓ Aprovados (${okItems.length}):</strong> ${okNames.length > 0 ? okNames.join(', ') : '<span style="color:#666;">Nenhum</span>'}
-                            </div>
-                            <div style="margin-top:4px; color:#dc3545;">
-                                <strong>✗ Pendentes (${nokItems.length}):</strong> ${nokNames.length > 0 ? nokNames.join(', ') : '<span style="color:#666;">Nenhum</span>'}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                return `
+                content.innerHTML += `
                     <div class="history-card ${isLatest ? 'latest' : ''}">
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-weight:bold; margin-bottom:6px;">
-                            <span>
-                                ${item.stage} (${item.category})
-                                ${isLatest ? '<span class="history-tag-latest">Mais Recente</span>' : ''}
-                            </span>
-                            <span style="color:#555; font-size:0.8rem;">📅 ${item.date}</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>${insp.stage} (${insp.category})</strong>
+                            ${isLatest ? '<span class="history-tag-latest">Última Vistoria</span>' : ''}
                         </div>
-                        <div style="margin-bottom:2px;"><strong>Responsável:</strong> ${item.inspector}</div>
-                        ${item.device ? `<div style="font-size:0.75rem; color:#666; margin-bottom:4px;">📱 <strong>Dispositivo:</strong> ${item.device}</div>` : ''}
-                        <div><strong>Resultado Final:</strong> ${item.pendenciesCount === 0 ? '<span style="color:green; font-weight:bold;">✓ Aprovado (0 pendências)</span>' : `<span style="color:red; font-weight:bold;">✗ Reprovado (${item.pendenciesCount} pendência(s))</span>`}</div>
-                        
-                        ${inspectedSummaryHTML}
-
-                        ${item.pendencies && item.pendencies.length > 0 ? `
-                            <div style="margin-top:8px; font-size:0.8rem; background:#fff5f5; padding:8px; border-radius:5px; border:1px solid #feb2b2;">
-                                <strong style="color:var(--danger);">Detalhamento das Pendências:</strong>
-                                <ul style="margin-left:18px; margin-top:6px; line-height:1.4;">
-                                    ${item.pendencies.map(p => `
-                                        <li style="margin-bottom:6px;">
-                                            <strong>[${p.room}]</strong> ${p.item}<br>
-                                            <span style="color:#4a5568;">Detalhes: ${p.details.join(', ')}</span><br>
-                                            <span style="font-size:0.75rem; color:#718096;">Responsável: ${p.resp} | Início Previsto: ${p.startDate} | Prazo: ${p.days} dias</span>
-                                            ${p.photo ? `<br><img src="${p.photo}" style="max-height:80px; border-radius:4px; margin-top:4px; border:1px solid #ccc;">` : ''}
-                                        </li>
-                                    `).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
-
-                        <button class="btn-view-pdf" onclick="printHistoryPDF(${unitNum}, ${originalIndex})">
-                            📄 Visualizar / Baixar Relatório PDF
+                        <div style="margin-top:6px; color:#555;">
+                            📅 <strong>Data:</strong> ${insp.date} | 👤 <strong>Vistoriador:</strong> ${insp.inspector}<br>
+                            📊 <strong>Resultado:</strong> ${pendText}
+                        </div>
+                        <button class="btn-view-pdf" onclick="reprintPDF('${historyKey}', ${history.length - 1 - idx})">
+                            📄 Imprimir / Salvar PDF Desta Vistoria
                         </button>
                     </div>
                 `;
-            }).join('');
+            });
         }
 
-        historyPanel.style.display = 'block';
-        historyPanel.scrollIntoView({ behavior: 'smooth' });
+        panel.style.display = 'block';
+        panel.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // --- CALENDÁRIO INTERATIVO & DRAG-AND-DROP ---
-function renderInteractiveCalendar() {
-    const legendContainer = document.getElementById('resp-legend-box');
-    const unassignedContainer = document.getElementById('unassigned-tasks-list');
-    const calendarEl = document.getElementById('calendar');
-
-    // Renderiza Legendas
-    legendContainer.innerHTML = Object.keys(respColors).map(resp => `
-        <div class="legend-item">
-            <span class="legend-dot" style="background:${respColors[resp]};"></span>
-            <span>${resp}</span>
-        </div>
-    `).join('');
-
-    let calendarEvents = [];
-    let unassignedTasks = [];
-
-    // Varre o banco em cache e distribui as pendências
-    Object.keys(dbUnitsCache).forEach(unitKey => {
-        const history = dbUnitsCache[unitKey] || [];
-        if (history.length > 0) {
-            const latestInsp = history[history.length - 1];
-            if (latestInsp.pendencies && latestInsp.pendencies.length > 0) {
-                latestInsp.pendencies.forEach((p, ncIndex) => {
-                    const color = respColors[p.resp] || '#dc2626';
-                    const days = parseInt(p.days) || 1;
-
-                    const taskObj = {
-    unitKey: unitKey,
-    ncIndex: ncIndex,
-    unit: latestInsp.unitNumber || unitKey.replace('unit_', ''),
-    room: p.room,
-    item: p.item,
-    details: p.details,
-    resp: p.resp || 'Outros',
-    days: days,
-    daysUpdatedNote: p.daysUpdatedNote || null, // <--- Adicionar esta linha
-    color: color,
-    photo: p.photo
-};
-                    if (p.startDateRaw && p.startDateRaw !== '9999-99-99' && p.startDateRaw !== '') {
-                        const startD = new Date(p.startDateRaw + 'T00:00:00');
-                        const endD = new Date(startD);
-                        endD.setDate(startD.getDate() + days);
-
-                        calendarEvents.push({
-                            id: `${unitKey}_${ncIndex}`,
-                            // Exibe apenas o número do Apto na grade para não poluir
-                            title: `Apto ${taskObj.unit}`,
-                            start: p.startDateRaw,
-                            end: endD.toISOString().split('T')[0],
-                            backgroundColor: color,
-                            borderColor: color,
-                            extendedProps: taskObj
-                        });
-                    } else {
-                        unassignedTasks.push(taskObj);
-                    }
-                });
-            }
+    function reprintPDF(historyKey, index) {
+        const history = dbUnitsCache[historyKey] || [];
+        if (history[index]) {
+            selectedUnitNum = historyKey.replace('unit_', '');
+            selectedFloorNum = Math.floor(selectedUnitNum / 100);
+            renderPDFView(history[index]);
         }
-    });
-
-    // Atualiza Painel Lateral Inicial
-    renderSidebarTasks(unassignedTasks, calendarEvents);
-
-    // Habilita Drag and Drop para itens não agendados
-    new FullCalendar.Draggable(unassignedContainer, {
-        itemSelector: '.fc-draggable-task',
-        eventData: function(eventEl) {
-            return {
-                title: eventEl.innerText,
-                backgroundColor: eventEl.dataset.color,
-                borderColor: eventEl.dataset.color
-            };
-        }
-    });
-
-    if (fullCalendarInstance) {
-        fullCalendarInstance.destroy();
-    }
-
-    fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'pt-br',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek'
-        },
-        buttonText: {
-            today: 'Hoje',
-            month: 'Mês',
-            week: 'Semana'
-        },
-        editable: true,
-        droppable: true,
-        events: calendarEvents,
-
-        drop: async function(info) {
-            const dateStr = info.dateStr;
-            const draggedEl = info.draggedEl;
-            const unitKey = draggedEl.dataset.unitKey;
-            const ncIndex = parseInt(draggedEl.dataset.ncIndex);
-
-            await updateTaskStartDate(unitKey, ncIndex, dateStr);
-        },
-
-        eventDrop: async function(info) {
-            const newDateStr = info.event.startStr;
-            const unitKey = info.event.extendedProps.unitKey;
-            const ncIndex = info.event.extendedProps.ncIndex;
-
-            await updateTaskStartDate(unitKey, ncIndex, newDateStr);
-        },
-
-        // Ao clicar no dia, atualiza a lista lateral com o que está programado naquele dia
-        dateClick: function(info) {
-            showDayInSidebar(info.dateStr, calendarEvents, unassignedTasks);
-        },
-        eventClick: function(info) {
-            showDayInSidebar(info.event.startStr, calendarEvents, unassignedTasks);
-        }
-    });
-
-    fullCalendarInstance.render();
-}
-
-    // Atualiza a Data no Firebase ao Arrastar/Mover
-    async function updateTaskStartDate(unitKey, ncIndex, newDateRaw) {
-        const history = dbUnitsCache[unitKey] || [];
-        if (history.length === 0) return;
-
-        const latestInsp = history[history.length - 1];
-        if (latestInsp.pendencies && latestInsp.pendencies[ncIndex]) {
-            const parts = newDateRaw.split('-');
-            latestInsp.pendencies[ncIndex].startDateRaw = newDateRaw;
-            latestInsp.pendencies[ncIndex].startDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-
-            try {
-                await db.collection('vistorias_unidades').doc(unitKey).set({
-                    history: history,
-                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-
-                dbUnitsCache[unitKey] = history;
-                renderInteractiveCalendar();
-            } catch (err) {
-                console.error("Erro ao atualizar data no Firebase:", err);
-            }
-        }
-    }
-
-    // Modal com tarefas executadas na data
-    function openDayTasksModal(dateStr, events) {
-        const parts = dateStr.split('-');
-        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        
-        document.getElementById('modal-date-title').innerText = `📋 Tarefas em Execução — ${formattedDate}`;
-        const modalList = document.getElementById('modal-task-list');
-
-        // Filtra eventos que cobrem a data selecionada
-        const targetDate = new Date(dateStr + 'T00:00:00');
-        const activeTasks = events.filter(e => {
-            const start = new Date(e.start + 'T00:00:00');
-            const end = new Date(e.end + 'T00:00:00');
-            return targetDate >= start && targetDate < end;
-        });
-
-        if (activeTasks.length === 0) {
-            modalList.innerHTML = '<p style="color:#666; text-align:center; padding:15px;">Nenhum serviço em andamento nesta data.</p>';
-        } else {
-            modalList.innerHTML = activeTasks.map(e => {
-                const p = e.extendedProps;
-                return `
-                    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-left:5px solid ${p.color}; padding:10px; border-radius:6px; margin-bottom:8px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong>Apto ${p.unit} — ${p.room}</strong>
-                            <span style="background:${p.color}; color:white; padding:2px 6px; border-radius:3px; font-size:0.7rem; font-weight:bold;">${p.resp}</span>
-                        </div>
-                        <div style="margin-top:4px;"><strong>Item:</strong> ${p.item}</div>
-                        <div style="color:#64748b; font-size:0.78rem;">Detalhes: ${p.details.join(', ')}</div>
-                        <div style="color:#d97706; font-size:0.78rem; font-weight:bold; margin-top:2px;">⏱️ Prazo: ${p.days} dia(s)</div>
-                        ${p.photo ? `<img src="${p.photo}" style="max-height:80px; border-radius:4px; margin-top:6px; border:1px solid #ccc;">` : ''}
-                    </div>
-                `;
-            }).join('');
-        }
-
-        document.getElementById('day-modal').style.display = 'flex';
-    }
-
-    function closeDayModal() {
-        document.getElementById('day-modal').style.display = 'none';
     }
 
     function closeHistory() {
         document.getElementById('history-panel').style.display = 'none';
     }
 
-    function startNextUnit() {
-        document.getElementById('inspection-area').style.display = 'none';
-        document.getElementById('type-card').style.display = 'none';
-        document.getElementById('unit-card').style.display = 'none';
-        document.getElementById('btn-next').style.display = 'none';
-
-        document.querySelectorAll('#floors .btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('#units .btn').forEach(b => b.classList.remove('active'));
-        
-        selectedUnitNum = null;
-        selectedCategory = "";
-        selectedStage = "";
-
-        if (selectedFloorNum) {
-            const currentFloorBtn = Array.from(document.querySelectorAll('#floors .btn')).find(b => b.innerText.includes(`${selectedFloorNum}º`));
-            if (currentFloorBtn) setFloor(selectedFloorNum, currentFloorBtn);
-        }
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    // Renderiza o painel lateral com pendências e itens programados do dia
-function renderSidebarTasks(unassignedTasks, calendarEvents) {
-    const container = document.getElementById('external-events-container');
-
-    let unassignedHTML = unassignedTasks.length === 0 
-        ? '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência sem data.</p>'
-        : unassignedTasks.map((t) => {
-            const hasUpdateNotice = t.daysUpdatedNote 
-                ? `<div style="color:#d97706; font-size:0.68rem; margin-top:3px; font-style:italic;">⚠️ ${t.daysUpdatedNote}</div>` 
-                : '';
-
-            return `
-                <div style="background:#fff; border:1px solid #cbd5e1; border-left:5px solid ${t.color}; padding:8px; border-radius:6px; margin-bottom:8px; font-size:0.78rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <strong>Apto ${t.unit}</strong>
-                        <span style="background:${t.color}; color:white; padding:1px 5px; border-radius:3px; font-size:0.68rem;">${t.resp}</span>
-                    </div>
-                    <div style="margin-top:3px; font-weight:600; color:#334155;">${t.item}</div>
-                    
-                    <!-- Campo de Alteração de Prazo -->
-                    <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
-                        <label style="font-size:0.72rem; margin:0; color:#475569;">Prazo (dias):</label>
-                        <input type="number" id="input-days-${t.unitKey}-${t.ncIndex}" value="${t.days}" min="1" style="width:55px; padding:3px; font-size:0.75rem; border:1px solid #ccc; border-radius:4px; text-align:center;">
-                    </div>
-                    ${hasUpdateNotice}
-                    
-                    <!-- Campos de Escolha de Data e Agendamento -->
-                    <div style="display:flex; gap:4px; margin-top:6px;">
-                        <input type="date" id="input-date-${t.unitKey}-${t.ncIndex}" style="padding:4px; font-size:0.75rem; border:1px solid #ccc; border-radius:4px; flex:1;">
-                        <button onclick="assignTaskDateFromInput('${t.unitKey}', ${t.ncIndex}, ${t.days})" style="background:#28a745; color:white; border:none; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.72rem; cursor:pointer;">
-                            📅 Agendar
-                        </button>
-                    </div>
+    function renderInteractiveCalendar() {
+        const legendContainer = document.getElementById('resp-legend-box');
+        legendContainer.innerHTML = '';
+        Object.keys(respColors).forEach(resp => {
+            legendContainer.innerHTML += `
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:${respColors[resp]};"></div> ${resp}
                 </div>
             `;
-        }).join('');
+        });
 
-    container.innerHTML = `
-        <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📋 Aguardando Agendamento (${unassignedTasks.length})</h4>
-        <div id="unassigned-tasks-list" style="max-height: 280px; overflow-y: auto; margin-bottom: 15px;">
-            ${unassignedHTML}
-        </div>
-        <hr style="border:0; border-top:1px dashed #cbd5e1; margin:10px 0;">
-        <div id="selected-day-tasks">
-            <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📌 Programado para o Dia Selecionado</h4>
-            <p style="font-size:0.75rem; color:#666;">Clique em qualquer dia do calendário para ver a lista de tarefas.</p>
-        </div>
-    `;
-}
+        const unassignedList = document.getElementById('unassigned-tasks-list');
+        unassignedList.innerHTML = '';
+        let eventsList = [];
 
-// Filtra e exibe na lateral os serviços ativos na data clicada
-function showDayInSidebar(dateStr, events, unassignedTasks) {
-    const parts = dateStr.split('-');
-    const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-    const targetDate = new Date(dateStr + 'T00:00:00');
+        Object.keys(dbUnitsCache).forEach(unitKey => {
+            const history = dbUnitsCache[unitKey] || [];
+            if (history.length > 0) {
+                const latestInsp = history[history.length - 1];
+                if (latestInsp.pendencies) {
+                    latestInsp.pendencies.forEach((nc, ncIndex) => {
+                        const respKey = Object.keys(respColors).find(r => nc.resp.includes(r)) || 'Outro';
+                        const color = respColors[respKey] || '#dc2626';
 
-    const activeTasks = events.filter(e => {
-        const start = new Date(e.start + 'T00:00:00');
-        const end = new Date(e.end + 'T00:00:00');
-        return targetDate >= start && targetDate < end;
-    });
+                        if (nc.startDateRaw) {
+                            eventsList.push({
+                                title: `Apto ${unitKey.replace('unit_', '')} - ${nc.item}`,
+                                start: nc.startDateRaw,
+                                backgroundColor: color,
+                                borderColor: color,
+                                extendedProps: {
+                                    unitKey: unitKey,
+                                    room: nc.room,
+                                    resp: nc.resp,
+                                    days: nc.days,
+                                    details: nc.details
+                                }
+                            });
+                        } else {
+                            unassignedList.innerHTML += `
+                                <div class="fc-task-card" style="border-left-color:${color};">
+                                    <strong>Apto ${unitKey.replace('unit_', '')} - ${nc.room}</strong><br>
+                                    <small>${nc.item}</small><br>
+                                    <span style="font-size:0.7rem; color:#666;">Resp: ${nc.resp}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+            }
+        });
 
-    const dayTasksContainer = document.getElementById('selected-day-tasks');
-    if (!dayTasksContainer) return;
-
-    if (activeTasks.length === 0) {
-        dayTasksContainer.innerHTML = `
-            <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📌 Programado (${formattedDate})</h4>
-            <p style="font-size:0.75rem; color:#888;">Nenhum serviço em execução neste dia.</p>
-        `;
-    } else {
-        dayTasksContainer.innerHTML = `
-            <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📌 Programado (${formattedDate}) — ${activeTasks.length} serviço(s)</h4>
-            <div style="max-height:300px; overflow-y:auto;">
-                ${activeTasks.map(e => {
-                    const p = e.extendedProps;
-                    return `
-                        <div style="background:#fff; border:1px solid #cbd5e1; border-left:5px solid ${p.color}; padding:8px; border-radius:6px; margin-bottom:6px; font-size:0.78rem;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <strong>Apto ${p.unit}</strong>
-                                <span style="background:${p.color}; color:white; padding:1px 5px; border-radius:3px; font-size:0.68rem;">${p.resp}</span>
-                            </div>
-                            <div style="margin-top:3px; font-weight:600; color:#334155;">${p.item}</div>
-                            <div style="color:#64748b; font-size:0.72rem;">${p.room} • Prazo: ${p.days}d</div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
-    }
-}
-// Lança a data escolhida direto no Firebase e recarrega o calendário
-async function assignTaskDateFromInput(unitKey, ncIndex, originalDays) {
-    const dateInput = document.getElementById(`input-date-${unitKey}-${ncIndex}`);
-    const daysInput = document.getElementById(`input-days-${unitKey}-${ncIndex}`);
-
-    if (!dateInput || !dateInput.value) {
-        alert('Por favor, escolha uma data de início antes de agendar.');
-        return;
-    }
-
-    const selectedDate = dateInput.value;
-    const newDays = parseInt(daysInput.value) || originalDays;
-
-    const history = dbUnitsCache[unitKey] || [];
-    if (history.length === 0) return;
-
-    const latestInsp = history[history.length - 1];
-    if (latestInsp.pendencies && latestInsp.pendencies[ncIndex]) {
-        const nc = latestInsp.pendencies[ncIndex];
-        const parts = selectedDate.split('-');
-
-        // Grava a data de início
-        nc.startDateRaw = selectedDate;
-        nc.startDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-
-        // Se o prazo foi modificado, grava o novo prazo e a observação de alteração
-        if (newDays !== parseInt(originalDays)) {
-            const todayFormatted = new Date().toLocaleDateString('pt-BR');
-            nc.days = newDays;
-            nc.daysUpdatedNote = `Prazo alterado de ${originalDays} para ${newDays} dia(s) em ${todayFormatted}`;
+        if (unassignedList.innerHTML === '') {
+            unassignedList.innerHTML = '<p style="font-size:0.75rem; color:#888;">Todas as pendências possuem data definida!</p>';
         }
 
+        const calendarEl = document.getElementById('calendar');
+        if (fullCalendarInstance) fullCalendarInstance.destroy();
+
+        fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'pt-br',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,listWeek'
+            },
+            events: eventsList,
+            dateClick: function(info) {
+                openDayModal(info.dateStr, eventsList);
+            }
+        });
+
+        fullCalendarInstance.render();
+    }
+
+    function openDayModal(dateStr, eventsList) {
+        const modal = document.getElementById('day-modal');
+        const title = document.getElementById('modal-date-title');
+        const list = document.getElementById('modal-task-list');
+
+        const parts = dateStr.split('-');
+        title.innerText = `Tarefas Agendadas para ${parts[2]}/${parts[1]}/${parts[0]}`;
+        list.innerHTML = '';
+
+        const dayEvents = eventsList.filter(e => e.start === dateStr);
+
+        if (dayEvents.length === 0) {
+            list.innerHTML = `<p style="color:#666;">Nenhuma intervenção agendada para este dia.</p>`;
+        } else {
+            dayEvents.forEach(e => {
+                const props = e.extendedProps;
+                list.innerHTML += `
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-left:5px solid ${e.backgroundColor}; padding:10px; border-radius:6px; margin-bottom:8px;">
+                        <strong>${e.title}</strong><br>
+                        <small><strong>Ambiente:</strong> ${props.room}</small><br>
+                        <small><strong>Responsável:</strong> ${props.resp}</small><br>
+                        <small><strong>Prazo Estimado:</strong> ${props.days} dia(s)</small>
+                    </div>
+                `;
+            });
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function closeDayModal() {
+        document.getElementById('day-modal').style.display = 'none';
+    }
+
+    function initApp() {
         try {
-            await db.collection('vistorias_unidades').doc(unitKey).set({
-                history: history,
-                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-
-            dbUnitsCache[unitKey] = history;
-            renderInteractiveCalendar();
-        } catch (err) {
-// ==========================================
-// FECHAMENTO SEGURO DO ARQUIVO JS
-// ==========================================
-
-function initApp() {
-    try {
-        if (typeof detectDevice === 'function') {
-            detectDevice();
+            if (typeof detectDevice === 'function') {
+                detectDevice();
+            }
+        } catch (e) {
+            console.error("Erro na inicialização:", e);
         }
-    } catch (e) {
-        console.error("Erro ao inicializar:", e);
     }
-}
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
-} else {
-    initApp();
-}}
-        }</script>
-
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+        initApp();
+    }
+</script>
 </body>
 </html>
