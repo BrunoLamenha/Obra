@@ -484,6 +484,7 @@
                 updateMapAndKPIs();
                 renderMapGrid();
                 renderDashboards();
+                updateDashboardData();
             }
         } catch (e) {}
 
@@ -1353,23 +1354,131 @@
     }
 
     function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById("tab-" + tab + "-btn").classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById("tab-" + tab + "-btn").classList.add('active');
 
-        document.getElementById('tab-vistorias').style.display = tab === 'vistorias' ? 'block' : 'none';
-        document.getElementById('tab-mapa').style.display = tab === 'mapa' ? 'block' : 'none';
-        document.getElementById('tab-cronograma').style.display = tab === 'cronograma' ? 'block' : 'none';
+    document.getElementById('tab-vistorias').style.display = tab === 'vistorias' ? 'block' : 'none';
+    document.getElementById('tab-mapa').style.display = tab === 'mapa' ? 'block' : 'none';
+    document.getElementById('tab-cronograma').style.display = tab === 'cronograma' ? 'block' : 'none';
 
-        if (tab === 'mapa' || tab === 'cronograma') {
-            loadAllUnitsData();
-            if (tab === 'cronograma') setTimeout(renderInteractiveCalendar, 200);
-        }
+    if (tab === 'mapa' || tab === 'cronograma') {
+        loadAllUnitsData();
+        if (tab === 'mapa') setTimeout(updateDashboardData, 100); // <-- Adicione esta linha
+        if (tab === 'cronograma') setTimeout(renderInteractiveCalendar, 200);
     }
+}
 
     function toggle(id) {
         const el = document.getElementById(id);
         if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
+    function updateDashboardData() {
+    let totalVistoriadas = 0;
+    let totalAprovadas = 0;
+    let totalPendenciasAbertas = 0;
+    let ncCount = {};
+    let respQueue = [];
+
+    // Lógica idêntica à do Calendário para ler todas as pendências ativas
+    Object.keys(dbUnitsCache).forEach(key => {
+        const history = dbUnitsCache[key] || [];
+        if (history.length > 0) {
+            totalVistoriadas++;
+            const last = history[history.length - 1];
+
+            if (last.details && last.details.length > 0) {
+                let activeNCs = last.details.filter(d => d.status !== 'Concluído');
+
+                if (activeNCs.length === 0) {
+                    totalAprovadas++;
+                } else {
+                    totalPendenciasAbertas += activeNCs.length;
+
+                    activeNCs.forEach(d => {
+                        const ncName = d.nonConformity || 'Não especificada';
+                        ncCount[ncName] = (ncCount[ncName] || 0) + 1;
+
+                        respQueue.push({
+                            unit: key.replace('unit_', ''),
+                            item: d.item,
+                            nonConformity: d.nonConformity,
+                            responsible: d.responsible || 'A definir',
+                            severity: d.severity || 'Baixa'
+                        });
+                    });
+                }
+            } else if (last.status === '100_ok' || last.pendenciesCount === 0) {
+                totalAprovadas++;
+            }
+        }
+    });
+
+    // Atualiza os contadores de tela procurando pelo texto do elemento no Mapa & Indicadores
+    const mapaTab = document.getElementById('tab-mapa');
+    if (mapaTab) {
+        // Atualiza os 3 grandes números do Dashboard
+        const cardNumbers = mapaTab.querySelectorAll('div, h2, h3, span');
+        cardNumbers.forEach(el => {
+            if (el.children.length === 0) { // procura elementos de texto puro com número '0'
+                if (el.innerText === '0 / 76' || el.innerText.includes('/ 76')) {
+                    el.innerText = `${totalVistoriadas} / 76`;
+                }
+            }
+        });
+
+        // Procura os cards específicos pelas caixas dos KPIs
+        const kpiContainers = mapaTab.querySelectorAll('div');
+        kpiContainers.forEach(div => {
+            if (div.innerText && div.innerText.includes('APROVADAS')) {
+                const num = div.querySelector('div, span, h2, strong');
+                if (num) num.innerText = totalAprovadas;
+            }
+            if (div.innerText && div.innerText.includes('PENDÊNCIAS ABERTAS')) {
+                const num = div.querySelector('div, span, h2, strong');
+                if (num) num.innerText = totalPendenciasAbertas;
+            }
+        });
+
+        // Preenche o bloco "Top Não Conformidades"
+        const topBlock = Array.from(mapaTab.querySelectorAll('div')).find(d => d.innerText && d.innerText.includes('Top Não Conformidades'));
+        if (topBlock) {
+            const sortedNCs = Object.entries(ncCount).sort((a, b) => b[1] - a[1]);
+            let listHTML = '<h4 style="font-size:0.9rem; margin-bottom:8px;">🔥 Top Não Conformidades Mais Recorrentes na Obra</h4>';
+            
+            if (sortedNCs.length > 0) {
+                sortedNCs.forEach(([name, count]) => {
+                    listHTML += `
+                        <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; font-size:0.82rem;">
+                            <span>📌 ${name}</span>
+                            <strong style="color:#dc2626;">${count} ocorrência(s)</strong>
+                        </div>`;
+                });
+            } else {
+                listHTML += '<p style="font-size:0.8rem; color:#666;">Nenhuma pendência registrada ainda.</p>';
+            }
+            topBlock.innerHTML = listHTML;
+        }
+
+        // Preenche a "Fila de Pendências por Responsável"
+        const queueBlock = Array.from(mapaTab.querySelectorAll('div')).find(d => d.innerText && d.innerText.includes('Fila de Pendências por Responsável'));
+        if (queueBlock) {
+            let queueHTML = '<h4 style="font-size:0.9rem; margin-bottom:8px;">👷 Fila de Pendências por Responsável</h4>';
+            
+            if (respQueue.length > 0) {
+                respQueue.forEach(item => {
+                    queueHTML += `
+                        <div style="background:#fff; border:1px solid #e2e8f0; border-left:4px solid ${item.severity === 'Alta' ? '#dc3545' : (item.severity === 'Média' ? '#ffc107' : '#004a8f')}; padding:8px; margin-bottom:6px; border-radius:4px; font-size:0.8rem;">
+                            <strong>Apto ${item.unit}</strong> — <span style="color:#004a8f;">${item.responsible}</span><br>
+                            <small>${item.item}: <strong>${item.nonConformity}</strong></small>
+                        </div>`;
+                });
+            } else {
+                queueHTML += '<p style="font-size:0.8rem; color:#666;">Nenhuma pendência ativa para exibição.</p>';
+            }
+            queueBlock.innerHTML = queueHTML;
+        }
+    }
+}
 </script>
 </body>
 </html>
