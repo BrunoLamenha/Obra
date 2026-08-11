@@ -261,8 +261,8 @@
             </div>
 
             <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 280px; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px;" id="external-events-container">
-                    <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">⏳ Pendências em Aberto / Prazos</h4>
+                <div style="flex: 1; min-width: 300px; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px;" id="external-events-container">
+                    <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">⏳ Gestão de Prazos das Pendências</h4>
                     <div id="unassigned-tasks-list"></div>
                 </div>
 
@@ -599,7 +599,7 @@
             resp: '',
             respOther: '',
             startDate: '',
-            businessDays: 3,
+            businessDays: '', // INICIA VAZIO / A DEFINIR
             status: 'Aguardando',
             severity: 'Baixa',
             photos: []
@@ -730,7 +730,7 @@
                             </div>
                             <div>
                                 <label>Prazo (Dias Úteis):</label>
-                                <input type="number" id="days_${key}_${index}" min="1" value="${nc.businessDays || 3}" oninput="salvarEstadoAtualInput('${key}')">
+                                <input type="number" id="days_${key}_${index}" min="1" placeholder="A definir" value="${nc.businessDays || ''}" oninput="salvarEstadoAtualInput('${key}')">
                             </div>
                         </div>
                     </div>
@@ -791,7 +791,7 @@
                 }
             }
             if (dateEl && nc.startDate) dateEl.value = nc.startDate;
-            if (daysEl && nc.businessDays) daysEl.value = nc.businessDays;
+            if (daysEl && nc.businessDays !== undefined) daysEl.value = nc.businessDays;
             if (statusEl && nc.status) statusEl.value = nc.status;
             if (sevEl && nc.severity) sevEl.value = nc.severity;
 
@@ -834,7 +834,9 @@
             pendingNCs[key].forEach(nc => {
                 if (nc.selectedOpts.length > 0 || nc.obs.trim() !== '' || (nc.photos && nc.photos.length > 0)) {
                     totalPendencies++;
-                    let deadlineDate = addBusinessDays(nc.startDate, parseInt(nc.businessDays));
+                    
+                    let days = parseInt(nc.businessDays);
+                    let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
 
                     ncList.push({
                         id: nc.id || Date.now(),
@@ -845,9 +847,9 @@
                         severity: nc.severity || 'Baixa',
                         status: nc.status || 'Aguardando',
                         inspectedAt: nowIso,
-                        scheduledFor: nc.startDate || 'Não agendado',
-                        businessDays: nc.businessDays || 3,
-                        deadlineDate: deadlineDate || 'Não calculada',
+                        scheduledFor: nc.startDate || null,
+                        businessDays: nc.businessDays || null,
+                        deadlineDate: deadlineDate || null,
                         resolvedAt: nc.status === 'Concluído' ? nowIso : null,
                         photos: nc.photos || []
                     });
@@ -886,11 +888,9 @@
         });
     }
 
-    // ENVIO VIA WHATSAPP DIRETO DA TELA (CORRIGIDO)
     function sendWhatsAppSummary() {
         if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
 
-        // Salvar todos os inputs dos campos visíveis na tela
         Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
 
         let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
@@ -911,14 +911,17 @@
                     if (hasOpts || hasObs) {
                         count++;
                         const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
-                        let deadlineDate = addBusinessDays(nc.startDate, parseInt(nc.businessDays));
+                        
+                        let days = parseInt(nc.businessDays);
+                        let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
 
                         text += `*${count}. ${roomNames[roomKey]} - ${itemObj ? itemObj.cleanName : ''}*\n`;
                         text += `• Pendência: ${nc.selectedOpts.join(', ')} ${nc.obs ? '(' + nc.obs + ')' : ''}\n`;
                         text += `• Responsável: ${resp || 'Não definido'}\n`;
-                        text += `• Data Início: ${nc.startDate || 'Não informada'}\n`;
-                        text += `• Prazo Execução: ${nc.businessDays || 3} dias úteis ${deadlineDate ? '(Prazo Final: ' + deadlineDate + ')' : ''}\n`;
-                        text += `• Severidade: ${nc.severity || 'Baixa'}\n\n`;
+                        text += `• Data Início: ${nc.startDate || 'Sem data'}\n`;
+                        text += `• Prazo Execução: ${nc.businessDays ? nc.businessDays + ' dias úteis' : 'A definir'}`;
+                        if (deadlineDate) text += ` (Prazo Final: ${deadlineDate})`;
+                        text += `\n• Severidade: ${nc.severity || 'Baixa'}\n\n`;
                     }
                 });
             }
@@ -929,9 +932,37 @@
         }
 
         const encoded = encodeURIComponent(text);
-        const url = `https://api.whatsapp.com/send?text=${encoded}`;
-        
-        window.open(url, '_blank');
+        window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+    }
+
+    // EDITA E SALVA PRAZO DIRETO NA ABA DE CALENDÁRIO / CRONOGRAMA
+    function updateTaskScheduleFromCalendar(unitNum, historyIndex, detailIndex) {
+        const historyKey = `unit_${unitNum}`;
+        if (!dbUnitsCache[historyKey] || !dbUnitsCache[historyKey][historyIndex]) return;
+
+        const dateEl = document.getElementById(`cal_date_${unitNum}_${historyIndex}_${detailIndex}`);
+        const daysEl = document.getElementById(`cal_days_${unitNum}_${historyIndex}_${detailIndex}`);
+
+        if (!dateEl || !daysEl) return;
+
+        const startDate = dateEl.value;
+        const daysVal = daysEl.value ? parseInt(daysEl.value) : null;
+
+        let record = dbUnitsCache[historyKey][historyIndex];
+        let itemDetail = record.details[detailIndex];
+
+        itemDetail.scheduledFor = startDate || null;
+        itemDetail.businessDays = daysVal;
+        itemDetail.deadlineDate = (startDate && daysVal) ? addBusinessDays(startDate, daysVal) : null;
+
+        localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
+        db.collection('vistorias').doc(historyKey).set({
+            unit: unitNum,
+            history: dbUnitsCache[historyKey]
+        }, { merge: true }).then(() => {
+            alert("Prazo/Agenda atualizado com sucesso!");
+            loadAllUnitsData();
+        });
     }
 
     function resolveTaskFromCalendar(unitNum, historyIndex, detailIndex) {
@@ -1153,8 +1184,8 @@
                                 <div style="background:#f1f5f9; padding:6px; border-radius:4px; margin-top:6px; font-size:0.73rem; color:#475569;">
                                     ⏱️ <strong>Linha do Tempo:</strong><br>
                                     📝 <strong>Vistoriado em:</strong> ${d.inspectedAt || h.date}<br>
-                                    📅 <strong>Início Agendado:</strong> ${d.scheduledFor || 'Não agendado'}<br>
-                                    ⏳ <strong>Prazo:</strong> ${d.businessDays || 3} dias úteis ${d.deadlineDate ? '(Prazo Limite: ' + d.deadlineDate + ')' : ''}<br>
+                                    📅 <strong>Início Agendado:</strong> ${d.scheduledFor || 'Sem data definida'}<br>
+                                    ⏳ <strong>Prazo:</strong> ${d.businessDays ? d.businessDays + ' dias úteis' : 'A definir'} ${d.deadlineDate ? '(Prazo Limite: ' + d.deadlineDate + ')' : ''}<br>
                                     ${d.resolvedAt ? `✅ <strong style="color:#16a34a;">Serviço Realizado em:</strong> ${d.resolvedAt}` : '⏳ <strong style="color:#d97706;">Aguardando Conclusão</strong>'}
                                 </div>
                             </div>
@@ -1182,8 +1213,8 @@
                 text += `*${idx + 1}. ${d.room} - ${d.item}*\n`;
                 text += `• Pendência: ${d.nonConformity}\n`;
                 text += `• Responsável: ${d.responsible}\n`;
-                text += `• Início Agendado: ${d.scheduledFor || 'Não agendado'}\n`;
-                text += `• Prazo: ${d.businessDays || 3} dias úteis ${d.deadlineDate ? '(Limite: ' + d.deadlineDate + ')' : ''}\n`;
+                text += `• Início Agendado: ${d.scheduledFor || 'Sem data'}\n`;
+                text += `• Prazo: ${d.businessDays ? d.businessDays + ' dias úteis' : 'A definir'} ${d.deadlineDate ? '(Limite: ' + d.deadlineDate + ')' : ''}\n`;
                 text += `• Status: ${d.resolvedAt ? '✅ Concluído em ' + d.resolvedAt : '⏳ ' + (d.status || 'Aguardando')}\n\n`;
             });
         } else {
@@ -1198,6 +1229,7 @@
         document.getElementById('history-panel').style.display = 'none';
     }
 
+    // RENDERIZAÇÃO DO CALENDÁRIO COM FORMULÁRIO DE EDIÇÃO DE PRAZO
     function renderInteractiveCalendar() {
         const calendarEl = document.getElementById('calendar');
         if (!calendarEl) return;
@@ -1216,22 +1248,41 @@
                     last.details.forEach((d, dIndex) => {
                         if ((filterResp === 'TODOS' || d.responsible === filterResp) && d.status !== 'Concluído') {
                             
-                            let deadline = d.deadlineDate || addBusinessDays(d.scheduledFor, parseInt(d.businessDays));
+                            let deadline = d.deadlineDate || (d.scheduledFor && d.businessDays ? addBusinessDays(d.scheduledFor, parseInt(d.businessDays)) : null);
 
                             unassignedHTML += `
-                                <div class="fc-task-card" style="background:#fff; border:1px solid #ddd; padding:8px; margin-bottom:8px; border-radius:5px;">
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div class="fc-task-card" style="background:#fff; border:1px solid #cbd5e1; padding:10px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
                                         <div>
-                                            <strong>Apto ${unitNum}</strong> - ${d.item}<br>
+                                            <strong style="color:var(--primary);">Apto ${unitNum}</strong> - ${d.item}<br>
                                             <small style="color:#dc2626; font-weight:bold;">${d.nonConformity}</small><br>
-                                            <small><strong>Resp:</strong> ${d.responsible}</small><br>
-                                            <small style="color:#004a8f;">📅 <strong>Início:</strong> ${d.scheduledFor || 'Aguardando'}</small><br>
-                                            <small style="color:#d97706;">⏳ <strong>Prazo:</strong> ${d.businessDays || 3} dias úteis ${deadline ? '(Até ' + deadline + ')' : ''}</small>
+                                            <small><strong>Resp:</strong> ${d.responsible}</small>
                                         </div>
                                         <button onclick="resolveTaskFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
                                                 style="background:#28a745; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; font-weight:bold;">
                                             ✓ Sanar
                                         </button>
+                                    </div>
+
+                                    <div style="background:#f1f5f9; padding:8px; border-radius:4px; margin-top:6px; font-size:0.75rem;">
+                                        <div style="font-weight:bold; color:#334155; margin-bottom:4px;">⚙️ Definir / Alterar Prazo:</div>
+                                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                                            <div>
+                                                <label style="font-size:0.7rem; margin:0;">Início:</label>
+                                                <input type="date" id="cal_date_${unitNum}_${hIndex}_${dIndex}" value="${d.scheduledFor || ''}" style="padding:4px; font-size:0.75rem;">
+                                            </div>
+                                            <div>
+                                                <label style="font-size:0.7rem; margin:0;">Dias Úteis:</label>
+                                                <input type="number" id="cal_days_${unitNum}_${hIndex}_${dIndex}" min="1" placeholder="A definir" value="${d.businessDays || ''}" style="padding:4px; font-size:0.75rem;">
+                                            </div>
+                                        </div>
+                                        <button onclick="updateTaskScheduleFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
+                                                style="width:100%; margin-top:6px; background:#007bff; color:white; border:none; padding:5px; border-radius:3px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
+                                            💾 Salvar Prazo
+                                        </button>
+                                        <div style="margin-top:4px; color:#d97706; font-weight:bold;">
+                                            Prazo Final: ${deadline || 'Sem prazo definido'}
+                                        </div>
                                     </div>
                                 </div>
                             `;
@@ -1280,9 +1331,9 @@
                             Severidade: d.severity || 'Baixa',
                             Status: d.status || 'Aguardando',
                             'Data Vistoria': d.inspectedAt || h.date,
-                            'Data Início': d.scheduledFor || 'N/A',
-                            'Prazo (Dias Úteis)': d.businessDays || 3,
-                            'Data Limite': d.deadlineDate || 'N/A',
+                            'Data Início': d.scheduledFor || 'Sem data',
+                            'Prazo (Dias Úteis)': d.businessDays || 'A definir',
+                            'Data Limite': d.deadlineDate || 'Sem prazo',
                             'Data Realizado': d.resolvedAt || 'Pendente'
                         });
                     });
