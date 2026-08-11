@@ -341,27 +341,34 @@
     };
 
     function detectDevice() {
-        let deviceId = localStorage.getItem('vistoria_device_id');
-        if (!deviceId) {
-            deviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-            localStorage.setItem('vistoria_device_id', deviceId);
-        }
-
-        let platform = "Dispositivo Movel";
-        const userAgent = navigator.userAgent;
-
-        if (userAgent.indexOf("Android") > -1) platform = "Android";
-        else if (userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPad") > -1) platform = "iOS (iPhone/iPad)";
-        else if (userAgent.indexOf("Windows") > -1) platform = "Windows PC";
-        else if (userAgent.indexOf("Mac") > -1) platform = "Mac";
-
-        deviceDetails = `${platform} | ID: ${deviceId}`;
-        
-        const infoEl = document.getElementById('device-info-text');
-        if(infoEl) {
-            infoEl.innerHTML = `📱 <strong>${platform}</strong><br>🆔 Código Único do Dispositivo: <strong>${deviceId}</strong>`;
-        }
+    let deviceId = localStorage.getItem('vistoria_device_id');
+    if (!deviceId) {
+        deviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        localStorage.setItem('vistoria_device_id', deviceId);
     }
+
+    let platform = "Dispositivo Movel";
+    const userAgent = navigator.userAgent;
+
+    if (userAgent.indexOf("Android") > -1) platform = "Android";
+    else if (userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPad") > -1) platform = "iOS (iPhone/iPad)";
+    else if (userAgent.indexOf("Windows") > -1) platform = "Windows PC";
+    else if (userAgent.indexOf("Mac") > -1) platform = "Mac";
+
+    deviceDetails = `${platform} | ID: ${deviceId}`;
+    
+    const infoEl = document.getElementById('device-info-text');
+    if(infoEl) {
+        infoEl.innerHTML = `📱 <strong>${platform}</strong><br>🆔 Código Único do Dispositivo: <strong>${deviceId}</strong>`;
+    }
+
+    // --- NOVO: Carrega o último nome salvo, se existir ---
+    const savedName = localStorage.getItem('vistoria_inspector_name');
+    if (savedName) {
+        const nameInput = document.getElementById('inspector-name');
+        if (nameInput) nameInput.value = savedName;
+    }
+}
 
     function switchTab(tab) {
         document.getElementById('tab-vistorias-btn').classList.toggle('active', tab === 'vistorias');
