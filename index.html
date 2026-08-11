@@ -1437,12 +1437,23 @@ async function assignTaskDateFromInput(unitKey, ncIndex, originalDays) {
     if (container) {
         if (selectEl.value === 'Outro') {
             container.style.display = 'block';
-       // Chama a detecção ao carregar o DOM ou de forma direta
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', detectDevice);
-} else {
-    detectDevice();
+       // Bloco final de inicialização seguro
+function initApp() {
+    try {
+        if (typeof detectDevice === 'function') {
+            detectDevice();
+        }
+    } catch (e) {
+        console.error("Erro na inicialização:", e);
+    }
 }
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
+</script>
 </script>
 
 </body>
