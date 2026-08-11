@@ -61,7 +61,7 @@
         .photo-area { margin-top: 10px; padding: 8px; background: #fff; border: 1px dashed var(--border); border-radius: 6px; text-align: center; }
         .photo-preview { max-width: 100%; max-height: 150px; margin-top: 8px; border-radius: 4px; display: none; border: 1px solid #ddd; }
 
-        .btn-add-nc { background: #007bff; color: white; border: none; padding: 10px 12px; border-radius: 5px; font-weight: bold; font-size: 0.85rem; margin-top: 10px; cursor: pointer; display: none; width: 100%; }
+        .btn-add-nc { background: #007bff; color: white; border: none; padding: 10px 12px; border-radius: 5px; font-weight: bold; font-size: 0.85rem; margin-top: 10px; cursor: pointer; width: 100%; }
         .btn-export { width: 100%; padding: 15px; background: #17a2b8; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
         .btn-next-unit { width: 100%; padding: 14px; background: #28a745; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: none; }
 
@@ -87,13 +87,10 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 999; }
         .modal-card { background: #fff; border-radius: 8px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 18px; position: relative; }
 
-        /* Estilos do Dashboard KPI */
         .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; text-align: center; }
         .kpi-card h5 { font-size: 0.72rem; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
         .kpi-card .kpi-num { font-size: 1.3rem; font-weight: bold; color: #0f172a; }
-
-        .badge-vencida { background: #dc2626; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 3px; font-weight: bold; display: inline-block; margin-left: 4px; }
 
         @media print {
             @page { size: landscape; margin: 1cm; }
@@ -142,7 +139,7 @@
             <h3>👤 Identificação do Vistoriador</h3>
             <div style="margin-top: 10px;">
                 <label for="inspector-name"><strong>Nome Completo do Engenheiro / Vistoriador:</strong></label>
-                <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha">
             </div>
             
             <div style="margin-top: 15px; background: #eef6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px;">
@@ -333,7 +330,7 @@
       measurementId: "G-GP1QQVWR50"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     const respColors = {
@@ -362,11 +359,11 @@
         { id: "portas", name: "5. Portas de Madeira e Alizares", cleanName: "Portas de Madeira e Alizares", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
         { id: "esquadria", name: "6. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias de Alumínio, Vidros e Vedações", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
         { id: "eletrica", name: "7. Tomadas, Interruptores e Plafons", cleanName: "Tomadas, Interruptores e Plafons", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Ponto Sem Energia / Fio Solto", "Plafon Não Liga / Danificado", "Quadro de Disjuntores Incompleto", "Outros"] },
-        { id: "ac", name: "8. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura / Aparelho Ar-Condicionado", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"], hasAC: true }
+        { id: "ac", name: "8. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura / Aparelho Ar-Condicionado", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] }
     ];
 
-    let ncCounters = {};
-    let itemStatusMap = {}; 
+    var pendingNCs = {};
+    var itemStatusMap = {}; 
     let selectedFloorNum = null;
     let selectedUnitNum = null;
     let selectedCategory = "";
@@ -375,7 +372,6 @@
     let deviceDetails = "";
     let dbUnitsCache = {};
     let fullCalendarInstance = null;
-    let pendingNCs = {};
 
     window.onload = function() {
         detectDevice();
@@ -409,20 +405,6 @@
             if (localName && nameInput && !nameInput.value) {
                 nameInput.value = localName;
             }
-
-            if (typeof db !== 'undefined' && db) {
-                db.collection('dispositivos').doc(deviceId).get()
-                    .then(function(devDoc) {
-                        if (devDoc.exists && devDoc.data() && devDoc.data().lastInspectorName) {
-                            var firebaseName = devDoc.data().lastInspectorName;
-                            if (nameInput && !nameInput.value) nameInput.value = firebaseName;
-                            localStorage.setItem('vistoria_inspector_name', firebaseName);
-                        }
-                    })
-                    .catch(function(e) { 
-                        console.log("Busca silenciosa Firebase:", e); 
-                    });
-            }
         } catch (err) {
             console.error("Erro na detecção:", err);
         }
@@ -432,19 +414,9 @@
         const nameInput = document.getElementById('inspector-name').value.trim();
         if (!nameInput) { alert('Por favor, informe o nome do vistoriador.'); return; }
 
-        const deviceId = localStorage.getItem('vistoria_device_id');
+        inspectorName = nameInput;
         localStorage.setItem('vistoria_inspector_name', nameInput);
 
-        if (deviceId && typeof db !== 'undefined' && db) {
-            db.collection('dispositivos').doc(deviceId).set({
-                deviceId: deviceId,
-                lastInspectorName: nameInput,
-                platformDetails: deviceDetails,
-                lastAccess: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }).catch(err => console.error("Erro ao sincronizar dispositivo:", err));
-        }
-
-        inspectorName = nameInput;
         document.getElementById('inspector-card').style.background = '#eef6ff';
         document.getElementById('inspector-card').innerHTML = `
             <h3>👤 Responsável Confirmado</h3>
@@ -452,6 +424,27 @@
             <p style="font-size:0.8rem; color:#004a8f; margin-top:3px;">📱 <strong>Aparelho Registrado:</strong> ${deviceDetails}</p>
         `;
         document.getElementById('floor-card').style.display = 'block';
+    }
+
+    function loadAllUnitsData() {
+        const localData = localStorage.getItem('vistorias_db');
+        if (localData) {
+            dbUnitsCache = JSON.parse(localData);
+            updateMapAndKPIs();
+            renderMapGrid();
+        }
+
+        db.collection('vistorias').get().then(snapshot => {
+            snapshot.forEach(doc => {
+                dbUnitsCache[doc.id] = doc.data().history || [];
+            });
+            localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
+            updateMapAndKPIs();
+            renderMapGrid();
+            if (document.getElementById('tab-cronograma').style.display === 'block') {
+                renderInteractiveCalendar();
+            }
+        }).catch(err => console.log("Lendo banco local offline"));
     }
 
     function setFloor(f, el) {
@@ -470,7 +463,7 @@
             let statusClass = '';
             if (existingHistory.length > 0) {
                 const lastInsp = existingHistory[existingHistory.length - 1];
-                statusClass = lastInsp.pendenciesCount === 0 ? 'unit-ok' : 'unit-nok';
+                statusClass = (lastInsp.pendenciesCount === 0 || lastInsp.status === '100_ok') ? 'unit-ok' : 'unit-nok';
             }
 
             u.innerHTML += `<div class="btn ${statusClass}" onclick="selectUnit(${num}, this)">${num}</div>`;
@@ -488,779 +481,365 @@
         
         document.getElementById('type-card').style.display = 'block';
         document.getElementById('inspection-area').style.display = 'none';
-        
-        selectedCategory = "";
-        selectedStage = "";
-
-        document.querySelectorAll('#type-card .btn-opt').forEach(b => {
-            b.classList.remove('active');
-            b.style.display = 'block';
-        });
-
-        const historyKey = `unit_${selectedUnitNum}`;
-        const existingHistory = dbUnitsCache[historyKey] || [];
-
-        if (existingHistory.length > 0) {
-            const lastInspection = existingHistory[existingHistory.length - 1];
-            selectedCategory = lastInspection.category;
-
-            if (selectedCategory.includes('Padrão')) {
-                document.getElementById('btn-cat-padrao').classList.add('active');
-                document.getElementById('btn-cat-reforma').style.display = 'none';
-            } else {
-                document.getElementById('btn-cat-reforma').classList.add('active');
-                document.getElementById('btn-cat-padrao').style.display = 'none';
-            }
-
-            document.getElementById('btn-stage-first').style.display = 'none';
-            document.getElementById('btn-stage-rev').style.gridColumn = 'span 2';
-        } else {
-            document.getElementById('btn-cat-padrao').style.display = 'block';
-            document.getElementById('btn-cat-reforma').style.display = 'block';
-            document.getElementById('btn-stage-first').style.display = 'block';
-            document.getElementById('btn-stage-rev').style.gridColumn = 'auto';
-        }
     }
 
     function setCategory(cat, el) {
         selectedCategory = cat;
-        el.parentElement.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#category-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
         checkAndShowInspection();
     }
 
     function setStage(stage, el) {
         selectedStage = stage;
-        el.parentElement.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#stage-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
         checkAndShowInspection();
     }
 
     function checkAndShowInspection() {
         if (selectedCategory && selectedStage) {
-            const historyKey = `unit_${selectedUnitNum}`;
-            const existingHistory = dbUnitsCache[historyKey] || [];
-            
-            if (selectedStage === 'Revistoria') {
-                let revisionCount = existingHistory.length;
-                selectedStage = `${revisionCount}ª Revistoria`;
-            }
-
-            document.getElementById('unit-title').innerHTML = `Unidade ${selectedUnitNum} <span class="badge">${selectedCategory}</span> <span class="badge" style="background:#17a2b8; color:#fff;">${selectedStage}</span>`;
+            document.getElementById('unit-title').innerText = `Unidade: Apto ${selectedUnitNum} (${selectedCategory} - ${selectedStage})`;
             document.getElementById('inspection-area').style.display = 'block';
-            
-            itemStatusMap = {};
-            render('room-dorm', true, existingHistory);
-            render('room-bath', false, existingHistory);
-            render('room-balcony', true, existingHistory);
+            buildInspectionForm();
         }
     }
 
-    function render(cId, allowAC, history) {
-        const c = document.getElementById(cId);
-        c.innerHTML = '';
-        checklist.forEach(item => {
-            if (!allowAC && item.hasAC) return;
-            const fullId = `${cId}_${item.id}`;
-            ncCounters[fullId] = 0;
+    function buildInspectionForm() {
+        ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
+            const container = document.getElementById(roomId);
+            container.innerHTML = '';
 
-            let prevPendings = [];
+            checklist.forEach(item => {
+                const key = `${roomId}_${item.id}`;
+                if (!pendingNCs[key]) pendingNCs[key] = [];
 
-            if (history && history.length > 0) {
-                const lastInsp = history[history.length - 1];
-                if (lastInsp.pendencies) {
-                    prevPendings = lastInsp.pendencies.filter(p => p.fullId === fullId && p.status !== 'RESOLVIDO');
-                }
-            }
+                let ncBoxesHTML = renderNCBoxes(key, item);
 
-            let html = `
-                <div class="item-card" id="card_${fullId}">
-                    <div class="item-header">
-                        <span class="item-title">${item.name}</span>
-                        <div>
-                            <button type="button" class="btn-status btn-neutral" id="btn_ok_${fullId}" onclick="setItemStatus('${fullId}', 'OK')">Conforme ✓</button>
-                            <button type="button" class="btn-status btn-neutral" id="btn_nok_${fullId}" onclick="setItemStatus('${fullId}', 'NOK')">Não Conforme ✕</button>
+                container.innerHTML += `
+                    <div class="item-card" id="card_${key}">
+                        <div class="item-header">
+                            <span class="item-title">${item.name}</span>
+                            <div>
+                                <button class="btn-status btn-neutral" id="btn_ok_${key}" onclick="setItemStatus('${key}', 'OK', '${item.id}')">Conforme ✓</button>
+                                <button class="btn-status btn-neutral" id="btn_nok_${key}" onclick="setItemStatus('${key}', 'NOK', '${item.id}')">Não Conforme ✕</button>
+                            </div>
                         </div>
+                        <div id="nc_container_${key}">${ncBoxesHTML}</div>
+                        <button class="btn-add-nc" id="btn_add_${key}" style="display:${pendingNCs[key].length > 0 ? 'block' : 'none'};" onclick="addNC('${key}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
                     </div>
-                    <div id="nc_container_${fullId}"></div>
-                    <button type="button" class="btn-add-nc" id="btn_add_${fullId}" onclick="addNC('${fullId}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
-                </div>
-            `;
-            c.innerHTML += html;
-
-            if (prevPendings.length > 0) {
-                setTimeout(() => {
-                    setItemStatus(fullId, 'NOK');
-                    const container = document.getElementById(`nc_container_${fullId}`);
-                    if(container) container.innerHTML = '';
-                    prevPendings.forEach(pData => {
-                        addNC(fullId, item.id, pData);
-                    });
-                }, 50);
-            }
+                `;
+            });
         });
     }
 
-    function setItemStatus(fullId, status) {
-        itemStatusMap[fullId] = status;
-        const btnOk = document.getElementById(`btn_ok_${fullId}`);
-        const btnNok = document.getElementById(`btn_nok_${fullId}`);
-        const addBtn = document.getElementById(`btn_add_${fullId}`);
-        const container = document.getElementById(`nc_container_${fullId}`);
+    function salvarEstadoAtualInput(key) {
+        if (!pendingNCs[key]) return;
+        pendingNCs[key].forEach((nc, index) => {
+            const obsEl = document.getElementById(`obs_${key}_${index}`);
+            const respEl = document.getElementById(`resp_${key}_${index}`);
+            if (obsEl) nc.obs = obsEl.value;
+            if (respEl) nc.resp = respEl.value;
+
+            nc.selectedOpts = [];
+            document.querySelectorAll(`.chk_${key}_${index}:checked`).forEach(chk => {
+                nc.selectedOpts.push(chk.value);
+            });
+        });
+    }
+
+    function setItemStatus(key, status, itemId) {
+        const btnOk = document.getElementById(`btn_ok_${key}`);
+        const btnNok = document.getElementById(`btn_nok_${key}`);
+        const btnAdd = document.getElementById(`btn_add_${key}`);
 
         if (status === 'OK') {
             btnOk.className = "btn-status btn-ok-active";
             btnNok.className = "btn-status btn-neutral";
-            addBtn.style.display = "none";
-            container.innerHTML = "";
-            ncCounters[fullId] = 0;
+            pendingNCs[key] = [];
+            document.getElementById(`nc_container_${key}`).innerHTML = '';
+            if (btnAdd) btnAdd.style.display = 'none';
         } else {
-            btnNok.className = "btn-status btn-nok-active";
             btnOk.className = "btn-status btn-neutral";
-            addBtn.style.display = "block";
-            if (ncCounters[fullId] === 0) {
-                const itemId = fullId.split('_').slice(1).join('_');
-                addNC(fullId, itemId);
-            }
-        }
-    }
+            btnNok.className = "btn-status btn-nok-active";
+            if (btnAdd) btnAdd.style.display = 'block';
 
-    function toggleOtherRespField(boxId, selectEl) {
-        const container = document.getElementById(`other-resp-container-${boxId}`);
-        if (container) {
-            if (selectEl.value === 'Outro') {
-                container.style.display = 'block';
+            if (!pendingNCs[key] || pendingNCs[key].length === 0) {
+                addNC(key, itemId);
             } else {
-                container.style.display = 'none';
+                salvarEstadoAtualInput(key);
+                const itemObj = checklist.find(i => i.id === itemId);
+                document.getElementById(`nc_container_${key}`).innerHTML = renderNCBoxes(key, itemObj);
+                restaurarValoresInputs(key);
             }
         }
     }
 
- // --- COPIE E SUBSTITUA DAQUI ---
-function salvarEstadoAtualInput(key) {
-    if (typeof pendingNCs === 'undefined') {
-        pendingNCs = {};
-    }
-    if (!pendingNCs[key]) return;
+    function addNC(key, itemId) {
+        salvarEstadoAtualInput(key);
 
-    pendingNCs[key].forEach((nc, index) => {
-        const obsEl = document.getElementById(`obs_${key}_${index}`);
-        const respEl = document.getElementById(`resp_${key}_${index}`);
-        if (obsEl) nc.obs = obsEl.value;
-        if (respEl) nc.resp = respEl.value;
+        if (!pendingNCs[key]) pendingNCs[key] = [];
 
-        nc.selectedOpts = [];
-        document.querySelectorAll(`.chk_${key}_${index}:checked`).forEach(chk => {
-            nc.selectedOpts.push(chk.value);
+        pendingNCs[key].push({
+            id: Date.now(),
+            selectedOpts: [],
+            obs: '',
+            resp: 'Pintura / Emassamento'
         });
-    });
-}
 
-function addNC(key, itemId) {
-    // 1. Preserva o que já foi marcado/digitado antes de adicionar uma nova linha
-    salvarEstadoAtualInput(key);
-
-    const itemObj = checklist.find(i => i.id === itemId);
-    if (!pendingNCs[key]) pendingNCs[key] = [];
-    
-    pendingNCs[key].push({
-        id: Date.now(),
-        selectedOpts: [],
-        obs: '',
-        resp: 'Pintura / Emassamento'
-    });
-
-    document.getElementById(`nc_container_${key}`).innerHTML = renderNCBoxes(key, itemObj);
-    restaurarValoresInputs(key);
-}
-
-function removeNC(key, index, itemId) {
-    salvarEstadoAtualInput(key);
-    pendingNCs[key].splice(index, 1);
-    const itemObj = checklist.find(i => i.id === itemId);
-    document.getElementById(`nc_container_${key}`).innerHTML = renderNCBoxes(key, itemObj);
-    restaurarValoresInputs(key);
-}
-
-function restaurarValoresInputs(key) {
-    if (!pendingNCs[key]) return;
-    pendingNCs[key].forEach((nc, index) => {
-        const obsEl = document.getElementById(`obs_${key}_${index}`);
-        const respEl = document.getElementById(`resp_${key}_${index}`);
-        if (obsEl && nc.obs) obsEl.value = nc.obs;
-        if (respEl && nc.resp) respEl.value = nc.resp;
-
-        if (nc.selectedOpts) {
-            nc.selectedOpts.forEach(val => {
-                const chk = document.querySelector(`.chk_${key}_${index}[value="${val}"]`);
-                if (chk) chk.checked = true;
-            });
+        const itemObj = checklist.find(i => i.id === itemId);
+        const container = document.getElementById(`nc_container_${key}`);
+        if (container) {
+            container.innerHTML = renderNCBoxes(key, itemObj);
+            restaurarValoresInputs(key);
         }
-    });
-}
-// --- ATÉ AQUI ---
-
-    function updateSuggestedStartDate(ncBoxId) {
-        const box = document.getElementById(ncBoxId);
-        if (!box) return;
-        const daysInput = box.querySelector('.nc-days');
-        const startDateInput = box.querySelector('.nc-start-date');
         
-        if (daysInput && startDateInput && !startDateInput.value) {
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            startDateInput.value = `${yyyy}-${mm}-${dd}`;
-        }
+        const btnAdd = document.getElementById(`btn_add_${key}`);
+        if (btnAdd) btnAdd.style.display = 'block';
     }
 
-    function previewPhoto(input, boxId) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.getElementById(`img-preview-${boxId}`);
-                if (img) {
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                }
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function toggle(id) {
-        const el = document.getElementById(id);
-        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
-    }
-
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-vistorias').style.display = 'none';
-        document.getElementById('tab-mapa').style.display = 'none';
-        document.getElementById('tab-cronograma').style.display = 'none';
-
-        if (tabName === 'vistorias') {
-            document.getElementById('tab-vistorias-btn').classList.add('active');
-            document.getElementById('tab-vistorias').style.display = 'block';
-        } else if (tabName === 'mapa') {
-            document.getElementById('tab-mapa-btn').classList.add('active');
-            document.getElementById('tab-mapa').style.display = 'block';
-            renderGeneralMap();
-        } else if (tabName === 'cronograma') {
-            document.getElementById('tab-cronograma-btn').classList.add('active');
-            document.getElementById('tab-cronograma').style.display = 'block';
-            setTimeout(() => { renderInteractiveCalendar(); }, 100);
-        }
-    }
-
-    function loadAllUnitsData() {
-        if (typeof db === 'undefined' || !db) return;
+    function removeNC(key, index, itemId) {
+        salvarEstadoAtualInput(key);
+        pendingNCs[key].splice(index, 1);
+        const itemObj = checklist.find(i => i.id === itemId);
         
-        db.collection('vistorias_unidades').get().then(snapshot => {
-            dbUnitsCache = {};
-            snapshot.forEach(doc => {
-                dbUnitsCache[doc.id] = doc.data().history || [];
-            });
-            if (document.getElementById('tab-mapa').style.display === 'block') {
-                renderGeneralMap();
+        const container = document.getElementById(`nc_container_${key}`);
+        if (container) {
+            container.innerHTML = renderNCBoxes(key, itemObj);
+            restaurarValoresInputs(key);
+        }
+
+        if (pendingNCs[key].length === 0) {
+            const btnOk = document.getElementById(`btn_ok_${key}`);
+            const btnNok = document.getElementById(`btn_nok_${key}`);
+            const btnAdd = document.getElementById(`btn_add_${key}`);
+            if (btnOk) btnOk.className = "btn-status btn-neutral";
+            if (btnNok) btnNok.className = "btn-status btn-neutral";
+            if (btnAdd) btnAdd.style.display = 'none';
+        }
+    }
+
+    function renderNCBoxes(key, itemObj) {
+        if (!pendingNCs[key] || pendingNCs[key].length === 0) return '';
+
+        return pendingNCs[key].map((nc, index) => {
+            const chkBoxes = itemObj.options.map(opt => `
+                <label class="chk-label">
+                    <input type="checkbox" class="chk_${key}_${index}" value="${opt}" onchange="salvarEstadoAtualInput('${key}')"> ${opt}
+                </label>
+            `).join('');
+
+            return `
+                <div class="nc-box">
+                    <div class="nc-header">
+                        <span>PENDÊNCIA #${index + 1}</span>
+                        <button class="btn-remove" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
+                    </div>
+                    <div class="checklist-group">${chkBoxes}</div>
+                    <label>Responsável / Subempreiteiro:</label>
+                    <select id="resp_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                        <option value="Pintura / Emassamento">Pintura / Emassamento</option>
+                        <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
+                        <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
+                        <option value="Eletricista">Eletricista</option>
+                        <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
+                        <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
+                        <option value="Piso e Revestimento">Piso e Revestimento</option>
+                        <option value="Gesso / Sancas">Gesso / Sancas</option>
+                    </select>
+                    <label>Observação Técnica:</label>
+                    <input type="text" id="obs_${key}_${index}" placeholder="Descreva a pendência com precisão..." oninput="salvarEstadoAtualInput('${key}')">
+                </div>
+            `;
+        }).join('');
+    }
+
+    function restaurarValoresInputs(key) {
+        if (!pendingNCs[key]) return;
+        pendingNCs[key].forEach((nc, index) => {
+            const obsEl = document.getElementById(`obs_${key}_${index}`);
+            const respEl = document.getElementById(`resp_${key}_${index}`);
+            if (obsEl && nc.obs) obsEl.value = nc.obs;
+            if (respEl && nc.resp) respEl.value = nc.resp;
+
+            if (nc.selectedOpts) {
+                nc.selectedOpts.forEach(val => {
+                    const chk = document.querySelector(`.chk_${key}_${index}[value="${val}"]`);
+                    if (chk) chk.checked = true;
+                });
             }
-        }).catch(err => {
-            console.error("Erro ao carregar banco em nuvem:", err);
         });
     }
 
     function generateTechnicalPDF() {
-        if (!inspectorName) {
-            alert('Por favor, informe e confirme o nome do vistoriador no topo da página.');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-        }
+        Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
 
-        let currentPendencies = [];
-        let allInspectedItems = [];
-        let pendingCount = 0;
+        let totalPendencies = 0;
+        let ncList = [];
 
-        try {
-            ['room-dorm', 'room-bath', 'room-balcony'].forEach(cId => {
-                const roomName = roomNames[cId];
-                const c = document.getElementById(cId);
-                const itemCards = c.querySelectorAll('.item-card');
+        Object.keys(pendingNCs).forEach(key => {
+            const roomKey = key.split('_')[0] + '_' + key.split('_')[1];
+            const roomId = key.replace(`${roomKey}_`, '');
+            const itemObj = checklist.find(i => i.id === roomId);
 
-                itemCards.forEach(card => {
-                    const fullId = card.id.replace('card_', '');
-                    const status = itemStatusMap[fullId] || 'OK';
-
-                    allInspectedItems.push({
-                        fullId: fullId,
-                        room: roomName,
-                        status: status
+            pendingNCs[key].forEach(nc => {
+                if (nc.selectedOpts.length > 0 || nc.obs.trim() !== '') {
+                    totalPendencies++;
+                    ncList.push({
+                        room: roomNames[roomKey] || 'Geral',
+                        item: itemObj ? itemObj.cleanName : 'Item',
+                        nonConformity: nc.selectedOpts.join(', ') + (nc.obs ? ` (${nc.obs})` : ''),
+                        responsible: nc.resp
                     });
-
-                    if (status === 'NOK') {
-                        const ncBoxes = card.querySelectorAll('.nc-box');
-                        ncBoxes.forEach(box => {
-                            pendingCount++;
-                            const itemId = box.getAttribute('data-item-id');
-                            const boxId = box.id;
-                            const itemObj = checklist.find(i => i.id === itemId) || { cleanName: 'Item de Vistoria' };
-                            
-                            let selectedOpts = [];
-                            box.querySelectorAll('.checklist-group input[type="checkbox"]:checked').forEach(chk => {
-                                selectedOpts.push(chk.value);
-                            });
-
-                            const otherVal = box.querySelector('.nc-other-input')?.value;
-                            if (otherVal) selectedOpts.push(`Outros: ${otherVal}`);
-
-                            let respVal = box.querySelector('.nc-resp')?.value;
-                            const respOtherInput = box.querySelector('.nc-resp-other-input')?.value.trim();
-
-                            if (!respVal) {
-                                alert(`⚠️ Por favor, selecione o Responsável Pela Correção na pendência do ambiente "${roomName}".`);
-                                box.querySelector('.nc-resp').focus();
-                                throw new Error("Responsável não selecionado");
-                            }
-
-                            let customRespNote = '';
-                            if (respVal === 'Outro') {
-                                if (!respOtherInput) {
-                                    alert(`⚠️ Por favor, especifique o nome do responsável no campo "Outro" do ambiente "${roomName}".`);
-                                    box.querySelector('.nc-resp-other-input').focus();
-                                    throw new Error("Responsável em branco");
-                                }
-                                customRespNote = respOtherInput;
-                                respVal = `Outro (${respOtherInput})`;
-                            }
-
-                            const daysVal = box.querySelector('.nc-days')?.value || '-';
-                            const startDateRaw = box.querySelector('.nc-start-date')?.value || '';
-                            let startDateFormatted = 'Não definida';
-                            if(startDateRaw) {
-                                const parts = startDateRaw.split('-');
-                                if(parts.length === 3) startDateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                            }
-
-                            const photoSrc = document.getElementById(`img-preview-${boxId}`)?.src || '';
-                            const hasPhoto = photoSrc && photoSrc.startsWith('data:image');
-
-                            currentPendencies.push({
-                                fullId: fullId,
-                                room: roomName,
-                                item: itemObj.cleanName,
-                                details: selectedOpts,
-                                resp: respVal,
-                                respCustom: customRespNote,
-                                days: daysVal,
-                                startDate: startDateFormatted,
-                                startDateRaw: startDateRaw,
-                                photo: hasPhoto ? photoSrc : null,
-                                status: 'ABERTO'
-                            });
-                        });
-                    }
-                });
+                }
             });
-        } catch (e) {
-            return;
-        }
+        });
 
-        const today = new Date().toLocaleDateString('pt-BR');
         const inspectionRecord = {
-            date: today,
-            timestamp: new Date().toISOString(),
+            date: new Date().toLocaleDateString('pt-BR'),
+            timestamp: Date.now(),
             inspector: inspectorName,
-            device: deviceDetails,
             category: selectedCategory,
             stage: selectedStage,
-            pendenciesCount: pendingCount,
-            pendencies: currentPendencies,
-            allInspectedItems: allInspectedItems
+            pendenciesCount: totalPendencies,
+            status: totalPendencies === 0 ? '100_ok' : 'com_pendencia',
+            details: ncList
         };
 
         const historyKey = `unit_${selectedUnitNum}`;
-        let existingHistory = dbUnitsCache[historyKey] || [];
-        existingHistory.push(inspectionRecord);
+        if (!dbUnitsCache[historyKey]) dbUnitsCache[historyKey] = [];
+        dbUnitsCache[historyKey].push(inspectionRecord);
+
+        // 1. Gravação local garantida
         localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
 
-        try {
-            db.collection('vistorias_unidades').doc(historyKey).set({
-                unitNumber: selectedUnitNum,
-                floorNumber: selectedFloorNum,
-                history: existingHistory,
-                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(function() {
-                dbUnitsCache[historyKey] = existingHistory;
-            }).catch(function(error) {
-                console.error("Erro ao salvar no banco:", error);
-                alert("⚠️ Atenção: Não foi possível sincronizar com o banco em nuvem.");
-            });
-        } catch (e) {
-            console.error("Erro no salvamento local:", e);
-        }
-
-        renderPDFView(inspectionRecord);
-        document.getElementById('btn-next').style.display = 'block';
-    }
-
-    function renderPDFView(record) {
-        const printContainer = document.getElementById('print-report');
-        
-        let tableRows = '';
-        if (record.pendenciesCount === 0) {
-            tableRows = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: green; font-weight: bold;">Unidade 100% Aprovada - Nenhum Apontamento Registrado</td></tr>`;
-        } else {
-            record.pendencies.forEach((p, idx) => {
-                const imgHtml = p.photo ? `<img src="${p.photo}" class="pdf-img">` : '<span style="color:#aaa;">Sem Foto</span>';
-                const optsText = p.details.length > 0 ? p.details.join(', ') : 'Sem detalhes';
-
-                tableRows += `
-                    <tr>
-                        <td style="text-align:center; font-weight:bold;">${idx + 1}</td>
-                        <td><strong>${p.room}</strong><br>${p.item}</td>
-                        <td>${optsText}</td>
-                        <td style="text-align:center;">${p.resp}</td>
-                        <td style="text-align:center;"><strong>${p.days} dia(s)</strong><br><small>Início: ${p.startDate}</small></td>
-                        <td style="text-align:center;">${imgHtml}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        printContainer.innerHTML = `
-            <table class="pdf-header-table">
-                <tr>
-                    <td colspan="4" class="pdf-header-title">RELATÓRIO TÉCNICO DE VISTORIA INTERNA DE OBRA</td>
-                </tr>
-                <tr>
-                    <td><strong>Unidade:</strong> Apto ${selectedUnitNum}</td>
-                    <td><strong>Pavimento:</strong> ${selectedFloorNum}º Pavimento</td>
-                    <td><strong>Tipo:</strong> ${record.category}</td>
-                    <td><strong>Etapa:</strong> ${record.stage}</td>
-                </tr>
-                <tr>
-                    <td><strong>Data:</strong> ${record.date}</td>
-                    <td><strong>Vistoriador:</strong> ${record.inspector}</td>
-                    <td colspan="2"><strong>Aparelho:</strong> ${record.device}</td>
-                </tr>
-            </table>
-
-            <div class="pdf-section-title">REGISTRO DE APONTAMENTOS & PENDÊNCIAS (${record.pendenciesCount})</div>
-            <table class="pdf-nc-table">
-                <thead>
-                    <tr>
-                        <th style="width: 30px; text-align:center;">#</th>
-                        <th style="width: 180px;">Ambiente / Item</th>
-                        <th>Não Conformidades Detectadas</th>
-                        <th style="width: 140px; text-align:center;">Responsável</th>
-                        <th style="width: 110px; text-align:center;">Prazo / Início</th>
-                        <th style="width: 120px; text-align:center;">Evidência</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${tableRows}
-                </tbody>
-            </table>
-
-            <div class="pdf-signatures">
-                ____________________________________________<br>
-                <strong>${record.inspector}</strong><br>
-                Engenharia / Controle de Qualidade
-            </div>
-        `;
-
-        window.print();
+        // 2. Gravação Firestore
+        db.collection('vistorias').doc(historyKey).set({
+            unit: selectedUnitNum,
+            history: dbUnitsCache[historyKey]
+        }, { merge: true }).then(() => {
+            alert(`Vistoria da Unidade ${selectedUnitNum} finalizada com sucesso! Total de Pendências: ${totalPendencies}`);
+            loadAllUnitsData();
+            document.getElementById('btn-next').style.display = 'block';
+        }).catch(err => {
+            alert(`Vistoria salva localmente no seu celular!`);
+            loadAllUnitsData();
+            document.getElementById('btn-next').style.display = 'block';
+        });
     }
 
     function startNextUnit() {
+        pendingNCs = {};
+        document.getElementById('btn-next').style.display = 'none';
         document.getElementById('inspection-area').style.display = 'none';
         document.getElementById('type-card').style.display = 'none';
-        document.getElementById('btn-next').style.display = 'none';
-        
-        const currentBtn = document.querySelector(`#units .btn.active`);
-        if (currentBtn) {
-            currentBtn.classList.remove('active');
-            const historyKey = `unit_${selectedUnitNum}`;
-            const existingHistory = dbUnitsCache[historyKey] || [];
-            if (existingHistory.length > 0) {
-                const lastInsp = existingHistory[existingHistory.length - 1];
-                currentBtn.className = `btn ${lastInsp.pendenciesCount === 0 ? 'unit-ok' : 'unit-nok'}`;
-            }
-        }
-        
-        selectedUnitNum = null;
-        window.scrollTo({ top: 150, behavior: 'smooth' });
+        if (selectedFloorNum) setFloor(selectedFloorNum, document.querySelector(`#floors .btn:nth-child(${selectedFloorNum})`));
     }
 
-    function renderGeneralMap() {
+    function updateMapAndKPIs() {
+        let totalInspected = 0;
+        let totalApproved = 0;
+        let totalPending = 0;
+
+        Object.keys(dbUnitsCache).forEach(key => {
+            const history = dbUnitsCache[key];
+            if (history && history.length > 0) {
+                totalInspected++;
+                const last = history[history.length - 1];
+                if (last.pendenciesCount === 0 || last.status === '100_ok') totalApproved++;
+                else totalPending += last.pendenciesCount;
+            }
+        });
+
+        document.getElementById('kpi-inspected').innerText = `${totalInspected} / 76`;
+        document.getElementById('kpi-approved').innerText = totalApproved;
+        document.getElementById('kpi-pending').innerText = totalPending;
+    }
+
+    function renderMapGrid() {
         const container = document.getElementById('map-container');
+        if (!container) return;
         container.innerHTML = '';
 
-        let totalUnits = 76;
-        let inspectedCount = 0;
-        let approvedCount = 0;
-        let totalPendingOpen = 0;
-        let totalResolvedCount = 0;
-
         for (let f = 4; f >= 1; f--) {
-            let floorHtml = `
-                <div style="margin-bottom:15px;">
-                    <h4 style="font-size:0.85rem; color:var(--primary); margin-bottom:5px;">${f}º Pavimento</h4>
-                    <div class="grid-map">
-            `;
-
+            let floorHTML = `<h5 style="margin-top:10px; font-size:0.8rem;">${f}º Pavimento</h5><div class="grid-map">`;
             for (let i = 1; i <= 19; i++) {
                 let num = (f * 100) + i;
                 const historyKey = `unit_${num}`;
                 const history = dbUnitsCache[historyKey] || [];
-
+                
                 let statusClass = '';
-                let statusText = 'Não Vistoriado';
-
+                let text = `${num}`;
                 if (history.length > 0) {
-                    inspectedCount++;
-                    const lastInsp = history[history.length - 1];
-                    
-                    let activePendencies = (lastInsp.pendencies || []).filter(p => p.status !== 'RESOLVIDO');
-                    let resolvedPendencies = (lastInsp.pendencies || []).filter(p => p.status === 'RESOLVIDO');
-                    
-                    totalPendingOpen += activePendencies.length;
-                    totalResolvedCount += resolvedPendencies.length;
-
-                    if (activePendencies.length === 0) {
+                    const last = history[history.length - 1];
+                    if (last.pendenciesCount === 0 || last.status === '100_ok') {
                         statusClass = 'unit-ok';
-                        statusText = '100% OK';
-                        approvedCount++;
+                        text += ' (OK)';
                     } else {
                         statusClass = 'unit-nok';
-                        statusText = `${activePendencies.length} Pend.`;
+                        text += ` (${last.pendenciesCount}p)`;
                     }
                 }
-
-                floorHtml += `
-                    <div class="map-unit ${statusClass}" onclick="openUnitHistory(${num})">
-                        <strong>${num}</strong><br>
-                        <span style="font-size:0.65rem;">${statusText}</span>
-                    </div>
-                `;
+                floorHTML += `<div class="map-unit ${statusClass}" onclick="showUnitHistory(${num})">${text}</div>`;
             }
-
-            floorHtml += `</div></div>`;
-            container.innerHTML += floorHtml;
+            floorHTML += `</div>`;
+            container.innerHTML += floorHTML;
         }
-
-        // Atualiza KPIs do Dashboard
-        document.getElementById('kpi-inspected').innerText = `${inspectedCount} / ${totalUnits}`;
-        document.getElementById('kpi-approved').innerText = approvedCount;
-        document.getElementById('kpi-pending').innerText = totalPendingOpen;
-        document.getElementById('kpi-resolved').innerText = totalResolvedCount;
     }
 
-    function openUnitHistory(unitNum) {
-        const historyKey = `unit_${unitNum}`;
+    function showUnitHistory(num) {
+        const historyKey = `unit_${num}`;
         const history = dbUnitsCache[historyKey] || [];
         const panel = document.getElementById('history-panel');
         const title = document.getElementById('history-unit-title');
         const content = document.getElementById('history-content');
 
-        title.innerText = `Histórico de Vistorias: Apto ${unitNum}`;
-        content.innerHTML = '';
+        title.innerText = `Histórico de Vistorias: Apto ${num}`;
+        panel.style.display = 'block';
 
         if (history.length === 0) {
-            content.innerHTML = `<p style="color:#666; font-style:italic;">Nenhuma vistoria registrada para esta unidade até o momento.</p>`;
-        } else {
-            history.slice().reverse().forEach((insp, idx) => {
-                const isLatest = idx === 0;
-                let activePendencies = (insp.pendencies || []).filter(p => p.status !== 'RESOLVIDO');
-                let pendText = activePendencies.length === 0 ? '<span style="color:green; font-weight:bold;">100% OK (Sem Pendências)</span>' : `<span style="color:red; font-weight:bold;">${activePendencies.length} Pendência(s) Ativa(s)</span>`;
-
-                content.innerHTML += `
-                    <div class="history-card ${isLatest ? 'latest' : ''}">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong>${insp.stage} (${insp.category})</strong>
-                            ${isLatest ? '<span class="history-tag-latest">Última Vistoria</span>' : ''}
-                        </div>
-                        <div style="margin-top:6px; color:#555;">
-                            📅 <strong>Data:</strong> ${insp.date} | 👤 <strong>Vistoriador:</strong> ${insp.inspector}<br>
-                            📊 <strong>Resultado:</strong> ${pendText}
-                        </div>
-                        <button class="btn-view-pdf" onclick="reprintPDF('${historyKey}', ${history.length - 1 - idx})">
-                            📄 Imprimir / Salvar PDF Desta Vistoria
-                        </button>
-                    </div>
-                `;
-            });
+            content.innerHTML = '<p>Nenhuma vistoria realizada nesta unidade ainda.</p>';
+            return;
         }
 
-        panel.style.display = 'block';
-        panel.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function reprintPDF(historyKey, index) {
-        const history = dbUnitsCache[historyKey] || [];
-        if (history[index]) {
-            selectedUnitNum = historyKey.replace('unit_', '');
-            selectedFloorNum = Math.floor(selectedUnitNum / 100);
-            renderPDFView(history[index]);
-        }
+        content.innerHTML = history.slice().reverse().map((h, i) => `
+            <div class="history-card ${i === 0 ? 'latest' : ''}">
+                <strong>Data:</strong> ${h.date} | <strong>Vistoriador:</strong> ${h.inspector}<br>
+                <strong>Tipo:</strong> ${h.category} - ${h.stage}<br>
+                <strong>Pendências:</strong> ${h.pendenciesCount}
+                ${h.details && h.details.length > 0 ? `
+                    <ul style="margin-top:5px; padding-left:18px;">
+                        ${h.details.map(d => `<li><strong>${d.room} - ${d.item}:</strong> ${d.nonConformity} [${d.responsible}]</li>`).join('')}
+                    </ul>
+                ` : '<p style="color:#28a745; margin-top:3px;"><strong>100% Aprovado</strong></p>'}
+            </div>
+        `).join('');
     }
 
     function closeHistory() {
         document.getElementById('history-panel').style.display = 'none';
     }
 
-    function assignTaskDateFromInput(unitKey, ncIndex, originalDays) {
-        const dateInput = document.getElementById(`input-date-${unitKey}-${ncIndex}`);
-        const daysInput = document.getElementById(`input-days-${unitKey}-${ncIndex}`);
-
-        if (!dateInput || !dateInput.value) {
-            alert('Por favor, escolha uma data de início antes de agendar.');
-            return;
-        }
-
-        const selectedDate = dateInput.value;
-        const newDays = parseInt(daysInput.value) || originalDays;
-
-        const history = dbUnitsCache[unitKey] || [];
-        if (history.length === 0) return;
-
-        const latestInsp = history[history.length - 1];
-        if (latestInsp.pendencies && latestInsp.pendencies[ncIndex]) {
-            const nc = latestInsp.pendencies[ncIndex];
-            const parts = selectedDate.split('-');
-
-            nc.startDateRaw = selectedDate;
-            nc.startDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-
-            if (newDays !== parseInt(originalDays)) {
-                const todayFormatted = new Date().toLocaleDateString('pt-BR');
-                nc.days = newDays;
-                nc.daysUpdatedNote = `Prazo alterado de ${originalDays} para ${newDays} dia(s) em ${todayFormatted}`;
-            }
-
-            db.collection('vistorias_unidades').doc(unitKey).set({
-                history: history,
-                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }).then(() => {
-                dbUnitsCache[unitKey] = history;
-                renderInteractiveCalendar();
-            }).catch(err => {
-                console.error("Erro ao agendar tarefa:", err);
-                alert("⚠️ Não foi possível salvar a data no banco de dados.");
-            });
-        }
-    }
-
-    function resolveTask(unitKey, ncIndex) {
-        if (!confirm("Deseja marcar esta pendência como CONCLUÍDA / CORRIGIDA?")) return;
-
-        const history = dbUnitsCache[unitKey] || [];
-        if (history.length === 0) return;
-
-        const latestInsp = history[history.length - 1];
-        if (latestInsp.pendencies && latestInsp.pendencies[ncIndex]) {
-            latestInsp.pendencies[ncIndex].status = 'RESOLVIDO';
-            latestInsp.pendencies[ncIndex].resolvedDate = new Date().toLocaleDateString('pt-BR');
-
-            db.collection('vistorias_unidades').doc(unitKey).set({
-                history: history,
-                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }).then(() => {
-                dbUnitsCache[unitKey] = history;
-                closeDayModal();
-                renderInteractiveCalendar();
-                renderGeneralMap();
-                alert("✅ Pendência concluída com sucesso!");
-            }).catch(err => {
-                console.error("Erro ao dar baixa:", err);
-                alert("✕ Erro ao atualizar no banco de dados.");
-            });
-        }
-    }
-
-    function isTaskOverdue(startDateRaw, days) {
-        if (!startDateRaw) return false;
-        const start = new Date(startDateRaw);
-        const deadline = new Date(start);
-        deadline.setDate(deadline.getDate() + (parseInt(days) || 0));
-        
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return today > deadline;
-    }
-
     function renderInteractiveCalendar() {
-        const legendContainer = document.getElementById('resp-legend-box');
-        legendContainer.innerHTML = '';
-        Object.keys(respColors).forEach(resp => {
-            legendContainer.innerHTML += `
-                <div class="legend-item">
-                    <div class="legend-dot" style="background:${respColors[resp]};"></div> ${resp}
-                </div>
-            `;
-        });
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return;
 
-        const selectedFilterResp = document.getElementById('calendar-resp-filter')?.value || 'TODOS';
-        const unassignedList = document.getElementById('unassigned-tasks-list');
-        unassignedList.innerHTML = '';
-        let eventsList = [];
+        let events = [];
+        let unassignedHTML = '';
+        const filterResp = document.getElementById('calendar-resp-filter').value;
 
-        Object.keys(dbUnitsCache).forEach(unitKey => {
-            const history = dbUnitsCache[unitKey] || [];
+        Object.keys(dbUnitsCache).forEach(key => {
+            const unitNum = key.replace('unit_', '');
+            const history = dbUnitsCache[key] || [];
             if (history.length > 0) {
-                const latestInsp = history[history.length - 1];
-                if (latestInsp.pendencies) {
-                    latestInsp.pendencies.forEach((nc, ncIndex) => {
-                        if (nc.status === 'RESOLVIDO') return;
-
-                        const respKey = Object.keys(respColors).find(r => nc.resp.includes(r)) || 'Outro';
-                        const color = respColors[respKey] || '#dc2626';
-
-                        // Aplica filtro do Select
-                        if (selectedFilterResp !== 'TODOS' && !nc.resp.includes(selectedFilterResp)) {
-                            return;
-                        }
-
-                        const overdue = isTaskOverdue(nc.startDateRaw, nc.days);
-                        const displayTitle = `Apto ${unitKey.replace('unit_', '')} - ${nc.item}` + (overdue ? ' ⚠️ VENCIDA' : '');
-
-                        if (nc.startDateRaw) {
-                            eventsList.push({
-                                title: displayTitle,
-                                start: nc.startDateRaw,
-                                backgroundColor: color,
-                                borderColor: color,
-                                extendedProps: {
-                                    unitKey: unitKey,
-                                    ncIndex: ncIndex,
-                                    room: nc.room,
-                                    resp: nc.resp,
-                                    days: nc.days,
-                                    details: nc.details,
-                                    daysUpdatedNote: nc.daysUpdatedNote || '',
-                                    isOverdue: overdue
-                                }
-                            });
-                        } else {
-                            unassignedList.innerHTML += `
-                                <div class="fc-task-card" style="border-left-color:${color}; background:#fff; padding:10px; margin-bottom:10px; border-radius:6px; border-width:1px 1px 1px 5px;">
-                                    <strong>Apto ${unitKey.replace('unit_', '')} - ${nc.room}</strong><br>
-                                    <small>${nc.item}</small><br>
-                                    <span style="font-size:0.75rem; color:#004a8f;"><strong>Resp:</strong> ${nc.resp}</span>
-                                    
-                                    <div style="margin-top:8px; display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
-                                        <div>
-                                            <label style="font-size:0.7rem; margin:0;">Prazo (dias):</label>
-                                            <input type="number" id="input-days-${unitKey}-${ncIndex}" value="${nc.days || 3}" min="1" style="padding:4px; font-size:0.78rem;">
-                                        </div>
-                                        <div>
-                                            <label style="font-size:0.7rem; margin:0;">Data Início:</label>
-                                            <input type="date" id="input-date-${unitKey}-${ncIndex}" style="padding:4px; font-size:0.78rem;">
-                                        </div>
-                                    </div>
-                                    <button onclick="assignTaskDateFromInput('${unitKey}', ${ncIndex}, ${nc.days || 3})" style="width:100%; margin-top:8px; background:#004a8f; color:white; border:none; padding:6px; border-radius:4px; font-weight:bold; font-size:0.75rem; cursor:pointer;">
-                                        📅 Confirmar Agendamento
-                                    </button>
+                const last = history[history.length - 1];
+                if (last.details) {
+                    last.details.forEach(d => {
+                        if (filterResp === 'TODOS' || d.responsible === filterResp) {
+                            unassignedHTML += `
+                                <div class="fc-task-card">
+                                    <strong>Apto ${unitNum}</strong>: ${d.item}<br>
+                                    <small>${d.nonConformity}</small>
                                 </div>
                             `;
                         }
@@ -1269,11 +848,8 @@ function restaurarValoresInputs(key) {
             }
         });
 
-        if (unassignedList.innerHTML === '') {
-            unassignedList.innerHTML = '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência pendente para o filtro selecionado!</p>';
-        }
+        document.getElementById('unassigned-tasks-list').innerHTML = unassignedHTML || '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência para agendar.</p>';
 
-        const calendarEl = document.getElementById('calendar');
         if (fullCalendarInstance) fullCalendarInstance.destroy();
 
         fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
@@ -1284,194 +860,80 @@ function restaurarValoresInputs(key) {
                 center: 'title',
                 right: 'dayGridMonth,listWeek'
             },
-            events: eventsList,
-            dateClick: function(info) {
-                openDayModal(info.dateStr, eventsList);
-            },
-            eventClick: function(info) {
-                openTaskDetailModal(info.event.extendedProps, info.event.title, info.event.startStr);
-            }
+            events: events
         });
-
         fullCalendarInstance.render();
     }
 
-    function openTaskDetailModal(props, titleStr, dateStr) {
-        const modal = document.getElementById('day-modal');
-        const title = document.getElementById('modal-date-title');
-        const list = document.getElementById('modal-task-list');
+    function exportToExcelXLSX() {
+        let exportData = [];
 
-        let formattedDate = dateStr;
-        if (dateStr && dateStr.includes('-')) {
-            const parts = dateStr.split('-');
-            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-
-        title.innerText = `Detalhes da Pendência - ${formattedDate}`;
-
-        let detailsListHtml = '';
-        if (props.details && props.details.length > 0) {
-            detailsListHtml = '<ul style="margin-left: 18px; margin-top: 4px;">';
-            props.details.forEach(d => {
-                detailsListHtml += `<li>${d}</li>`;
+        Object.keys(dbUnitsCache).forEach(key => {
+            const unitNum = key.replace('unit_', '');
+            const history = dbUnitsCache[key] || [];
+            history.forEach(h => {
+                if (h.details && h.details.length > 0) {
+                    h.details.forEach(d => {
+                        exportData.push({
+                            Unidade: unitNum,
+                            Data: h.date,
+                            Vistoriador: h.inspector,
+                            Tipo: h.category,
+                            Etapa: h.stage,
+                            Ambiente: d.room,
+                            Item: d.item,
+                            'Não Conformidade': d.nonConformity,
+                            Responsável: d.responsible
+                        });
+                    });
+                } else {
+                    exportData.push({
+                        Unidade: unitNum,
+                        Data: h.date,
+                        Vistoriador: h.inspector,
+                        Tipo: h.category,
+                        Etapa: h.stage,
+                        Ambiente: '100% OK',
+                        Item: 'Nenhum',
+                        'Não Conformidade': 'Sem pendências',
+                        Responsável: 'Nenhum'
+                    });
+                }
             });
-            detailsListHtml += '</ul>';
-        } else {
-            detailsListHtml = '<em>Nenhuma falha específica selecionada.</em>';
+        });
+
+        if (exportData.length === 0) {
+            alert("Nenhum dado de vistoria encontrado para exportar.");
+            return;
         }
 
-        let obsNoteHtml = '';
-        if (props.daysUpdatedNote) {
-            obsNoteHtml = `
-                <div style="margin-top: 10px; background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 8px; border-radius: 4px; font-size: 0.8rem;">
-                    📌 <strong>Observação / Alteração:</strong><br>${props.daysUpdatedNote}
-                </div>
-            `;
-        }
-
-        let overdueBadgeHtml = '';
-        if (props.isOverdue) {
-            overdueBadgeHtml = `<span class="badge-vencida">⚠️ PRAZO VENCIDO</span>`;
-        }
-
-        list.innerHTML = `
-            <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
-                <h4 style="color:#004a8f; margin-bottom:8px; font-size:1rem;">${titleStr} ${overdueBadgeHtml}</h4>
-                <p style="margin-bottom:4px;"><strong>Ambiente:</strong> ${props.room || 'Não informado'}</p>
-                <p style="margin-bottom:4px;"><strong>Responsável:</strong> ${props.resp || 'Não informado'}</p>
-                <p style="margin-bottom:8px;"><strong>Prazo Estimado:</strong> ${props.days || '-'} dia(s)</p>
-                
-                <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px;">
-                    <strong>Falhas Encontradas:</strong>
-                    ${detailsListHtml}
-                </div>
-
-                ${obsNoteHtml}
-
-                <button onclick="resolveTask('${props.unitKey}', ${props.ncIndex})" style="width:100%; margin-top:12px; background:#16a34a; color:white; border:none; padding:8px; border-radius:4px; font-weight:bold; font-size:0.85rem; cursor:pointer;">
-                    ✅ Concluir / Baixar Esta Pendência
-                </button>
-            </div>
-        `;
-
-        modal.style.display = 'flex';
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Vistorias");
+        XLSX.writeFile(workbook, `Relatorio_Vistorias_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
-    function openDayModal(dateStr, eventsList) {
-        const modal = document.getElementById('day-modal');
-        const title = document.getElementById('modal-date-title');
-        const list = document.getElementById('modal-task-list');
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-${tab}-btn`).classList.add('active');
 
-        const parts = dateStr.split('-');
-        title.innerText = `Tarefas Agendadas para ${parts[2]}/${parts[1]}/${parts[0]}`;
-        list.innerHTML = '';
+        document.getElementById('tab-vistorias').style.display = tab === 'vistorias' ? 'block' : 'none';
+        document.getElementById('tab-mapa').style.display = tab === 'mapa' ? 'block' : 'none';
+        document.getElementById('tab-cronograma').style.display = tab === 'cronograma' ? 'block' : 'none';
 
-        const dayEvents = eventsList.filter(e => e.start === dateStr);
-
-        if (dayEvents.length === 0) {
-            list.innerHTML = `<p style="color:#666;">Nenhuma intervenção agendada para este dia.</p>`;
-        } else {
-            dayEvents.forEach(e => {
-                const props = e.extendedProps;
-                list.innerHTML += `
-                    <div onclick='openTaskDetailModal(${JSON.stringify(props).replace(/'/g, "&apos;")}, "${e.title}", "${dateStr}")' style="background:#f8fafc; border:1px solid #cbd5e1; border-left:5px solid ${e.backgroundColor}; padding:10px; border-radius:6px; margin-bottom:8px; cursor:pointer;">
-                        <strong>${e.title}</strong><br>
-                        <small><strong>Ambiente:</strong> ${props.room}</small><br>
-                        <small><strong>Responsável:</strong> ${props.resp}</small><br>
-                        <small><strong>Prazo Estimado:</strong> ${props.days} dia(s)</small>
-                    </div>
-                `;
-            });
+        if (tab === 'mapa' || tab === 'cronograma') {
+            loadAllUnitsData();
+            if (tab === 'cronograma') setTimeout(renderInteractiveCalendar, 200);
         }
+    }
 
-        modal.style.display = 'flex';
+    function toggle(id) {
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
     function closeDayModal() {
         document.getElementById('day-modal').style.display = 'none';
-    }
-
-    function exportToExcelXLSX() {
-        if (typeof XLSX === 'undefined') {
-            alert("⚠️ Biblioteca de Excel ainda carregando. Tente novamente em alguns segundos.");
-            return;
-        }
-
-        let exportData = [];
-
-        Object.keys(dbUnitsCache).forEach(unitKey => {
-            const history = dbUnitsCache[unitKey] || [];
-            if (history.length > 0) {
-                const latestInsp = history[history.length - 1];
-                const aptoNum = unitKey.replace('unit_', '');
-                
-                if (!latestInsp.pendencies || latestInsp.pendencies.length === 0) {
-                    exportData.push({
-                        "Unidade": aptoNum,
-                        "Pavimento": Math.floor(aptoNum / 100),
-                        "Data Vistoria": latestInsp.date,
-                        "Vistoriador": latestInsp.inspector,
-                        "Tipo": latestInsp.category,
-                        "Etapa": latestInsp.stage,
-                        "Status Unidade": "100% OK",
-                        "Ambiente": "-",
-                        "Item": "-",
-                        "Falhas / Observações": "Nenhuma",
-                        "Responsável": "-",
-                        "Prazo (Dias)": "-",
-                        "Data Início": "-",
-                        "Status Pendência": "CONCLUÍDO"
-                    });
-                } else {
-                    latestInsp.pendencies.forEach(nc => {
-                        exportData.push({
-                            "Unidade": aptoNum,
-                            "Pavimento": Math.floor(aptoNum / 100),
-                            "Data Vistoria": latestInsp.date,
-                            "Vistoriador": latestInsp.inspector,
-                            "Tipo": latestInsp.category,
-                            "Etapa": latestInsp.stage,
-                            "Status Unidade": "Com Pendências",
-                            "Ambiente": nc.room || "-",
-                            "Item": nc.item || "-",
-                            "Falhas / Observações": (nc.details || []).join(" | "),
-                            "Responsável": nc.resp || "-",
-                            "Prazo (Dias)": nc.days || "-",
-                            "Data Início": nc.startDate || "Não agendada",
-                            "Status Pendência": nc.status === 'RESOLVIDO' ? "CONCLUÍDO / BAIXADO" : "PENDENTE"
-                        });
-                    });
-                }
-            }
-        });
-
-        if (exportData.length === 0) {
-            alert("Nenhum dado de vistoria para exportar.");
-            return;
-        }
-
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Vistorias_Obra");
-
-        const dateStr = new Date().toISOString().split('T')[0];
-        XLSX.writeFile(wb, `Relatorio_Vistorias_Obra_${dateStr}.xlsx`);
-    }
-
-    function initApp() {
-        try {
-            if (typeof detectDevice === 'function') {
-                detectDevice();
-            }
-        } catch (e) {
-            console.error("Erro na inicialização:", e);
-        }
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initApp);
-    } else {
-        initApp();
     }
 </script>
 </body>
