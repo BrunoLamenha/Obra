@@ -3,31 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vistoria Interna de Obra</title>
+    <title>Vistoria Interna de Obra - Cloud</title>
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#004a8f">
 
     <style>
         :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ccc; --success: #28a745; --danger: #dc3545; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { background: var(--bg); padding: 12px; color: #333; }
-        .container { max-width: 680px; margin: 0 auto; }
+        .container { max-width: 720px; margin: 0 auto; }
         
         header { background: var(--primary); color: #fff; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
+        .nav-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: #e0e6ed; color: #004a8f; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
         .card { background: #fff; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+        .grid-map { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
         .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         
         .btn { padding: 10px; background: #eee; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; }
         .btn.active { outline: 3px solid #000; font-weight: 900; }
         
-        .btn-unit-ok { background: var(--success) !important; color: #fff !important; border-color: #1e7e34 !important; }
-        .btn-unit-nok { background: var(--danger) !important; color: #fff !important; border-color: #bd2130 !important; }
-        
+        .map-unit { padding: 10px 4px; font-size: 0.78rem; border-radius: 5px; text-align: center; font-weight: bold; border: 1px solid #ccc; cursor: pointer; background: #fff; }
+        .unit-ok { background: var(--success) !important; color: #fff !important; border-color: #1e7e34 !important; }
+        .unit-nok { background: var(--danger) !important; color: #fff !important; border-color: #bd2130 !important; }
+
         .btn-opt { padding: 12px; background: #eef4fa; border: 2px solid #b8daff; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; color: var(--primary); }
         .btn-opt.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         
@@ -68,13 +71,16 @@
         .legend-item { display: flex; align-items: center; gap: 4px; }
         .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
 
-        /* Canvas de Assinatura */
         .signature-box { border: 2px dashed #a0aec0; border-radius: 6px; background: #fafafa; margin-top: 6px; position: relative; touch-action: none; }
         canvas { width: 100%; height: 120px; display: block; cursor: crosshair; }
         .btn-clear-sig { position: absolute; right: 8px; bottom: 8px; background: #6c757d; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
         .btn-confirm-inspector { background: var(--success); color: white; border: none; width: 100%; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 0.95rem; margin-top: 12px; cursor: pointer; }
 
-        /* IMPRESSÃO NATIVA EM PDF PAISAGEM */
+        /* Estilos do Histórico */
+        .history-card { background: #fff; border: 1px solid #ddd; border-left: 5px solid var(--primary); border-radius: 6px; padding: 12px; margin-bottom: 12px; font-size: 0.85rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .history-card.latest { border-left-color: var(--success); background: #f4fff6; border-top: 2px solid var(--success); }
+        .history-tag-latest { background: var(--success); color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-left: 6px; }
+
         @media print {
             @page { size: landscape; margin: 1cm; }
             body { background: #fff !important; padding: 0 !important; }
@@ -93,71 +99,143 @@
         .pdf-img { max-width: 110px; max-height: 110px; display: block; margin: 0 auto; border: 1px solid #ccc; border-radius: 4px; }
         .pdf-signatures { margin-top: 30px; width: 300px; margin-left: auto; margin-right: auto; text-align: center; border-top: 1px solid #000000; padding-top: 5px; font-size: 11px; }
     </style>
+
+    <!-- SDKs do Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
 <div class="container" id="app-content">
     <header class="no-print">
         <h2>Vistoria Interna de Obra</h2>
-        <p style="font-size:0.8rem;">Controle Técnico de Qualidade & Pendências</p>
+        <p style="font-size:0.8rem;">Controle Técnico de Qualidade & Nuvem</p>
     </header>
 
-    <!-- 0. Identificação do Vistoriador -->
-    <div class="card no-print" id="inspector-card">
-        <h3>👤 Identificação do Responsável Técnico</h3>
-        <label>Nome Completo do Engenheiro / Vistoriador:</label>
-        <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha">
-
-        <label>Assinatura Digital (Desenhe abaixo):</label>
-        <div class="signature-box">
-            <canvas id="sig-canvas"></canvas>
-            <button class="btn-clear-sig" onclick="clearSignature()">Limpar ↺</button>
-        </div>
-
-        <button class="btn-confirm-inspector" onclick="confirmInspector()">Confirmar Responsável ✓</button>
+    <!-- Navegação por Abas -->
+    <div class="nav-tabs no-print">
+        <button class="tab-btn active" id="tab-vistorias-btn" onclick="switchTab('vistorias')">📝 Vistorias</button>
+        <button class="tab-btn" id="tab-mapa-btn" onclick="switchTab('mapa')">🗺️ Mapa Geral da Obra</button>
     </div>
 
-    <!-- 1. Seleção de Pavimento -->
-    <div class="card no-print" id="floor-card" style="display:none;">
-        <h3>1. Selecione o Pavimento</h3>
-        <div class="grid" id="floors">
-            <div class="btn" onclick="setFloor(1, this)">1º Pav</div>
-            <div class="btn" onclick="setFloor(2, this)">2º Pav</div>
-            <div class="btn" onclick="setFloor(3, this)">3º Pav</div>
-            <div class="btn" onclick="setFloor(4, this)">4º Pav</div>
+    <!-- ABA 1: VISTORIAS -->
+    <div id="tab-vistorias" class="no-print">
+        <!-- 0. Identificação do Vistoriador -->
+        <div class="card" id="inspector-card">
+            <h3>👤 Identificação do Responsável Técnico</h3>
+            <label>Nome Completo do Engenheiro / Vistoriador:</label>
+            <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha">
+
+            <label>Assinatura Digital (Desenhe abaixo):</label>
+            <div class="signature-box">
+                <canvas id="sig-canvas"></canvas>
+                <button class="btn-clear-sig" onclick="clearSignature()">Limpar ↺</button>
+            </div>
+
+            <button class="btn-confirm-inspector" onclick="confirmInspector()">Confirmar Responsável ✓</button>
         </div>
-    </div>
 
-    <!-- 2. Seleção de Unidade -->
-    <div class="card no-print" id="unit-card" style="display:none;">
-        <h3>2. Selecione a Unidade</h3>
-        <div class="grid" id="units"></div>
-        <div class="legend-box">
-            <div class="legend-item"><div class="legend-dot" style="background:#28a745;"></div> 100% OK</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#dc3545;"></div> Com Pendência</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#eee; border:1px solid #ccc;"></div> Não Vistoriado</div>
-        </div>
-    </div>
-
-    <!-- 3. Tipo e Etapa -->
-    <div class="card no-print" id="type-card" style="display:none;">
-        <h3>3. Configuração do Acompanhamento</h3>
-
-        <div id="category-selection-container">
-            <label>Tipo de Vistoria:</label>
-            <div class="grid-two">
-                <div class="btn-opt" id="btn-cat-padrao" onclick="setCategory('Padrão (Construtora)', this)">🏗️ Padrão</div>
-                <div class="btn-opt" id="btn-cat-reforma" onclick="setCategory('Reforma', this)">🔨 Reforma</div>
+        <!-- 1. Seleção de Pavimento -->
+        <div class="card" id="floor-card" style="display:none;">
+            <h3>1. Selecione o Pavimento</h3>
+            <div class="grid" id="floors">
+                <div class="btn" onclick="setFloor(1, this)">1º Pav</div>
+                <div class="btn" onclick="setFloor(2, this)">2º Pav</div>
+                <div class="btn" onclick="setFloor(3, this)">3º Pav</div>
+                <div class="btn" onclick="setFloor(4, this)">4º Pav</div>
             </div>
         </div>
 
-        <div id="stage-selection-container" style="margin-top:12px;">
-            <label>Etapa / Ciclo de Inspeção:</label>
-            <div class="grid-two" id="stage-buttons-grid">
-                <div class="btn-opt" id="btn-stage-first" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</div>
-                <div class="btn-opt" id="btn-stage-rev" onclick="setStage('Revistoria', this)">🔄 Revistoria</div>
+        <!-- 2. Seleção de Unidade -->
+        <div class="card" id="unit-card" style="display:none;">
+            <h3>2. Selecione a Unidade</h3>
+            <div class="grid" id="units"></div>
+            <div class="legend-box">
+                <div class="legend-item"><div class="legend-dot" style="background:#28a745;"></div> 100% OK</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#dc3545;"></div> Com Pendência</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#eee; border:1px solid #ccc;"></div> Não Vistoriado</div>
             </div>
-        const firebaseConfig = {
+        </div>
+
+        <!-- 3. Tipo e Etapa -->
+        <div class="card" id="type-card" style="display:none;">
+            <h3>3. Configuração do Acompanhamento</h3>
+            <div id="category-selection-container">
+                <label>Tipo de Vistoria:</label>
+                <div class="grid-two">
+                    <div class="btn-opt" id="btn-cat-padrao" onclick="setCategory('Padrão (Construtora)', this)">🏗️ Padrão</div>
+                    <div class="btn-opt" id="btn-cat-reforma" onclick="setCategory('Reforma', this)">🔨 Reforma</div>
+                </div>
+            </div>
+
+            <div id="stage-selection-container" style="margin-top:12px;">
+                <label>Etapa / Ciclo de Inspeção:</label>
+                <div class="grid-two" id="stage-buttons-grid">
+                    <div class="btn-opt" id="btn-stage-first" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</div>
+                    <div class="btn-opt" id="btn-stage-rev" onclick="setStage('Revistoria', this)">🔄 Revistoria</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de Inspeção -->
+        <div id="inspection-area" style="display:none;">
+            <div class="card" style="background: var(--primary); color: white;">
+                <h3 id="unit-title">Unidade: ---</h3>
+            </div>
+
+            <div class="card">
+                <button class="accordion" onclick="toggle('room-dorm')">Dormitório / Cozinha</button>
+                <div class="content" id="room-dorm"></div>
+            </div>
+
+            <div class="card">
+                <button class="accordion" onclick="toggle('room-bath')">Banheiro</button>
+                <div class="content" id="room-bath"></div>
+            </div>
+
+            <div class="card">
+                <button class="accordion" onclick="toggle('room-balcony')">Varanda</button>
+                <div class="content" id="room-balcony"></div>
+            </div>
+
+            <button class="btn-export" onclick="generateTechnicalPDF()">📄 Finalizar & Salvar no Banco (PDF Paisagem)</button>
+            <button class="btn-next-unit" id="btn-next" onclick="startNextUnit()">➡️ Próxima Unidade</button>
+        </div>
+    </div>
+
+    <!-- ABA 2: MAPA GERAL DA OBRA & HISTÓRICO -->
+    <div id="tab-mapa" class="no-print" style="display:none;">
+        <div class="card">
+            <h3>🗺️ Visão Geral dos Pavimentos e Unidades</h3>
+            <p style="font-size:0.8rem; color:#666; margin-top:4px;">Clique em uma unidade para abrir a lista completa de vistorias.</p>
+            <div class="legend-box" style="margin-bottom:15px; margin-top:10px;">
+                <div class="legend-item"><div class="legend-dot" style="background:#28a745;"></div> Aprovado</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#dc3545;"></div> Pendente</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#fff; border:1px solid #ccc;"></div> Não Vistoriado</div>
+            </div>
+
+            <div id="map-container">
+                <!-- Pavimentos gerados via JS -->
+            </div>
+        </div>
+
+        <!-- Modal / Painel de Histórico da Unidade -->
+        <div class="card" id="history-panel" style="display:none; background:#f8fafc; border:2px solid var(--primary);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="history-unit-title">Histórico: Apto ---</h3>
+                <button onclick="closeHistory()" style="padding:4px 8px; background:#dc3545; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">Fechar ✕</button>
+            </div>
+            <div id="history-content" style="margin-top:12px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- CONTAINER DE IMPRESSÃO PDF -->
+<div id="print-report"></div>
+
+<script>
+    // Configuração do Firebase
+    const firebaseConfig = {
       apiKey: "AIzaSyBqtptEp5QjIOoAjwx0wT--cswUhSvcsGM",
       authDomain: "vistoria-obra.firebaseapp.com",
       projectId: "vistoria-obra",
@@ -167,30 +245,10 @@
       measurementId: "G-GP1QQVWR50"
     };
 
-        <div class="card">
-            <button class="accordion" onclick="toggle('room-dorm')">Dormitório / Cozinha</button>
-            <div class="content" id="room-dorm"></div>
-        </div>
+    // Inicializa Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-        <div class="card">
-            <button class="accordion" onclick="toggle('room-bath')">Banheiro</button>
-            <div class="content" id="room-bath"></div>
-        </div>
-
-        <div class="card">
-            <button class="accordion" onclick="toggle('room-balcony')">Varanda</button>
-            <div class="content" id="room-balcony"></div>
-        </div>
-
-        <button class="btn-export" onclick="generateTechnicalPDF()">📄 Finalizar & Salvar Relatório Interno (PDF Paisagem)</button>
-        <button class="btn-next-unit" id="btn-next" onclick="startNextUnit()">➡️ Próxima Unidade</button>
-    </div>
-</div>
-
-<!-- CONTAINER DE IMPRESSÃO PDF -->
-<div id="print-report"></div>
-
-<script>
     const roomNames = {
         'room-dorm': 'Dormitório / Cozinha',
         'room-bath': 'Banheiro',
@@ -216,6 +274,7 @@
     let inspectorName = "";
     let inspectorSigData = null;
     let revisionCount = 1;
+    let dbUnitsCache = {};
 
     let canvas, ctx, isDrawing = false;
 
@@ -235,7 +294,36 @@
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseleave', stopDrawing);
+
+        loadAllUnitsData();
     };
+
+    function switchTab(tab) {
+        document.getElementById('tab-vistorias-btn').classList.toggle('active', tab === 'vistorias');
+        document.getElementById('tab-mapa-btn').classList.toggle('active', tab === 'mapa');
+        document.getElementById('tab-vistorias').style.display = tab === 'vistorias' ? 'block' : 'none';
+        document.getElementById('tab-mapa').style.display = tab === 'mapa' ? 'block' : 'none';
+
+        if(tab === 'mapa') {
+            renderFullMap();
+        }
+    }
+
+    async function loadAllUnitsData() {
+        try {
+            db.collection('vistorias_unidades').onSnapshot(snapshot => {
+                dbUnitsCache = {};
+                snapshot.forEach(doc => {
+                    dbUnitsCache[doc.id] = doc.data().history || [];
+                });
+                if (document.getElementById('tab-mapa').style.display === 'block') {
+                    renderFullMap();
+                }
+            });
+        } catch (e) {
+            console.error("Erro ao carregar dados em nuvem:", e);
+        }
+    }
 
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
@@ -298,13 +386,13 @@
         
         for (let i = 1; i <= 19; i++) {
             let num = (f * 100) + i;
-            const historyKey = `history_unit_${num}`;
-            const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
+            const historyKey = `unit_${num}`;
+            const existingHistory = dbUnitsCache[historyKey] || [];
             
             let statusClass = '';
             if (existingHistory.length > 0) {
                 const lastInsp = existingHistory[existingHistory.length - 1];
-                statusClass = lastInsp.pendenciesCount === 0 ? 'btn-unit-ok' : 'btn-unit-nok';
+                statusClass = lastInsp.pendenciesCount === 0 ? 'unit-ok' : 'unit-nok';
             }
 
             u.innerHTML += `<div class="btn ${statusClass}" onclick="selectUnit(${num}, this)">${num}</div>`;
@@ -331,8 +419,8 @@
             b.style.display = 'block';
         });
 
-        const historyKey = `history_unit_${selectedUnitNum}`;
-        const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
+        const historyKey = `unit_${selectedUnitNum}`;
+        const existingHistory = dbUnitsCache[historyKey] || [];
 
         if (existingHistory.length > 0) {
             const lastInspection = existingHistory[existingHistory.length - 1];
@@ -372,8 +460,8 @@
 
     function checkAndShowInspection() {
         if (selectedCategory && selectedStage) {
-            const historyKey = `history_unit_${selectedUnitNum}`;
-            const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
+            const historyKey = `unit_${selectedUnitNum}`;
+            const existingHistory = dbUnitsCache[historyKey] || [];
             
             if (selectedStage === 'Revistoria') {
                 revisionCount = existingHistory.length + 1;
@@ -541,7 +629,6 @@
         `;
         ncList.appendChild(div);
 
-        // Checa data inicial para aviso
         const dateInput = div.querySelector('.nc-start-date');
         checkDateNotice(ncBoxId, dateInput);
     }
@@ -582,8 +669,7 @@
         if(el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    // GERA O RELATÓRIO PDF NATIVO INTERNO EM PAISAGEM COM FOTOS E DATAS INDIVIDUAIS
-    function generateTechnicalPDF() {
+    async function generateTechnicalPDF() {
         const today = new Date().toLocaleDateString('pt-BR');
         const printContainer = document.getElementById('print-report');
         
@@ -615,7 +701,6 @@
                 const respVal = box.querySelector('.nc-resp')?.value || 'Não informado';
                 const daysVal = box.querySelector('.nc-days')?.value || '-';
                 
-                // Formatação da data de início individual
                 const startDateRaw = box.querySelector('.nc-start-date')?.value || '';
                 let startDateFormatted = 'Não definida';
                 if(startDateRaw) {
@@ -654,9 +739,11 @@
             });
         });
 
-        const historyKey = `history_unit_${selectedUnitNum}`;
-        const existingHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
+        const historyKey = `unit_${selectedUnitNum}`;
+        const existingHistory = dbUnitsCache[historyKey] || [];
+        
         existingHistory.push({
+            timestamp: Date.now(),
             date: today,
             stage: selectedStage,
             category: selectedCategory,
@@ -664,7 +751,19 @@
             pendenciesCount: pendingCount,
             pendencies: currentPendencies
         });
-        localStorage.setItem(historyKey, JSON.stringify(existingHistory));
+
+        try {
+            await db.collection('vistorias_unidades').doc(historyKey).set({
+                unitNumber: selectedUnitNum,
+                floorNumber: selectedFloorNum,
+                history: existingHistory,
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            dbUnitsCache[historyKey] = existingHistory;
+        } catch (error) {
+            console.error("Erro ao salvar no banco:", error);
+            alert("⚠️ Atenção: Não foi possível sincronizar com o banco em nuvem. Verifique sua conexão.");
+        }
 
         const statusGeneral = pendingCount > 0 ? `<span style="color:#dc3545; font-weight:bold;">REPROVADO (${pendingCount} pendências)</span>` : `<span style="color:#28a745; font-weight:bold;">APROVADO (Sem pendências)</span>`;
 
@@ -717,6 +816,91 @@
 
         document.getElementById('btn-next').style.display = 'block';
         window.print();
+    }
+
+    function renderFullMap() {
+        const container = document.getElementById('map-container');
+        container.innerHTML = '';
+
+        for (let f = 4; f >= 1; f--) {
+            let unitsHTML = '';
+            for (let i = 1; i <= 19; i++) {
+                let num = (f * 100) + i;
+                const historyKey = `unit_${num}`;
+                const existingHistory = dbUnitsCache[historyKey] || [];
+                
+                let statusClass = '';
+                let statusText = `${num}`;
+                if (existingHistory.length > 0) {
+                    const lastInsp = existingHistory[existingHistory.length - 1];
+                    statusClass = lastInsp.pendenciesCount === 0 ? 'unit-ok' : 'unit-nok';
+                }
+
+                unitsHTML += `<div class="map-unit ${statusClass}" onclick="openHistory(${num})">${statusText}</div>`;
+            }
+
+            container.innerHTML += `
+                <div style="margin-bottom:15px;">
+                    <h4 style="font-size:0.9rem; color:var(--primary); margin-bottom:4px;">${f}º Pavimento</h4>
+                    <div class="grid-map">${unitsHTML}</div>
+                </div>
+            `;
+        }
+    }
+
+    function openHistory(unitNum) {
+        const historyKey = `unit_${unitNum}`;
+        const rawHistory = dbUnitsCache[historyKey] || [];
+        const historyPanel = document.getElementById('history-panel');
+        const historyContent = document.getElementById('history-content');
+        
+        document.getElementById('history-unit-title').innerText = `Histórico de Vistorias: Apto ${unitNum}`;
+        
+        if (rawHistory.length === 0) {
+            historyContent.innerHTML = '<p style="font-size:0.85rem; color:#666; text-align:center; padding:15px;">Nenhuma vistoria registrada para esta unidade até o momento.</p>';
+        } else {
+            const reversedHistory = [...rawHistory].reverse();
+            
+            historyContent.innerHTML = reversedHistory.map((item, index) => {
+                const isLatest = index === 0;
+                return `
+                    <div class="history-card ${isLatest ? 'latest' : ''}">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-weight:bold; margin-bottom:6px;">
+                            <span>
+                                ${item.stage} (${item.category})
+                                ${isLatest ? '<span class="history-tag-latest">Mais Recente</span>' : ''}
+                            </span>
+                            <span style="color:#555; font-size:0.8rem;">📅 ${item.date}</span>
+                        </div>
+                        <div style="margin-bottom:4px;"><strong>Responsável:</strong> ${item.inspector}</div>
+                        <div><strong>Resultado:</strong> ${item.pendenciesCount === 0 ? '<span style="color:green; font-weight:bold;">✓ Aprovado (0 pendências)</span>' : `<span style="color:red; font-weight:bold;">✗ Reprovado (${item.pendenciesCount} pendência(s))</span>`}</div>
+                        
+                        ${item.pendencies && item.pendencies.length > 0 ? `
+                            <div style="margin-top:8px; font-size:0.8rem; background:#fff; padding:8px; border-radius:5px; border:1px solid #e2e8f0;">
+                                <strong style="color:var(--danger);">Lista de Não Conformidades:</strong>
+                                <ul style="margin-left:18px; margin-top:6px; line-height:1.4;">
+                                    ${item.pendencies.map(p => `
+                                        <li style="margin-bottom:6px;">
+                                            <strong>[${p.room}]</strong> ${p.item}<br>
+                                            <span style="color:#4a5568;">Detalhes: ${p.details.join(', ')}</span><br>
+                                            <span style="font-size:0.75rem; color:#718096;">Responsável: ${p.resp} | Início Previsto: ${p.startDate} | Prazo: ${p.days} dias</span>
+                                            ${p.photo ? `<br><img src="${p.photo}" style="max-height:80px; border-radius:4px; margin-top:4px; border:1px solid #ccc;">` : ''}
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        historyPanel.style.display = 'block';
+        historyPanel.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeHistory() {
+        document.getElementById('history-panel').style.display = 'none';
     }
 
     function startNextUnit() {
