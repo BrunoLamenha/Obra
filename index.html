@@ -8,11 +8,14 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
     <meta name="theme-color" content="#004a8f">
 
+    <!-- FullCalendar JS + Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
     <style>
         :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ccc; --success: #28a745; --danger: #dc3545; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { background: var(--bg); padding: 12px; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; }
+        .container { max-width: 900px; margin: 0 auto; }
         
         header { background: var(--primary); color: #fff; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
         .nav-tabs { display: flex; gap: 6px; margin-bottom: 15px; }
@@ -78,12 +81,14 @@
         .history-tag-latest { background: var(--success); color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-left: 6px; }
 
         .btn-view-pdf { background: #004a8f; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 0.8rem; cursor: pointer; margin-top: 10px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-view-pdf:hover { background: #003366; }
 
-        /* Estilos do Cronograma / Calendário de Serviços */
-        .cron-date-group { background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-bottom: 12px; }
-        .cron-date-header { background: #f1f5f9; padding: 6px 10px; border-radius: 4px; font-weight: bold; color: var(--primary); border-left: 4px solid var(--primary); font-size: 0.85rem; margin-bottom: 8px; }
-        .cron-item { border: 1px solid #e2e8f0; padding: 8px; border-radius: 5px; margin-bottom: 6px; font-size: 0.8rem; border-left-width: 5px; border-left-style: solid; background: #fff; }
+        /* Estilos do Drag & Drop e Calendário */
+        .fc-task-card { background: #fff; border: 1px solid #cbd5e1; border-left: 5px solid #004a8f; padding: 8px; border-radius: 5px; margin-bottom: 8px; font-size: 0.78rem; cursor: grab; }
+        .fc-task-card:active { cursor: grabbing; }
+
+        /* Estilo do Modal de Tarefas do Dia */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 999; }
+        .modal-card { background: #fff; border-radius: 8px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 18px; position: relative; }
 
         @media print {
             @page { size: landscape; margin: 1cm; }
@@ -120,7 +125,7 @@
     <div class="nav-tabs no-print">
         <button class="tab-btn active" id="tab-vistorias-btn" onclick="switchTab('vistorias')">📝 Vistorias</button>
         <button class="tab-btn" id="tab-mapa-btn" onclick="switchTab('mapa')">🗺️ Mapa Geral da Obra</button>
-        <button class="tab-btn" id="tab-cronograma-btn" onclick="switchTab('cronograma')">📅 Cronograma de Ações</button>
+        <button class="tab-btn" id="tab-cronograma-btn" onclick="switchTab('cronograma')">📅 Cronograma / Calendário</button>
     </div>
 
     <!-- ABA 1: VISTORIAS -->
@@ -131,9 +136,7 @@
             <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha">
 
             <label>Identificação Automática do Aparelho:</label>
-            <div class="device-info-box" id="device-info-text">
-                Carregando dados do dispositivo...
-            </div>
+            <div class="device-info-box" id="device-info-text">Carregando dados do dispositivo...</div>
 
             <button class="btn-confirm-inspector" onclick="confirmInspector()" style="background:var(--success); color:white; border:none; width:100%; padding:12px; border-radius:6px; font-weight:bold; font-size:0.95rem; margin-top:12px; cursor:pointer;">Confirmar & Iniciar Vistoria ✓</button>
         </div>
@@ -206,7 +209,7 @@
     <div id="tab-mapa" class="no-print" style="display:none;">
         <div class="card">
             <h3>🗺️ Visão Geral dos Pavimentos e Unidades</h3>
-            <p style="font-size:0.8rem; color:#666; margin-top:4px;">Clique em uma unidade para abrir a lista completa de vistorias e gerar/baixar os PDFs.</p>
+            <p style="font-size:0.8rem; color:#666; margin-top:4px;">Clique em uma unidade para abrir o histórico e gerar PDFs.</p>
             <div class="legend-box" style="margin-bottom:15px; margin-top:10px;">
                 <div class="legend-item"><div class="legend-dot" style="background:#28a745;"></div> Aprovado</div>
                 <div class="legend-item"><div class="legend-dot" style="background:#dc3545;"></div> Pendente</div>
@@ -225,18 +228,40 @@
         </div>
     </div>
 
-    <!-- ABA 3: CRONOGRAMA GERAL DE AÇÕES -->
+    <!-- ABA 3: CRONOGRAMA & CALENDÁRIO INTERATIVO -->
     <div id="tab-cronograma" class="no-print" style="display:none;">
         <div class="card">
-            <h3>📅 Cronograma Geral de Ações e Prazos</h3>
-            <p style="font-size:0.8rem; color:#666; margin-top:4px;">Calendário consolidado de pendências registradas em todas as unidades da obra.</p>
+            <h3>📅 Cronograma de Ações & Calendário da Obra</h3>
+            <p style="font-size:0.8rem; color:#666; margin-top:4px;">Arraste as tarefas pendentes da lista lateral e solte no dia desejado do calendário.</p>
             
-            <div class="legend-box" id="resp-legend-box">
-                <!-- Legendas dinâmicas de cores por responsável -->
+            <div class="legend-box" id="resp-legend-box"></div>
+
+            <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
+                <!-- Painel de Tarefas para Arrastar -->
+                <div style="flex: 1; min-width: 250px; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px;" id="external-events-container">
+                    <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📋 Aguardando Agendamento</h4>
+                    <div id="unassigned-tasks-list">
+                        <!-- Itens dinâmicos -->
+                    </div>
+                </div>
+
+                <!-- Calendário -->
+                <div style="flex: 3; min-width: 320px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                    <div id="calendar"></div>
+                </div>
             </div>
-            
-            <div id="cronograma-content" style="margin-top:15px;"></div>
         </div>
+    </div>
+</div>
+
+<!-- MODAL DE TAREFAS DO DIA -->
+<div class="modal-overlay" id="day-modal">
+    <div class="modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:8px;">
+            <h3 id="modal-date-title" style="font-size:1rem; color:var(--primary);">Tarefas do Dia</h3>
+            <button onclick="closeDayModal()" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; font-weight:bold; cursor:pointer;">✕</button>
+        </div>
+        <div id="modal-task-list" style="margin-top:12px; font-size:0.85rem;"></div>
     </div>
 </div>
 
@@ -295,6 +320,7 @@
     let inspectorName = "";
     let deviceDetails = "";
     let dbUnitsCache = {};
+    let fullCalendarInstance = null;
 
     window.onload = () => {
         detectDevice();
@@ -334,7 +360,7 @@
         document.getElementById('tab-cronograma').style.display = tab === 'cronograma' ? 'block' : 'none';
 
         if(tab === 'mapa') renderFullMap();
-        if(tab === 'cronograma') renderGlobalCronograma();
+        if(tab === 'cronograma') renderInteractiveCalendar();
     }
 
     async function loadAllUnitsData() {
@@ -345,7 +371,7 @@
                     dbUnitsCache[doc.id] = doc.data().history || [];
                 });
                 if (document.getElementById('tab-mapa').style.display === 'block') renderFullMap();
-                if (document.getElementById('tab-cronograma').style.display === 'block') renderGlobalCronograma();
+                if (document.getElementById('tab-cronograma').style.display === 'block') renderInteractiveCalendar();
             });
         } catch (e) {
             console.error("Erro ao carregar dados em nuvem:", e);
@@ -797,7 +823,6 @@
         window.print();
     }
 
-    // Renderiza e aciona visualização/download de PDF para qualquer registro
     function renderPDFToPrint(record) {
         const printContainer = document.getElementById('print-report');
         const statusGeneral = record.pendenciesCount > 0 
@@ -851,9 +876,7 @@
                             <th style="width:12%;">Início & Prazo</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${rowsHTML}
-                    </tbody>
+                    <tbody>${rowsHTML}</tbody>
                 </table>
             ` : `
                 <div style="padding: 15px; text-align:center; border:1px solid #cccccc; background:#f9f9f9; color:#28a745; font-weight:bold; margin-bottom:20px;">
@@ -993,12 +1016,13 @@
         historyPanel.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Renderiza a visualização do Cronograma de Ações em aba própria
-    function renderGlobalCronograma() {
+    // --- CALENDÁRIO INTERATIVO & DRAG-AND-DROP ---
+    function renderInteractiveCalendar() {
         const legendContainer = document.getElementById('resp-legend-box');
-        const cronContainer = document.getElementById('cronograma-content');
-        
-        // Renderiza as Legendas
+        const unassignedContainer = document.getElementById('unassigned-tasks-list');
+        const calendarEl = document.getElementById('calendar');
+
+        // Renderiza Legendas
         legendContainer.innerHTML = Object.keys(respColors).map(resp => `
             <div class="legend-item">
                 <span class="legend-dot" style="background:${respColors[resp]};"></span>
@@ -1006,69 +1030,203 @@
             </div>
         `).join('');
 
-        let globalPendencies = [];
+        let calendarEvents = [];
+        let unassignedTasks = [];
 
-        // Coleta todas as pendências das vistorias mais recentes de cada unidade
+        // Varre todo o banco em cache e distribui as pendências
         Object.keys(dbUnitsCache).forEach(unitKey => {
             const history = dbUnitsCache[unitKey] || [];
             if (history.length > 0) {
                 const latestInsp = history[history.length - 1];
                 if (latestInsp.pendencies && latestInsp.pendencies.length > 0) {
-                    latestInsp.pendencies.forEach(p => {
-                        globalPendencies.push({
+                    latestInsp.pendencies.forEach((p, ncIndex) => {
+                        const color = respColors[p.resp] || '#dc2626';
+                        const days = parseInt(p.days) || 1;
+
+                        const taskObj = {
+                            unitKey: unitKey,
+                            ncIndex: ncIndex,
                             unit: latestInsp.unitNumber || unitKey.replace('unit_', ''),
                             room: p.room,
                             item: p.item,
                             details: p.details,
                             resp: p.resp || 'Outros',
-                            startDateStr: p.startDate || 'Sem Data',
-                            startDateRaw: p.startDateRaw || '9999-99-99',
-                            days: p.days || '-'
-                        });
+                            days: days,
+                            color: color,
+                            photo: p.photo
+                        };
+
+                        if (p.startDateRaw && p.startDateRaw !== '9999-99-99' && p.startDateRaw !== '') {
+                            // Calcula Data Fim baseada nos Dias de Prazo
+                            const startD = new Date(p.startDateRaw + 'T00:00:00');
+                            const endD = new Date(startD);
+                            endD.setDate(startD.getDate() + days);
+
+                            calendarEvents.push({
+                                id: `${unitKey}_${ncIndex}`,
+                                title: `Apto ${taskObj.unit}: ${taskObj.item}`,
+                                start: p.startDateRaw,
+                                end: endD.toISOString().split('T')[0],
+                                backgroundColor: color,
+                                borderColor: color,
+                                extendedProps: taskObj
+                            });
+                        } else {
+                            unassignedTasks.push(taskObj);
+                        }
                     });
                 }
             }
         });
 
-        if (globalPendencies.length === 0) {
-            cronContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Nenhuma ação ou pendência agendada no momento em toda a obra.</p>';
-            return;
+        // Monta lista de Tarefas Sem Data (Draggable)
+        if (unassignedTasks.length === 0) {
+            unassignedContainer.innerHTML = '<p style="font-size:0.75rem; color:#888;">Todas as pendências possuem data agendada!</p>';
+        } else {
+            unassignedContainer.innerHTML = unassignedTasks.map(t => `
+                <div class="fc-task-card fc-draggable-task" 
+                     style="border-left-color:${t.color};"
+                     data-unit-key="${t.unitKey}"
+                     data-nc-index="${t.ncIndex}"
+                     data-days="${t.days}"
+                     data-color="${t.color}">
+                    <strong>Apto ${t.unit}</strong> — ${t.item}<br>
+                    <span style="color:#64748b; font-size:0.7rem;">${t.resp} | Prazo: ${t.days} dia(s)</span>
+                </div>
+            `).join('');
         }
 
-        // Agrupa por data de início
-        const groupedByDate = {};
-        globalPendencies.forEach(p => {
-            const key = p.startDateRaw;
-            if (!groupedByDate[key]) groupedByDate[key] = [];
-            groupedByDate[key].push(p);
+        // Habilita a lista lateral para ser arrastável
+        new FullCalendar.Draggable(unassignedContainer, {
+            itemSelector: '.fc-draggable-task',
+            eventData: function(eventEl) {
+                return {
+                    title: eventEl.innerText,
+                    backgroundColor: eventEl.dataset.color,
+                    borderColor: eventEl.dataset.color
+                };
+            }
         });
 
-        const sortedDates = Object.keys(groupedByDate).sort();
+        // Inicializa ou atualiza o FullCalendar
+        if (fullCalendarInstance) {
+            fullCalendarInstance.destroy();
+        }
 
-        cronContainer.innerHTML = sortedDates.map(dateKey => {
-            const items = groupedByDate[dateKey];
-            const displayDate = items[0].startDateStr;
+        fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'pt-br',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            buttonText: {
+                today: 'Hoje',
+                month: 'Mês',
+                week: 'Semana'
+            },
+            editable: true,
+            droppable: true,
+            events: calendarEvents,
 
-            return `
-                <div class="cron-date-group">
-                    <div class="cron-date-header">📅 Data do Início: ${displayDate}</div>
-                    ${items.map(item => {
-                        const color = respColors[item.resp] || respColors['Outros'];
-                        return `
-                            <div class="cron-item" style="border-left-color:${color};">
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <strong>Apto ${item.unit} — ${item.room}</strong>
-                                    <span style="background:${color}; color:white; padding:2px 6px; border-radius:3px; font-size:0.7rem; font-weight:bold;">${item.resp}</span>
-                                </div>
-                                <div style="margin-top:3px; color:#334155;"><strong>Item:</strong> ${item.item}</div>
-                                <div style="color:#64748b; font-size:0.75rem;">Detalhes: ${item.details.join(', ')}</div>
-                                <div style="color:#d97706; font-size:0.75rem; font-weight:bold; margin-top:2px;">⏱️ Prazo para Resolução: ${item.days} dia(s)</div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }).join('');
+            // Evento ao Arrastar e Soltar no Calendário
+            drop: async function(info) {
+                const dateStr = info.dateStr;
+                const draggedEl = info.draggedEl;
+                const unitKey = draggedEl.dataset.unitKey;
+                const ncIndex = parseInt(draggedEl.dataset.ncIndex);
+
+                await updateTaskStartDate(unitKey, ncIndex, dateStr);
+            },
+
+            // Evento ao Mover Evento no Próprio Calendário
+            eventDrop: async function(info) {
+                const newDateStr = info.event.startStr;
+                const unitKey = info.event.extendedProps.unitKey;
+                const ncIndex = info.event.extendedProps.ncIndex;
+
+                await updateTaskStartDate(unitKey, ncIndex, newDateStr);
+            },
+
+            // Clique no Dia ou Evento (Abre o Modal)
+            dateClick: function(info) {
+                openDayTasksModal(info.dateStr, calendarEvents);
+            },
+            eventClick: function(info) {
+                openDayTasksModal(info.event.startStr, calendarEvents);
+            }
+        });
+
+        fullCalendarInstance.render();
+    }
+
+    // Atualiza a Data no Firebase ao Arrastar/Mover
+    async function updateTaskStartDate(unitKey, ncIndex, newDateRaw) {
+        const history = dbUnitsCache[unitKey] || [];
+        if (history.length === 0) return;
+
+        const latestInsp = history[history.length - 1];
+        if (latestInsp.pendencies && latestInsp.pendencies[ncIndex]) {
+            const parts = newDateRaw.split('-');
+            latestInsp.pendencies[ncIndex].startDateRaw = newDateRaw;
+            latestInsp.pendencies[ncIndex].startDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+            try {
+                await db.collection('vistorias_unidades').doc(unitKey).set({
+                    history: history,
+                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                dbUnitsCache[unitKey] = history;
+                renderInteractiveCalendar();
+            } catch (err) {
+                console.error("Erro ao atualizar data no Firebase:", err);
+            }
+        }
+    }
+
+    // Modal com tarefas executadas na data
+    function openDayTasksModal(dateStr, events) {
+        const parts = dateStr.split('-');
+        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        
+        document.getElementById('modal-date-title').innerText = `📋 Tarefas em Execução — ${formattedDate}`;
+        const modalList = document.getElementById('modal-task-list');
+
+        // Filtra eventos que cobrem a data selecionada
+        const targetDate = new Date(dateStr + 'T00:00:00');
+        const activeTasks = events.filter(e => {
+            const start = new Date(e.start + 'T00:00:00');
+            const end = new Date(e.end + 'T00:00:00');
+            return targetDate >= start && targetDate < end;
+        });
+
+        if (activeTasks.length === 0) {
+            modalList.innerHTML = '<p style="color:#666; text-align:center; padding:15px;">Nenhum serviço em andamento nesta data.</p>';
+        } else {
+            modalList.innerHTML = activeTasks.map(e => {
+                const p = e.extendedProps;
+                return `
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-left:5px solid ${p.color}; padding:10px; border-radius:6px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>Apto ${p.unit} — ${p.room}</strong>
+                            <span style="background:${p.color}; color:white; padding:2px 6px; border-radius:3px; font-size:0.7rem; font-weight:bold;">${p.resp}</span>
+                        </div>
+                        <div style="margin-top:4px;"><strong>Item:</strong> ${p.item}</div>
+                        <div style="color:#64748b; font-size:0.78rem;">Detalhes: ${p.details.join(', ')}</div>
+                        <div style="color:#d97706; font-size:0.78rem; font-weight:bold; margin-top:2px;">⏱️ Prazo: ${p.days} dia(s)</div>
+                        ${p.photo ? `<img src="${p.photo}" style="max-height:80px; border-radius:4px; margin-top:6px; border:1px solid #ccc;">` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('day-modal').style.display = 'flex';
+    }
+
+    function closeDayModal() {
+        document.getElementById('day-modal').style.display = 'none';
     }
 
     function closeHistory() {
