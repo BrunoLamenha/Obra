@@ -107,6 +107,19 @@
         .pdf-nc-table td { padding: 6px; border: 1px solid #cccccc; vertical-align: top; line-height: 1.3; }
         .pdf-img { max-width: 110px; max-height: 110px; display: block; margin: 0 auto; border: 1px solid #ccc; border-radius: 4px; }
         .pdf-signatures { margin-top: 25px; width: 320px; margin-left: auto; margin-right: auto; text-align: center; border-top: 1px solid #000000; padding-top: 5px; font-size: 11px; }
+   /* Limpa os eventos na grade para mostrar blocos de cor legíveis */
+.fc-event {
+    border-radius: 4px !important;
+    padding: 2px 4px !important;
+    font-size: 0.72rem !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+}
+.fc-event-title {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
     </style>
 
     <!-- SDKs do Firebase -->
@@ -1017,149 +1030,132 @@
     }
 
     // --- CALENDÁRIO INTERATIVO & DRAG-AND-DROP ---
-    function renderInteractiveCalendar() {
-        const legendContainer = document.getElementById('resp-legend-box');
-        const unassignedContainer = document.getElementById('unassigned-tasks-list');
-        const calendarEl = document.getElementById('calendar');
+function renderInteractiveCalendar() {
+    const legendContainer = document.getElementById('resp-legend-box');
+    const unassignedContainer = document.getElementById('unassigned-tasks-list');
+    const calendarEl = document.getElementById('calendar');
 
-        // Renderiza Legendas
-        legendContainer.innerHTML = Object.keys(respColors).map(resp => `
-            <div class="legend-item">
-                <span class="legend-dot" style="background:${respColors[resp]};"></span>
-                <span>${resp}</span>
-            </div>
-        `).join('');
+    // Renderiza Legendas
+    legendContainer.innerHTML = Object.keys(respColors).map(resp => `
+        <div class="legend-item">
+            <span class="legend-dot" style="background:${respColors[resp]};"></span>
+            <span>${resp}</span>
+        </div>
+    `).join('');
 
-        let calendarEvents = [];
-        let unassignedTasks = [];
+    let calendarEvents = [];
+    let unassignedTasks = [];
 
-        // Varre todo o banco em cache e distribui as pendências
-        Object.keys(dbUnitsCache).forEach(unitKey => {
-            const history = dbUnitsCache[unitKey] || [];
-            if (history.length > 0) {
-                const latestInsp = history[history.length - 1];
-                if (latestInsp.pendencies && latestInsp.pendencies.length > 0) {
-                    latestInsp.pendencies.forEach((p, ncIndex) => {
-                        const color = respColors[p.resp] || '#dc2626';
-                        const days = parseInt(p.days) || 1;
+    // Varre o banco em cache e distribui as pendências
+    Object.keys(dbUnitsCache).forEach(unitKey => {
+        const history = dbUnitsCache[unitKey] || [];
+        if (history.length > 0) {
+            const latestInsp = history[history.length - 1];
+            if (latestInsp.pendencies && latestInsp.pendencies.length > 0) {
+                latestInsp.pendencies.forEach((p, ncIndex) => {
+                    const color = respColors[p.resp] || '#dc2626';
+                    const days = parseInt(p.days) || 1;
 
-                        const taskObj = {
-                            unitKey: unitKey,
-                            ncIndex: ncIndex,
-                            unit: latestInsp.unitNumber || unitKey.replace('unit_', ''),
-                            room: p.room,
-                            item: p.item,
-                            details: p.details,
-                            resp: p.resp || 'Outros',
-                            days: days,
-                            color: color,
-                            photo: p.photo
-                        };
+                    const taskObj = {
+                        unitKey: unitKey,
+                        ncIndex: ncIndex,
+                        unit: latestInsp.unitNumber || unitKey.replace('unit_', ''),
+                        room: p.room,
+                        item: p.item,
+                        details: p.details,
+                        resp: p.resp || 'Outros',
+                        days: days,
+                        color: color,
+                        photo: p.photo
+                    };
 
-                        if (p.startDateRaw && p.startDateRaw !== '9999-99-99' && p.startDateRaw !== '') {
-                            // Calcula Data Fim baseada nos Dias de Prazo
-                            const startD = new Date(p.startDateRaw + 'T00:00:00');
-                            const endD = new Date(startD);
-                            endD.setDate(startD.getDate() + days);
+                    if (p.startDateRaw && p.startDateRaw !== '9999-99-99' && p.startDateRaw !== '') {
+                        const startD = new Date(p.startDateRaw + 'T00:00:00');
+                        const endD = new Date(startD);
+                        endD.setDate(startD.getDate() + days);
 
-                            calendarEvents.push({
-                                id: `${unitKey}_${ncIndex}`,
-                                title: `Apto ${taskObj.unit}: ${taskObj.item}`,
-                                start: p.startDateRaw,
-                                end: endD.toISOString().split('T')[0],
-                                backgroundColor: color,
-                                borderColor: color,
-                                extendedProps: taskObj
-                            });
-                        } else {
-                            unassignedTasks.push(taskObj);
-                        }
-                    });
-                }
+                        calendarEvents.push({
+                            id: `${unitKey}_${ncIndex}`,
+                            // Exibe apenas o número do Apto na grade para não poluir
+                            title: `Apto ${taskObj.unit}`,
+                            start: p.startDateRaw,
+                            end: endD.toISOString().split('T')[0],
+                            backgroundColor: color,
+                            borderColor: color,
+                            extendedProps: taskObj
+                        });
+                    } else {
+                        unassignedTasks.push(taskObj);
+                    }
+                });
             }
-        });
-
-        // Monta lista de Tarefas Sem Data (Draggable)
-        if (unassignedTasks.length === 0) {
-            unassignedContainer.innerHTML = '<p style="font-size:0.75rem; color:#888;">Todas as pendências possuem data agendada!</p>';
-        } else {
-            unassignedContainer.innerHTML = unassignedTasks.map(t => `
-                <div class="fc-task-card fc-draggable-task" 
-                     style="border-left-color:${t.color};"
-                     data-unit-key="${t.unitKey}"
-                     data-nc-index="${t.ncIndex}"
-                     data-days="${t.days}"
-                     data-color="${t.color}">
-                    <strong>Apto ${t.unit}</strong> — ${t.item}<br>
-                    <span style="color:#64748b; font-size:0.7rem;">${t.resp} | Prazo: ${t.days} dia(s)</span>
-                </div>
-            `).join('');
         }
+    });
 
-        // Habilita a lista lateral para ser arrastável
-        new FullCalendar.Draggable(unassignedContainer, {
-            itemSelector: '.fc-draggable-task',
-            eventData: function(eventEl) {
-                return {
-                    title: eventEl.innerText,
-                    backgroundColor: eventEl.dataset.color,
-                    borderColor: eventEl.dataset.color
-                };
-            }
-        });
+    // Atualiza Painel Lateral Inicial
+    renderSidebarTasks(unassignedTasks, calendarEvents);
 
-        // Inicializa ou atualiza o FullCalendar
-        if (fullCalendarInstance) {
-            fullCalendarInstance.destroy();
+    // Habilita Drag and Drop para itens não agendados
+    new FullCalendar.Draggable(unassignedContainer, {
+        itemSelector: '.fc-draggable-task',
+        eventData: function(eventEl) {
+            return {
+                title: eventEl.innerText,
+                backgroundColor: eventEl.dataset.color,
+                borderColor: eventEl.dataset.color
+            };
         }
+    });
 
-        fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'pt-br',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek'
-            },
-            buttonText: {
-                today: 'Hoje',
-                month: 'Mês',
-                week: 'Semana'
-            },
-            editable: true,
-            droppable: true,
-            events: calendarEvents,
-
-            // Evento ao Arrastar e Soltar no Calendário
-            drop: async function(info) {
-                const dateStr = info.dateStr;
-                const draggedEl = info.draggedEl;
-                const unitKey = draggedEl.dataset.unitKey;
-                const ncIndex = parseInt(draggedEl.dataset.ncIndex);
-
-                await updateTaskStartDate(unitKey, ncIndex, dateStr);
-            },
-
-            // Evento ao Mover Evento no Próprio Calendário
-            eventDrop: async function(info) {
-                const newDateStr = info.event.startStr;
-                const unitKey = info.event.extendedProps.unitKey;
-                const ncIndex = info.event.extendedProps.ncIndex;
-
-                await updateTaskStartDate(unitKey, ncIndex, newDateStr);
-            },
-
-            // Clique no Dia ou Evento (Abre o Modal)
-            dateClick: function(info) {
-                openDayTasksModal(info.dateStr, calendarEvents);
-            },
-            eventClick: function(info) {
-                openDayTasksModal(info.event.startStr, calendarEvents);
-            }
-        });
-
-        fullCalendarInstance.render();
+    if (fullCalendarInstance) {
+        fullCalendarInstance.destroy();
     }
+
+    fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'pt-br',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek'
+        },
+        buttonText: {
+            today: 'Hoje',
+            month: 'Mês',
+            week: 'Semana'
+        },
+        editable: true,
+        droppable: true,
+        events: calendarEvents,
+
+        drop: async function(info) {
+            const dateStr = info.dateStr;
+            const draggedEl = info.draggedEl;
+            const unitKey = draggedEl.dataset.unitKey;
+            const ncIndex = parseInt(draggedEl.dataset.ncIndex);
+
+            await updateTaskStartDate(unitKey, ncIndex, dateStr);
+        },
+
+        eventDrop: async function(info) {
+            const newDateStr = info.event.startStr;
+            const unitKey = info.event.extendedProps.unitKey;
+            const ncIndex = info.event.extendedProps.ncIndex;
+
+            await updateTaskStartDate(unitKey, ncIndex, newDateStr);
+        },
+
+        // Ao clicar no dia, atualiza a lista lateral com o que está programado naquele dia
+        dateClick: function(info) {
+            showDayInSidebar(info.dateStr, calendarEvents, unassignedTasks);
+        },
+        eventClick: function(info) {
+            showDayInSidebar(info.event.startStr, calendarEvents, unassignedTasks);
+        }
+    });
+
+    fullCalendarInstance.render();
+}
 
     // Atualiza a Data no Firebase ao Arrastar/Mover
     async function updateTaskStartDate(unitKey, ncIndex, newDateRaw) {
@@ -1253,6 +1249,78 @@
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    // Renderiza o painel lateral com pendências e itens programados do dia
+function renderSidebarTasks(unassignedTasks, calendarEvents) {
+    const container = document.getElementById('external-events-container');
+
+    let unassignedHTML = unassignedTasks.length === 0 
+        ? '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência sem data.</p>'
+        : unassignedTasks.map(t => `
+            <div class="fc-task-card fc-draggable-task" 
+                 style="border-left-color:${t.color}; cursor:grab;"
+                 data-unit-key="${t.unitKey}"
+                 data-nc-index="${t.ncIndex}"
+                 data-days="${t.days}"
+                 data-color="${t.color}">
+                <strong>Apto ${t.unit}</strong> — ${t.item}<br>
+                <span style="color:#64748b; font-size:0.7rem;">${t.resp} | Prazo: ${t.days} dia(s)</span>
+            </div>
+        `).join('');
+
+    container.innerHTML = `
+        <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📋 Aguardando Agendamento (${unassignedTasks.length})</h4>
+        <div id="unassigned-tasks-list" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px;">
+            ${unassignedHTML}
+        </div>
+        <hr style="border:0; border-top:1px dashed #cbd5e1; margin:10px 0;">
+        <div id="selected-day-tasks">
+            <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📌 Programado para o Dia Selecionado</h4>
+            <p style="font-size:0.75rem; color:#666;">Clique em qualquer dia do calendário para ver a lista de tarefas.</p>
+        </div>
+    `;
+}
+
+// Filtra e exibe na lateral os serviços ativos na data clicada
+function showDayInSidebar(dateStr, events, unassignedTasks) {
+    const parts = dateStr.split('-');
+    const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    const targetDate = new Date(dateStr + 'T00:00:00');
+
+    const activeTasks = events.filter(e => {
+        const start = new Date(e.start + 'T00:00:00');
+        const end = new Date(e.end + 'T00:00:00');
+        return targetDate >= start && targetDate < end;
+    });
+
+    const dayTasksContainer = document.getElementById('selected-day-tasks');
+    if (!dayTasksContainer) return;
+
+    if (activeTasks.length === 0) {
+        dayTasksContainer.innerHTML = `
+            <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📌 Programado (${formattedDate})</h4>
+            <p style="font-size:0.75rem; color:#888;">Nenhum serviço em execução neste dia.</p>
+        `;
+    } else {
+        dayTasksContainer.innerHTML = `
+            <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">📌 Programado (${formattedDate}) — ${activeTasks.length} serviço(s)</h4>
+            <div style="max-height:300px; overflow-y:auto;">
+                ${activeTasks.map(e => {
+                    const p = e.extendedProps;
+                    return `
+                        <div style="background:#fff; border:1px solid #cbd5e1; border-left:5px solid ${p.color}; padding:8px; border-radius:6px; margin-bottom:6px; font-size:0.78rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong>Apto ${p.unit}</strong>
+                                <span style="background:${p.color}; color:white; padding:1px 5px; border-radius:3px; font-size:0.68rem;">${p.resp}</span>
+                            </div>
+                            <div style="margin-top:3px; font-weight:600; color:#334155;">${p.item}</div>
+                            <div style="color:#64748b; font-size:0.72rem;">${p.room} • Prazo: ${p.days}d</div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+}
 </script>
 
 </body>
