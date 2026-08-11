@@ -12,11 +12,11 @@
         :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ccc; --success: #28a745; --danger: #dc3545; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { background: var(--bg); padding: 12px; color: #333; }
-        .container { max-width: 720px; margin: 0 auto; }
+        .container { max-width: 800px; margin: 0 auto; }
         
         header { background: var(--primary); color: #fff; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
-        .nav-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: #e0e6ed; color: #004a8f; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; }
+        .nav-tabs { display: flex; gap: 6px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 10px 4px; border: none; background: #e0e6ed; color: #004a8f; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; font-size: 0.85rem; }
         .tab-btn.active { background: var(--primary); color: white; }
 
         .card { background: #fff; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
@@ -67,9 +67,9 @@
         
         .badge { display: inline-block; background: #ffc107; color: #000; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: bold; margin-left: 5px; }
 
-        .legend-box { display: flex; gap: 10px; margin-top: 8px; font-size: 0.75rem; justify-content: center; }
-        .legend-item { display: flex; align-items: center; gap: 4px; }
-        .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+        .legend-box { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: 0.75rem; justify-content: center; }
+        .legend-item { display: flex; align-items: center; gap: 4px; background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
 
         .device-info-box { background: #eef6ff; border: 1px solid #b8daff; padding: 10px; border-radius: 6px; font-size: 0.8rem; margin-top: 8px; color: #004a8f; }
 
@@ -77,9 +77,13 @@
         .history-card.latest { border-left-color: var(--success); background: #f4fff6; border-top: 2px solid var(--success); }
         .history-tag-latest { background: var(--success); color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-left: 6px; }
 
-        .timeline-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; margin-top: 10px; }
-        .timeline-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; font-size: 0.78rem; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }
-        .timeline-date { background: #004a8f; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 0.7rem; white-space: nowrap; }
+        .btn-view-pdf { background: #004a8f; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 0.8rem; cursor: pointer; margin-top: 10px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-view-pdf:hover { background: #003366; }
+
+        /* Estilos do Cronograma / Calendário de Serviços */
+        .cron-date-group { background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+        .cron-date-header { background: #f1f5f9; padding: 6px 10px; border-radius: 4px; font-weight: bold; color: var(--primary); border-left: 4px solid var(--primary); font-size: 0.85rem; margin-bottom: 8px; }
+        .cron-item { border: 1px solid #e2e8f0; padding: 8px; border-radius: 5px; margin-bottom: 6px; font-size: 0.8rem; border-left-width: 5px; border-left-style: solid; background: #fff; }
 
         @media print {
             @page { size: landscape; margin: 1cm; }
@@ -116,11 +120,11 @@
     <div class="nav-tabs no-print">
         <button class="tab-btn active" id="tab-vistorias-btn" onclick="switchTab('vistorias')">📝 Vistorias</button>
         <button class="tab-btn" id="tab-mapa-btn" onclick="switchTab('mapa')">🗺️ Mapa Geral da Obra</button>
+        <button class="tab-btn" id="tab-cronograma-btn" onclick="switchTab('cronograma')">📅 Cronograma de Ações</button>
     </div>
 
     <!-- ABA 1: VISTORIAS -->
     <div id="tab-vistorias" class="no-print">
-        <!-- 0. Identificação do Vistoriador e Dispositivo -->
         <div class="card" id="inspector-card">
             <h3>👤 Identificação do Vistoriador</h3>
             <label>Nome Completo do Engenheiro / Vistoriador:</label>
@@ -134,7 +138,6 @@
             <button class="btn-confirm-inspector" onclick="confirmInspector()" style="background:var(--success); color:white; border:none; width:100%; padding:12px; border-radius:6px; font-weight:bold; font-size:0.95rem; margin-top:12px; cursor:pointer;">Confirmar & Iniciar Vistoria ✓</button>
         </div>
 
-        <!-- 1. Seleção de Pavimento -->
         <div class="card" id="floor-card" style="display:none;">
             <h3>1. Selecione o Pavimento</h3>
             <div class="grid" id="floors">
@@ -145,7 +148,6 @@
             </div>
         </div>
 
-        <!-- 2. Seleção de Unidade -->
         <div class="card" id="unit-card" style="display:none;">
             <h3>2. Selecione a Unidade</h3>
             <div class="grid" id="units"></div>
@@ -156,7 +158,6 @@
             </div>
         </div>
 
-        <!-- 3. Tipo e Etapa -->
         <div class="card" id="type-card" style="display:none;">
             <h3>3. Configuração do Acompanhamento</h3>
             <div id="category-selection-container">
@@ -176,7 +177,6 @@
             </div>
         </div>
 
-        <!-- Área de Inspeção -->
         <div id="inspection-area" style="display:none;">
             <div class="card" style="background: var(--primary); color: white;">
                 <h3 id="unit-title">Unidade: ---</h3>
@@ -206,19 +206,16 @@
     <div id="tab-mapa" class="no-print" style="display:none;">
         <div class="card">
             <h3>🗺️ Visão Geral dos Pavimentos e Unidades</h3>
-            <p style="font-size:0.8rem; color:#666; margin-top:4px;">Clique em uma unidade para abrir a lista completa de vistorias.</p>
+            <p style="font-size:0.8rem; color:#666; margin-top:4px;">Clique em uma unidade para abrir a lista completa de vistorias e gerar/baixar os PDFs.</p>
             <div class="legend-box" style="margin-bottom:15px; margin-top:10px;">
                 <div class="legend-item"><div class="legend-dot" style="background:#28a745;"></div> Aprovado</div>
                 <div class="legend-item"><div class="legend-dot" style="background:#dc3545;"></div> Pendente</div>
                 <div class="legend-item"><div class="legend-dot" style="background:#fff; border:1px solid #ccc;"></div> Não Vistoriado</div>
             </div>
 
-            <div id="map-container">
-                <!-- Pavimentos gerados via JS -->
-            </div>
+            <div id="map-container"></div>
         </div>
 
-        <!-- Modal / Painel de Histórico da Unidade -->
         <div class="card" id="history-panel" style="display:none; background:#f8fafc; border:2px solid var(--primary);">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 id="history-unit-title">Histórico: Apto ---</h3>
@@ -227,13 +224,26 @@
             <div id="history-content" style="margin-top:12px;"></div>
         </div>
     </div>
+
+    <!-- ABA 3: CRONOGRAMA GERAL DE AÇÕES -->
+    <div id="tab-cronograma" class="no-print" style="display:none;">
+        <div class="card">
+            <h3>📅 Cronograma Geral de Ações e Prazos</h3>
+            <p style="font-size:0.8rem; color:#666; margin-top:4px;">Calendário consolidado de pendências registradas em todas as unidades da obra.</p>
+            
+            <div class="legend-box" id="resp-legend-box">
+                <!-- Legendas dinâmicas de cores por responsável -->
+            </div>
+            
+            <div id="cronograma-content" style="margin-top:15px;"></div>
+        </div>
+    </div>
 </div>
 
 <!-- CONTAINER DE IMPRESSÃO PDF -->
 <div id="print-report"></div>
 
 <script>
-    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBqtptEp5QjIOoAjwx0wT--cswUhSvcsGM",
       authDomain: "vistoria-obra.firebaseapp.com",
@@ -246,6 +256,18 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
+    const respColors = {
+        'Pintura / Emassamento': '#0284c7',
+        'Marmoraria / Graniteiro': '#16a34a',
+        'Instalações Hidráulicas': '#2563eb',
+        'Eletricista': '#d97706',
+        'Marcenaria / Portas de Madeira': '#9333ea',
+        'Esquadrias de Alumínio / Vidros': '#0891b2',
+        'Piso e Revestimento': '#ca8a04',
+        'Gesso / Sancas': '#475569',
+        'Outros': '#dc2626'
+    };
 
     const roomNames = {
         'room-dorm': 'Dormitório / Cozinha',
@@ -305,12 +327,14 @@
     function switchTab(tab) {
         document.getElementById('tab-vistorias-btn').classList.toggle('active', tab === 'vistorias');
         document.getElementById('tab-mapa-btn').classList.toggle('active', tab === 'mapa');
+        document.getElementById('tab-cronograma-btn').classList.toggle('active', tab === 'cronograma');
+
         document.getElementById('tab-vistorias').style.display = tab === 'vistorias' ? 'block' : 'none';
         document.getElementById('tab-mapa').style.display = tab === 'mapa' ? 'block' : 'none';
+        document.getElementById('tab-cronograma').style.display = tab === 'cronograma' ? 'block' : 'none';
 
-        if(tab === 'mapa') {
-            renderFullMap();
-        }
+        if(tab === 'mapa') renderFullMap();
+        if(tab === 'cronograma') renderGlobalCronograma();
     }
 
     async function loadAllUnitsData() {
@@ -320,9 +344,8 @@
                 snapshot.forEach(doc => {
                     dbUnitsCache[doc.id] = doc.data().history || [];
                 });
-                if (document.getElementById('tab-mapa').style.display === 'block') {
-                    renderFullMap();
-                }
+                if (document.getElementById('tab-mapa').style.display === 'block') renderFullMap();
+                if (document.getElementById('tab-cronograma').style.display === 'block') renderGlobalCronograma();
             });
         } catch (e) {
             console.error("Erro ao carregar dados em nuvem:", e);
@@ -530,9 +553,7 @@
             const para = targetStatus === 'OK' ? 'APROVADO (OK)' : 'PENDENTE';
             const confirmChange = confirm(`⚠️ ALERTA DE ALTERAÇÃO DE REVISTORIA:\n\nEste item estava registrado como "${de}" na vistoria anterior.\n\nTem certeza que deseja alterar o estado para "${para}"?`);
             
-            if (!confirmChange) {
-                return;
-            }
+            if (!confirmChange) return;
         }
 
         itemStatusMap[fullId].status = targetStatus;
@@ -566,7 +587,6 @@
         if(!ncList) return;
         
         const ncBoxId = `nc-${fullId}-${count}`;
-
         const itemObj = checklist.find(i => i.id === itemId) || { options: ["Falha de Acabamento", "Outros"] };
 
         let checkboxesHTML = itemObj.options.map((opt) => {
@@ -590,9 +610,7 @@
             </div>
             
             <label>Selecione as não conformidades identificadas:</label>
-            <div class="checklist-group">
-                ${checkboxesHTML}
-            </div>
+            <div class="checklist-group">${checkboxesHTML}</div>
 
             <div id="other-field-${ncBoxId}" style="display:none;">
                 <label style="color:var(--danger);">Descreva a opção "Outros" / Observação Exata:</label>
@@ -637,9 +655,7 @@
 
     function checkDateNotice(boxId, input) {
         const notice = document.getElementById(`notice-${boxId}`);
-        if(notice) {
-            notice.style.display = input.value ? 'none' : 'block';
-        }
+        if(notice) notice.style.display = input.value ? 'none' : 'block';
     }
 
     function previewPhoto(boxId, input) {
@@ -673,10 +689,8 @@
 
     async function generateTechnicalPDF() {
         const today = new Date().toLocaleDateString('pt-BR');
-        const printContainer = document.getElementById('print-report');
         
         let pendingCount = 0;
-        let rowsHTML = '';
         let currentPendencies = [];
         let allInspectedItems = [];
 
@@ -692,7 +706,6 @@
 
                 const statusInfo = itemStatusMap[fullId] || { status: 'UNINSPECTED' };
                 
-                // Registra apenas itens efetivamente vistoriados (OK ou NOK)
                 if (statusInfo.status === 'OK' || statusInfo.status === 'NOK') {
                     allInspectedItems.push({
                         fullId: fullId,
@@ -742,20 +755,6 @@
                             startDateRaw: startDateRaw,
                             photo: hasPhoto ? photoSrc : null
                         });
-
-                        rowsHTML += `
-                            <tr>
-                                <td style="font-weight:bold;">${roomName}</td>
-                                <td>${itemObj.cleanName}</td>
-                                <td>${selectedOpts.length > 0 ? selectedOpts.map(o => `• ${o}`).join('<br>') : 'Pendência apontada sem detalhes'}</td>
-                                <td style="text-align:center;">${hasPhoto ? `<img src="${photoSrc}" class="pdf-img">` : '<span style="color:#888;">Sem foto</span>'}</td>
-                                <td>${respVal}</td>
-                                <td style="text-align:center;">
-                                    <strong>Início:</strong> ${startDateFormatted}<br>
-                                    <strong>Prazo:</strong> ${daysVal} dias
-                                </td>
-                            </tr>
-                        `;
                     });
                 }
             });
@@ -764,9 +763,11 @@
         const historyKey = `unit_${selectedUnitNum}`;
         const existingHistory = dbUnitsCache[historyKey] || [];
         
-        existingHistory.push({
+        const recordData = {
             timestamp: Date.now(),
             date: today,
+            unitNumber: selectedUnitNum,
+            floorNumber: selectedFloorNum,
             stage: selectedStage,
             category: selectedCategory,
             inspector: inspectorName,
@@ -774,7 +775,9 @@
             pendenciesCount: pendingCount,
             pendencies: currentPendencies,
             allInspectedItems: allInspectedItems
-        });
+        };
+
+        existingHistory.push(recordData);
 
         try {
             await db.collection('vistorias_unidades').doc(historyKey).set({
@@ -786,10 +789,37 @@
             dbUnitsCache[historyKey] = existingHistory;
         } catch (error) {
             console.error("Erro ao salvar no banco:", error);
-            alert("⚠️ Atenção: Não foi possível sincronizar com o banco em nuvem. Verifique sua conexão.");
+            alert("⚠️ Atenção: Não foi possível sincronizar com o banco em nuvem.");
         }
 
-        const statusGeneral = pendingCount > 0 ? `<span style="color:#dc3545; font-weight:bold;">REPROVADO (${pendingCount} pendências)</span>` : `<span style="color:#28a745; font-weight:bold;">APROVADO (Sem pendências)</span>`;
+        renderPDFToPrint(recordData);
+        document.getElementById('btn-next').style.display = 'block';
+        window.print();
+    }
+
+    // Renderiza e aciona visualização/download de PDF para qualquer registro
+    function renderPDFToPrint(record) {
+        const printContainer = document.getElementById('print-report');
+        const statusGeneral = record.pendenciesCount > 0 
+            ? `<span style="color:#dc3545; font-weight:bold;">REPROVADO (${record.pendenciesCount} pendências)</span>` 
+            : `<span style="color:#28a745; font-weight:bold;">APROVADO (Sem pendências)</span>`;
+
+        let rowsHTML = '';
+        if (record.pendencies && record.pendencies.length > 0) {
+            rowsHTML = record.pendencies.map(p => `
+                <tr>
+                    <td style="font-weight:bold;">${p.room}</td>
+                    <td>${p.item}</td>
+                    <td>${p.details.length > 0 ? p.details.map(o => `• ${o}`).join('<br>') : 'Sem detalhes'}</td>
+                    <td style="text-align:center;">${p.photo ? `<img src="${p.photo}" class="pdf-img">` : '<span style="color:#888;">Sem foto</span>'}</td>
+                    <td>${p.resp}</td>
+                    <td style="text-align:center;">
+                        <strong>Início:</strong> ${p.startDate}<br>
+                        <strong>Prazo:</strong> ${p.days} dias
+                    </td>
+                </tr>
+            `).join('');
+        }
 
         printContainer.innerHTML = `
             <table class="pdf-header-table">
@@ -797,19 +827,19 @@
                     <td colspan="4" class="pdf-header-title">RELATÓRIO TÉCNICO INTERNO DE VISTORIA</td>
                 </tr>
                 <tr>
-                    <td><strong>Data da Vistoria:</strong> ${today}</td>
-                    <td><strong>Pavimento / Unidade:</strong> ${selectedFloorNum}º Pav - Apto ${selectedUnitNum}</td>
-                    <td colspan="2"><strong>Etapa/Ciclo:</strong> ${selectedCategory} (${selectedStage})</td>
+                    <td><strong>Data da Vistoria:</strong> ${record.date}</td>
+                    <td><strong>Pavimento / Unidade:</strong> ${record.floorNumber}º Pav - Apto ${record.unitNumber}</td>
+                    <td colspan="2"><strong>Etapa/Ciclo:</strong> ${record.category} (${record.stage})</td>
                 </tr>
                 <tr>
-                    <td colspan="2"><strong>Responsável Técnico:</strong> ${inspectorName}</td>
+                    <td colspan="2"><strong>Responsável Técnico:</strong> ${record.inspector}</td>
                     <td colspan="2"><strong>Status Técnico:</strong> ${statusGeneral}</td>
                 </tr>
             </table>
 
             <div class="pdf-section-title">DETALHAMENTO DAS NÃO CONFORMIDADES / PENDÊNCIAS DA OBRA</div>
 
-            ${pendingCount > 0 ? `
+            ${record.pendenciesCount > 0 ? `
                 <table class="pdf-nc-table">
                     <thead>
                         <tr>
@@ -832,14 +862,24 @@
             `}
 
             <div class="pdf-signatures">
-                <strong>${inspectorName}</strong><br>
+                <strong>${record.inspector}</strong><br>
                 Responsável Técnico<br>
-                <span style="font-size:0.75rem; color:#666;">📱 Autenticado via Dispositivo: ${deviceDetails}</span>
+                <span style="font-size:0.75rem; color:#666;">📱 Autenticado via Dispositivo: ${record.device || 'N/A'}</span>
             </div>
         `;
+    }
 
-        document.getElementById('btn-next').style.display = 'block';
-        window.print();
+    function printHistoryPDF(unitNum, historyIndex) {
+        const historyKey = `unit_${unitNum}`;
+        const history = dbUnitsCache[historyKey] || [];
+        const record = history[historyIndex];
+        
+        if (record) {
+            renderPDFToPrint(record);
+            window.print();
+        } else {
+            alert('Erro ao carregar o relatório PDF selecionado.');
+        }
     }
 
     function renderFullMap() {
@@ -887,8 +927,8 @@
             
             historyContent.innerHTML = reversedHistory.map((item, index) => {
                 const isLatest = index === 0;
+                const originalIndex = rawHistory.length - 1 - index;
 
-                // 1. FILTRA EXCLUSIVAMENTE OS ITENS QUE FORAM CLICADOS/APROVADOS
                 let inspectedSummaryHTML = '';
                 if (item.allInspectedItems && item.allInspectedItems.length > 0) {
                     const okItems = item.allInspectedItems.filter(i => i.status === 'OK');
@@ -901,42 +941,10 @@
                         <div style="margin-top:8px; background:#fff; padding:8px; border-radius:5px; border:1px solid #e2e8f0; font-size:0.8rem;">
                             <strong>Resumo Geral dos Itens Vistoriados:</strong>
                             <div style="margin-top:4px; color:#28a745;">
-                                <strong>✓ Aprovados (${okItems.length}):</strong> ${okNames.length > 0 ? okNames.join(', ') : '<span style="color:#666;">Nenhum item marcado como OK</span>'}
+                                <strong>✓ Aprovados (${okItems.length}):</strong> ${okNames.length > 0 ? okNames.join(', ') : '<span style="color:#666;">Nenhum</span>'}
                             </div>
                             <div style="margin-top:4px; color:#dc3545;">
                                 <strong>✗ Pendentes (${nokItems.length}):</strong> ${nokNames.length > 0 ? nokNames.join(', ') : '<span style="color:#666;">Nenhum</span>'}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                // 2. MONTA CRONOGRAMA DE AÇÃO DA VISTORIA
-                let timelineHTML = '';
-                if (item.pendencies && item.pendencies.length > 0) {
-                    const timelineItems = item.pendencies.map(p => {
-                        return {
-                            dateStr: p.startDate || 'Sem Data Defined',
-                            rawDate: p.startDateRaw || '9999-99-99',
-                            room: p.room,
-                            item: p.item,
-                            resp: p.resp,
-                            days: p.days
-                        };
-                    }).sort((a,b) => a.rawDate.localeCompare(b.rawDate));
-
-                    timelineHTML = `
-                        <div class="timeline-box">
-                            <strong style="font-size:0.8rem; color:#004a8f;">📅 Cronograma de Ação & Prazos das Correções:</strong>
-                            <div style="margin-top:6px;">
-                                ${timelineItems.map(t => `
-                                    <div class="timeline-item">
-                                        <span class="timeline-date">${t.dateStr}</span>
-                                        <div>
-                                            <strong>[${t.room}]</strong> ${t.item} — <span style="color:#d97706; font-weight:bold;">Prazo: ${t.days} dia(s)</span><br>
-                                            <span style="color:#64748b;">Resp: ${t.resp}</span>
-                                        </div>
-                                    </div>
-                                `).join('')}
                             </div>
                         </div>
                     `;
@@ -973,7 +981,9 @@
                             </div>
                         ` : ''}
 
-                        ${timelineHTML}
+                        <button class="btn-view-pdf" onclick="printHistoryPDF(${unitNum}, ${originalIndex})">
+                            📄 Visualizar / Baixar Relatório PDF
+                        </button>
                     </div>
                 `;
             }).join('');
@@ -981,6 +991,84 @@
 
         historyPanel.style.display = 'block';
         historyPanel.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Renderiza a visualização do Cronograma de Ações em aba própria
+    function renderGlobalCronograma() {
+        const legendContainer = document.getElementById('resp-legend-box');
+        const cronContainer = document.getElementById('cronograma-content');
+        
+        // Renderiza as Legendas
+        legendContainer.innerHTML = Object.keys(respColors).map(resp => `
+            <div class="legend-item">
+                <span class="legend-dot" style="background:${respColors[resp]};"></span>
+                <span>${resp}</span>
+            </div>
+        `).join('');
+
+        let globalPendencies = [];
+
+        // Coleta todas as pendências das vistorias mais recentes de cada unidade
+        Object.keys(dbUnitsCache).forEach(unitKey => {
+            const history = dbUnitsCache[unitKey] || [];
+            if (history.length > 0) {
+                const latestInsp = history[history.length - 1];
+                if (latestInsp.pendencies && latestInsp.pendencies.length > 0) {
+                    latestInsp.pendencies.forEach(p => {
+                        globalPendencies.push({
+                            unit: latestInsp.unitNumber || unitKey.replace('unit_', ''),
+                            room: p.room,
+                            item: p.item,
+                            details: p.details,
+                            resp: p.resp || 'Outros',
+                            startDateStr: p.startDate || 'Sem Data',
+                            startDateRaw: p.startDateRaw || '9999-99-99',
+                            days: p.days || '-'
+                        });
+                    });
+                }
+            }
+        });
+
+        if (globalPendencies.length === 0) {
+            cronContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Nenhuma ação ou pendência agendada no momento em toda a obra.</p>';
+            return;
+        }
+
+        // Agrupa por data de início
+        const groupedByDate = {};
+        globalPendencies.forEach(p => {
+            const key = p.startDateRaw;
+            if (!groupedByDate[key]) groupedByDate[key] = [];
+            groupedByDate[key].push(p);
+        });
+
+        const sortedDates = Object.keys(groupedByDate).sort();
+
+        cronContainer.innerHTML = sortedDates.map(dateKey => {
+            const items = groupedByDate[dateKey];
+            const displayDate = items[0].startDateStr;
+
+            return `
+                <div class="cron-date-group">
+                    <div class="cron-date-header">📅 Data do Início: ${displayDate}</div>
+                    ${items.map(item => {
+                        const color = respColors[item.resp] || respColors['Outros'];
+                        return `
+                            <div class="cron-item" style="border-left-color:${color};">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <strong>Apto ${item.unit} — ${item.room}</strong>
+                                    <span style="background:${color}; color:white; padding:2px 6px; border-radius:3px; font-size:0.7rem; font-weight:bold;">${item.resp}</span>
+                                </div>
+                                <div style="margin-top:3px; color:#334155;"><strong>Item:</strong> ${item.item}</div>
+                                <div style="color:#64748b; font-size:0.75rem;">Detalhes: ${item.details.join(', ')}</div>
+                                <div style="color:#d97706; font-size:0.75rem; font-weight:bold; margin-top:2px;">⏱️ Prazo para Resolução: ${item.days} dia(s)</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }).join('');
     }
 
     function closeHistory() {
