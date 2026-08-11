@@ -375,6 +375,7 @@
     let deviceDetails = "";
     let dbUnitsCache = {};
     let fullCalendarInstance = null;
+    let pendingNCs = {};
 
     window.onload = function() {
         detectDevice();
@@ -637,7 +638,11 @@
 
  // --- COPIE E SUBSTITUA DAQUI ---
 function salvarEstadoAtualInput(key) {
+    if (typeof pendingNCs === 'undefined') {
+        pendingNCs = {};
+    }
     if (!pendingNCs[key]) return;
+
     pendingNCs[key].forEach((nc, index) => {
         const obsEl = document.getElementById(`obs_${key}_${index}`);
         const respEl = document.getElementById(`resp_${key}_${index}`);
