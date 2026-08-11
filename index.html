@@ -335,13 +335,13 @@
     let dbUnitsCache = {};
     let fullCalendarInstance = null;
 
-   window.onload = async () => {
-    await detectDevice();
+   window.onload = () => {
+    detectDevice();
     loadAllUnitsData();
 };
     };
 
-    async function detectDevice() {
+    function detectDevice() {
     let deviceId = localStorage.getItem('vistoria_device_id');
     if (!deviceId) {
         deviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
@@ -358,26 +358,25 @@
 
     deviceDetails = `${platform} | ID: ${deviceId}`;
 
+    // 1. Atualiza a tela IMEDIATAMENTE (sem esperar o banco)
     const infoEl = document.getElementById('device-info-text');
     if (infoEl) {
         infoEl.innerHTML = `📱 <strong>${platform}</strong><br>🆔 Código Único do Dispositivo: <strong>${deviceId}</strong>`;
     }
 
-    // --- BUSCA NO FIREBASE O ÚLTIMO NOME REGISTRADO NESTE DISPOSITIVO ---
-    try {
-        const devDoc = await db.collection('dispositivos').doc(deviceId).get();
-        if (devDoc.exists) {
-            const devData = devDoc.data();
-            if (devData && devData.lastInspectorName) {
+    // 2. Busca no Firebase em segundo plano sem travar a interface
+    db.collection('dispositivos').doc(deviceId).get()
+        .then(devDoc => {
+            if (devDoc.exists && devDoc.data().lastInspectorName) {
                 const nameInput = document.getElementById('inspector-name');
                 if (nameInput) {
-                    nameInput.value = devData.lastInspectorName;
+                    nameInput.value = devDoc.data().lastInspectorName;
                 }
             }
-        }
-    } catch (err) {
-        console.error("Erro ao buscar informações do dispositivo no Firebase:", err);
-    }
+        })
+        .catch(err => {
+            console.warn("Aviso: Não foi possível buscar o nome no Firebase (usando valor local se disponível).", err);
+        });
 }
 
     function switchTab(tab) {
