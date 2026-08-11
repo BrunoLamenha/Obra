@@ -28,7 +28,6 @@
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .grid-map { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
         .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .grid-three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
         
         .btn { padding: 10px; background: #eee; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; }
         .btn.active { outline: 3px solid #000; font-weight: 900; }
@@ -86,6 +85,14 @@
         .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; text-align: center; }
         .kpi-card h5 { font-size: 0.72rem; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
         .kpi-card .kpi-num { font-size: 1.3rem; font-weight: bold; color: #0f172a; }
+
+        /* Barra de Recorrência */
+        .bar-container { background: #e2e8f0; border-radius: 4px; height: 14px; width: 100%; overflow: hidden; margin-top: 4px; }
+        .bar-fill { background: var(--primary); height: 100%; transition: width 0.3s; }
+        
+        .badge-alta { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .badge-media { background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .badge-baixa { background: #e0f2fe; color: #075985; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
     </style>
 
     <!-- SDKs do Firebase -->
@@ -156,10 +163,9 @@
             </div>
 
             <div id="stage-selection-container" style="margin-top:12px;">
-                <label>Etapa / Ciclo de Inspeção:</label>
-                <div class="grid-two" id="stage-buttons-grid">
-                    <div class="btn-opt" id="btn-stage-first" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</div>
-                    <div class="btn-opt" id="btn-stage-rev" onclick="setStage('Revistoria', this)">🔄 Revistoria</div>
+                <label>Etapa / Ciclo de Inspeção (Sugerido pelo Histórico):</label>
+                <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; font-weight: bold; color: var(--primary); text-align: center; margin-top: 5px;" id="suggested-stage-box">
+                    ---
                 </div>
             </div>
         </div>
@@ -190,7 +196,7 @@
         </div>
     </div>
 
-    <!-- ABA 2: MAPA GERAL DA OBRA & INDICADORES -->
+    <!-- ABA 2: MAPA GERAL DA OBRA & INDICADORES (DASHBOARD COMPLETO) -->
     <div id="tab-mapa" class="no-print" style="display:none;">
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
@@ -206,7 +212,23 @@
                 <div class="kpi-card"><h5>Pendências Abertas</h5><div class="kpi-num" id="kpi-pending" style="color:#dc2626;">0</div></div>
             </div>
 
-            <h4 style="font-size:0.85rem; color:var(--primary); margin-bottom:8px;">🗺️ Visão Geral dos Pavimentos</h4>
+            <!-- DASHBOARD 1: NÃO CONFORMIDADES MAIS RECORRENTES -->
+            <div style="margin-top: 15px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+                <h4 style="font-size:0.85rem; color:var(--primary); margin-bottom:10px;">🔥 Top Não Conformidades Mais Recorrentes na Obra</h4>
+                <div id="top-nc-container">
+                    <p style="font-size:0.8rem; color:#666;">Nenhuma pendência registrada ainda.</p>
+                </div>
+            </div>
+
+            <!-- DASHBOARD 2: LISTA DE PENDÊNCIAS POR RESPONSÁVEL (GRAVIDADE > TEMPO) -->
+            <div style="margin-top: 15px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+                <h4 style="font-size:0.85rem; color:var(--primary); margin-bottom:10px;">👷‍♂️ Fila de Pendências por Responsável (Ordenado por Gravidade > Tempo)</h4>
+                <div id="resp-priority-container">
+                    <p style="font-size:0.8rem; color:#666;">Nenhuma pendência ativa para exibição.</p>
+                </div>
+            </div>
+
+            <h4 style="font-size:0.85rem; color:var(--primary); margin-top:20px; margin-bottom:8px;">🗺️ Visão Geral dos Pavimentos</h4>
             <div id="map-container"></div>
         </div>
 
@@ -334,6 +356,7 @@
             dbUnitsCache = JSON.parse(localData);
             updateMapAndKPIs();
             renderMapGrid();
+            renderDashboards();
         }
 
         db.collection('vistorias').get().then(snapshot => {
@@ -343,6 +366,7 @@
             localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
             updateMapAndKPIs();
             renderMapGrid();
+            renderDashboards();
             if (document.getElementById('tab-cronograma').style.display === 'block') {
                 renderInteractiveCalendar();
             }
@@ -355,7 +379,7 @@
         let added = 0;
         while (added < days) {
             date.setDate(date.getDate() + 1);
-            if (date.getDay() !== 0 && date.getDay() !== 6) { // Ignora Sábado (6) e Domingo (0)
+            if (date.getDay() !== 0 && date.getDay() !== 6) {
                 added++;
             }
         }
@@ -396,19 +420,43 @@
         
         document.getElementById('type-card').style.display = 'block';
         document.getElementById('inspection-area').style.display = 'none';
+
+        // Restaura Categoria Se Existir
+        if (selectedCategory) {
+            let catBtn = selectedCategory.includes('Reforma') ? document.getElementById('btn-cat-reforma') : document.getElementById('btn-cat-padrao');
+            if (catBtn) setCategory(selectedCategory, catBtn, true);
+        }
     }
 
-    function setCategory(cat, el) {
+    function setCategory(cat, el, isAuto = false) {
+        if (selectedCategory && selectedCategory !== cat && !isAuto) {
+            const confirmChange = confirm(`Mudar o tipo para ${cat}? Isso iniciará o ciclo a partir da 1ª Vistoria para este tipo.`);
+            if (!confirmChange) return;
+        }
+
         selectedCategory = cat;
         document.querySelectorAll('#category-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
-        checkAndShowInspection();
+
+        calculateNextStage();
     }
 
-    function setStage(stage, el) {
-        selectedStage = stage;
-        document.querySelectorAll('#stage-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
+    // CALCULA AUTOMATICAMENTE SE É 1ª VISTORIA OU REVISTORIA (1ª Rev, 2ª Rev...)
+    function calculateNextStage() {
+        const historyKey = `unit_${selectedUnitNum}`;
+        const history = dbUnitsCache[historyKey] || [];
+        
+        // Filtra histórico pelo tipo atual
+        const sameCatHistory = history.filter(h => h.category === selectedCategory);
+
+        if (sameCatHistory.length === 0) {
+            selectedStage = "1ª Vistoria";
+        } else {
+            const count = sameCatHistory.length;
+            selectedStage = `${count}ª Revistoria`;
+        }
+
+        document.getElementById('suggested-stage-box').innerHTML = `🔄 <strong>${selectedStage}</strong> (Calculado pelo Histórico)`;
         checkAndShowInspection();
     }
 
@@ -844,7 +892,6 @@
         });
     }
 
-    // ENVIO VIA WHATSAPP DIRETO DA TELA DE PREENCHIMENTO
     function sendWhatsAppSummary() {
         if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
         
@@ -907,9 +954,7 @@
                 history: dbUnitsCache[historyKey]
             }, { merge: true }).then(() => {
                 alert("Serviço marcado como REALIZADO!");
-                updateMapAndKPIs();
-                renderMapGrid();
-                renderInteractiveCalendar();
+                loadAllUnitsData();
             });
         }
     }
@@ -940,6 +985,101 @@
         document.getElementById('kpi-inspected').innerText = `${totalInspected} / 76`;
         document.getElementById('kpi-approved').innerText = totalApproved;
         document.getElementById('kpi-pending').innerText = totalPending;
+    }
+
+    // RENDERIZAÇÃO DOS DASHBOARDS DE RECORRÊNCIA E PRIORIDADE
+    function renderDashboards() {
+        let ncCounts = {};
+        let activeByResp = {};
+
+        const severityWeight = { 'Alta': 3, 'Média': 2, 'Baixa': 1 };
+
+        Object.keys(dbUnitsCache).forEach(key => {
+            const unitNum = key.replace('unit_', '');
+            const history = dbUnitsCache[key] || [];
+            if (history.length > 0) {
+                const last = history[history.length - 1];
+                if (last.details) {
+                    last.details.forEach(d => {
+                        // Contador de Recorrência (Mesmo para concluídas)
+                        let ncName = `${d.item}: ${d.nonConformity}`;
+                        ncCounts[ncName] = (ncCounts[ncName] || 0) + 1;
+
+                        // Agrupamento de Ativas por Responsável
+                        if (d.status !== 'Concluído') {
+                            let resp = d.responsible || 'Outro / Não Definido';
+                            if (!activeByResp[resp]) activeByResp[resp] = [];
+                            
+                            activeByResp[resp].push({
+                                unit: unitNum,
+                                item: d.item,
+                                nc: d.nonConformity,
+                                severity: d.severity || 'Baixa',
+                                timestamp: d.id || 0,
+                                date: d.inspectedAt || 'Recente'
+                            });
+                        }
+                    });
+                }
+            }
+        });
+
+        // 1. Renderiza Top 5 Recorrências
+        const sortedNCs = Object.entries(ncCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const topContainer = document.getElementById('top-nc-container');
+        if (sortedNCs.length === 0) {
+            topContainer.innerHTML = '<p style="font-size:0.8rem; color:#666;">Nenhuma pendência registrada ainda.</p>';
+        } else {
+            const maxVal = sortedNCs[0][1];
+            topContainer.innerHTML = sortedNCs.map(([name, count]) => {
+                const pct = Math.round((count / maxVal) * 100);
+                return `
+                    <div style="margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.78rem; font-weight:bold;">
+                            <span>${name}</span>
+                            <span style="color:var(--danger);">${count} ocorrência(s)</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${pct}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 2. Renderiza Prioridade por Responsável (Gravidade > Tempo)
+        const respContainer = document.getElementById('resp-priority-container');
+        if (Object.keys(activeByResp).length === 0) {
+            respContainer.innerHTML = '<p style="font-size:0.8rem; color:#666;">Nenhuma pendência ativa para exibição.</p>';
+        } else {
+            respContainer.innerHTML = Object.keys(activeByResp).map(resp => {
+                // Ordenação: Gravidade maior primeiro. Se igual, Mais antigo (timestamp menor) primeiro.
+                activeByResp[resp].sort((a, b) => {
+                    let weightA = severityWeight[a.severity] || 1;
+                    let weightB = severityWeight[b.severity] || 1;
+                    if (weightB !== weightA) return weightB - weightA;
+                    return a.timestamp - b.timestamp;
+                });
+
+                return `
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:6px; margin-bottom:10px;">
+                        <strong style="color:var(--primary); font-size:0.85rem;">👷‍♂️ ${resp} (${activeByResp[resp].length} em aberto)</strong>
+                        <div style="margin-top:6px;">
+                            ${activeByResp[resp].map(item => `
+                                <div style="background:#fff; border:1px solid #eee; padding:6px; border-radius:4px; margin-bottom:4px; font-size:0.75rem;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <strong>Apto ${item.unit} - ${item.item}</strong>
+                                        <span class="badge-${item.severity.toLowerCase()}">${item.severity}</span>
+                                    </div>
+                                    <div style="color:#666; margin-top:2px;">${item.nc}</div>
+                                    <small style="color:#94a3b8;">📅 Vistoriado em: ${item.date}</small>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
     }
 
     function renderMapGrid() {
@@ -1060,7 +1200,6 @@
         document.getElementById('history-panel').style.display = 'none';
     }
 
-    // RENDERIZAÇÃO DO CALENDÁRIO & BARRA LATERAL COM PRAZOS DE DIAS ÚTEIS
     function renderInteractiveCalendar() {
         const calendarEl = document.getElementById('calendar');
         if (!calendarEl) return;
