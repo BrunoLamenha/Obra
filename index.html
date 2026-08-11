@@ -1314,84 +1314,148 @@ const checklist = [
         document.getElementById('history-panel').style.display = 'none';
     }
 
-    function renderInteractiveCalendar() {
-        const calendarEl = document.getElementById('calendar');
-        if (!calendarEl) return;
+   // Mapeamento de cores fixas por Serviço/Responsável
+const respColors = {
+    "Pintura / Emassamento": "#2563eb",       // Azul
+    "Marmoraria / Graniteiro": "#7c3aed",     // Roxo
+    "Instalações Hidráulicas": "#0284c7",    // Azul Claro
+    "Eletricista": "#d97706",                // Âmbar / Laranja
+    "Marcenaria / Portas de Madeira": "#78350f", // Castanho
+    "Esquadrias de Alumínio / Vidros": "#475569",// Cinza Escuro
+    "Piso e Revestimento": "#059669",        // Verde Esmeralda
+    "Gesso / Sancas": "#db2777",             // Rosa
+    "Serralharia / Portões": "#525252",      // Grafite
+    "Impermeabilização": "#0891b2",          // Ciano
+    "Limpeza Pós-Obra": "#16a34a",           // Verde
+    "Gás Encanado": "#ea580c"                // Laranja Forte
+};
 
-        let events = [];
-        let unassignedHTML = '';
-        const filterResp = document.getElementById('calendar-resp-filter').value;
+function renderInteractiveCalendar() {
+    const calendarEl = document.getElementById('calendar');
+    if (!calendarEl) return;
 
-        Object.keys(dbUnitsCache).forEach(key => {
-            const unitNum = key.replace('unit_', '');
-            const history = dbUnitsCache[key] || [];
-            if (history.length > 0) {
-                const hIndex = history.length - 1;
-                const last = history[hIndex];
-                if (last.details) {
-                    last.details.forEach((d, dIndex) => {
-                        if ((filterResp === 'TODOS' || d.responsible === filterResp) && d.status !== 'Concluído') {
-                            
-                            let deadline = d.deadlineDate || (d.scheduledFor && d.businessDays ? addBusinessDays(d.scheduledFor, parseInt(d.businessDays)) : null);
+    let events = [];
+    let unassignedHTML = '';
+    let scheduledTasksHTML = '';
+    const filterResp = document.getElementById('calendar-resp-filter').value;
 
-                            unassignedHTML += `
-                                <div class="fc-task-card" style="background:#fff; border:1px solid #cbd5e1; padding:10px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                                        <div>
-                                            <strong style="color:var(--primary);">Apto ${unitNum}</strong> - ${d.item}<br>
-                                            <small style="color:#dc2626; font-weight:bold;">${d.nonConformity}</small><br>
-                                            <small><strong>Resp:</strong> ${d.responsible}</small>
-                                        </div>
-                                        <button onclick="resolveTaskFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
-                                                style="background:#28a745; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; font-weight:bold;">
-                                            ✓ Sanar
-                                        </button>
+    Object.keys(dbUnitsCache).forEach(key => {
+        const unitNum = key.replace('unit_', '');
+        const history = dbUnitsCache[key] || [];
+        if (history.length > 0) {
+            const hIndex = history.length - 1;
+            const last = history[hIndex];
+            if (last.details) {
+                last.details.forEach((d, dIndex) => {
+                    const respName = d.responsible || 'Outro';
+                    
+                    if ((filterResp === 'TODOS' || respName === filterResp) && d.status !== 'Concluído') {
+                        
+                        let deadline = d.deadlineDate || (d.scheduledFor && d.businessDays ? addBusinessDays(d.scheduledFor, parseInt(d.businessDays)) : null);
+                        let serviceColor = respColors[respName] || '#004a8f';
+
+                        // 1. CARDS DE CONFIGURAÇÃO DE PRAZO (LATERAL ESQUERDA)
+                        unassignedHTML += `
+                            <div class="fc-task-card" style="background:#fff; border:1px solid #cbd5e1; border-left: 4px solid ${serviceColor}; padding:10px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                                    <div>
+                                        <strong style="color:${serviceColor};">Apto ${unitNum}</strong> - ${d.item}<br>
+                                        <small style="color:#dc2626; font-weight:bold;">${d.nonConformity}</small><br>
+                                        <small><strong>Resp:</strong> ${respName}</small>
                                     </div>
+                                    <button onclick="resolveTaskFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
+                                            style="background:#28a745; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; font-weight:bold;">
+                                        ✓ Sanar
+                                    </button>
+                                </div>
 
-                                    <div style="background:#f1f5f9; padding:8px; border-radius:4px; margin-top:6px; font-size:0.75rem;">
-                                        <div style="font-weight:bold; color:#334155; margin-bottom:4px;">⚙️ Definir / Alterar Prazo:</div>
-                                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
-                                            <div>
-                                                <label style="font-size:0.7rem; margin:0;">Início:</label>
-                                                <input type="date" id="cal_date_${unitNum}_${hIndex}_${dIndex}" value="${d.scheduledFor || ''}" style="padding:4px; font-size:0.75rem;">
-                                            </div>
-                                            <div>
-                                                <label style="font-size:0.7rem; margin:0;">Dias Úteis:</label>
-                                                <input type="number" id="cal_days_${unitNum}_${hIndex}_${dIndex}" min="1" placeholder="A definir" value="${d.businessDays || ''}" style="padding:4px; font-size:0.75rem;">
-                                            </div>
+                                <div style="background:#f1f5f9; padding:8px; border-radius:4px; margin-top:6px; font-size:0.75rem;">
+                                    <div style="font-weight:bold; color:#334155; margin-bottom:4px;">⚙️ Definir / Alterar Prazo:</div>
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                                        <div>
+                                            <label style="font-size:0.7rem; margin:0;">Início:</label>
+                                            <input type="date" id="cal_date_${unitNum}_${hIndex}_${dIndex}" value="${d.scheduledFor || ''}" style="padding:4px; font-size:0.75rem;">
                                         </div>
-                                        <button onclick="updateTaskScheduleFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
-                                                style="width:100%; margin-top:6px; background:#007bff; color:white; border:none; padding:5px; border-radius:3px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
-                                            💾 Salvar Prazo
-                                        </button>
-                                        <div style="margin-top:4px; color:#d97706; font-weight:bold;">
-                                            Prazo Final: ${deadline || 'Sem prazo definido'}
+                                        <div>
+                                            <label style="font-size:0.7rem; margin:0;">Dias Úteis:</label>
+                                            <input type="number" id="cal_days_${unitNum}_${hIndex}_${dIndex}" min="1" placeholder="A definir" value="${d.businessDays || ''}" style="padding:4px; font-size:0.75rem;">
                                         </div>
+                                    </div>
+                                    <button onclick="updateTaskScheduleFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
+                                            style="width:100%; margin-top:6px; background:#007bff; color:white; border:none; padding:5px; border-radius:3px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
+                                        💾 Salvar Prazo
+                                    </button>
+                                    <div style="margin-top:4px; color:#d97706; font-weight:bold;">
+                                        Prazo Final: ${deadline || 'Não calculada'}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        // 2. MONTAGEM DAS TAGS NO CALENDÁRIO E LISTA DE ATIVIDADES
+                        if (d.scheduledFor) {
+                            let endDateIso = null;
+                            if (deadline && deadline.includes('/')) {
+                                const parts = deadline.split('/');
+                                endDateIso = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                            }
+
+                            // Tag no Calendário
+                            events.push({
+                                id: `${unitNum}_${hIndex}_${dIndex}`,
+                                title: `APTO ${unitNum}: ${d.nonConformity}`,
+                                start: d.scheduledFor,
+                                end: endDateIso || d.scheduledFor,
+                                backgroundColor: serviceColor,
+                                borderColor: serviceColor,
+                                textColor: '#ffffff'
+                            });
+
+                            // Item para a Lista de Atividades Agendadas
+                            scheduledTasksHTML += `
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #e2e8f0; border-left:5px solid ${serviceColor}; padding:8px 12px; border-radius:6px; margin-bottom:6px; font-size:0.8rem;">
+                                    <div>
+                                        <span style="background:${serviceColor}; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold; margin-right:6px;">APTO ${unitNum}</span>
+                                        <strong>${respName}</strong> — <span style="color:#475569;">${d.item}: ${d.nonConformity}</span>
+                                    </div>
+                                    <div style="text-align:right; font-size:0.75rem; color:#64748b;">
+                                        📅 Início: <strong>${d.scheduledFor}</strong> | Prazo Final: <strong style="color:#d97706;">${deadline || 'N/A'}</strong>
                                     </div>
                                 </div>
                             `;
                         }
-                    });
-                }
+                    }
+                });
             }
-        });
+        }
+    });
 
-        document.getElementById('unassigned-tasks-list').innerHTML = unassignedHTML || '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência pendente.</p>';
-
-        if (fullCalendarInstance) fullCalendarInstance.destroy();
-
-        fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'pt-br',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,listWeek'
-            },
-            events: events
-        });
-        fullCalendarInstance.render();
+    // Renderiza a lista lateral e a lista de atividades no HTML
+    document.getElementById('unassigned-tasks-list').innerHTML = unassignedHTML || '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência pendente.</p>';
+    
+    const activityListEl = document.getElementById('scheduled-activities-list');
+    if (activityListEl) {
+        activityListEl.innerHTML = scheduledTasksHTML || '<p style="font-size:0.8rem; color:#666;">Nenhuma atividade agendada para o filtro selecionado.</p>';
     }
+
+    if (fullCalendarInstance) fullCalendarInstance.destroy();
+
+    fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'pt-br',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,listWeek'
+        },
+        events: events,
+        eventClick: function(info) {
+            alert(`📌 ${info.event.title}\n📅 Início: ${info.event.start.toLocaleDateString('pt-BR')}`);
+        }
+    });
+    
+    fullCalendarInstance.render();
+}
 
     function exportToExcelXLSX() {
         let exportData = [];
