@@ -349,14 +349,16 @@
     
  function detectDevice() {
     try {
+        // 1. Pega ou cria o ID do dispositivo
         let deviceId = localStorage.getItem('vistoria_device_id');
         if (!deviceId) {
             deviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
             localStorage.setItem('vistoria_device_id', deviceId);
         }
 
-        let platform = "Dispositivo Movel";
-        const userAgent = navigator.userAgent || "";
+        // 2. Identifica o sistema operacional
+        let platform = "Dispositivo Móvel";
+        var userAgent = navigator.userAgent || "";
         if (userAgent.indexOf("Android") > -1) platform = "Android";
         else if (userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPad") > -1) platform = "iOS (iPhone/iPad)";
         else if (userAgent.indexOf("Windows") > -1) platform = "Windows PC";
@@ -364,37 +366,37 @@
 
         deviceDetails = platform + " | ID: " + deviceId;
 
-        // Atualização direta do DOM
-        const infoEl = document.getElementById('device-info-text');
+        // 3. ATUALIZA A TELA NA NA HORA
+        var infoEl = document.getElementById('device-info-text');
         if (infoEl) {
             infoEl.innerHTML = "📱 <strong>" + platform + "</strong><br>🆔 Código Único do Dispositivo: <strong>" + deviceId + "</strong>";
         }
 
-        // Puxa o nome local imediatamente
-        const localName = localStorage.getItem('vistoria_inspector_name');
-        const nameInput = document.getElementById('inspector-name');
+        // 4. Preenche o último nome salvo localmente
+        var localName = localStorage.getItem('vistoria_inspector_name');
+        var nameInput = document.getElementById('inspector-name');
         if (localName && nameInput && !nameInput.value) {
             nameInput.value = localName;
         }
 
-        // Busca opcional em background no Firebase
+        // 5. Busca no Firebase em segundo plano (sem travar a tela)
         if (typeof db !== 'undefined' && db) {
-            db.collection('dispositivos').doc(deviceId).get().then(function(devDoc) {
-                if (devDoc.exists && devDoc.data() && devDoc.data().lastInspectorName) {
-                    const firebaseName = devDoc.data().lastInspectorName;
-                    if (nameInput && !nameInput.value) nameInput.value = firebaseName;
-                    localStorage.setItem('vistoria_inspector_name', firebaseName);
-                }
-            }).catch(function(e) { console.log("Firebase sync silent:", e); });
+            db.collection('dispositivos').doc(deviceId).get()
+                .then(function(devDoc) {
+                    if (devDoc.exists && devDoc.data() && devDoc.data().lastInspectorName) {
+                        var firebaseName = devDoc.data().lastInspectorName;
+                        if (nameInput && !nameInput.value) nameInput.value = firebaseName;
+                        localStorage.setItem('vistoria_inspector_name', firebaseName);
+                    }
+                })
+                .catch(function(e) { 
+                    console.log("Busca em segundo plano indisponível:", e); 
+                });
         }
     } catch (err) {
-        console.error("Erro em detectDevice:", err);
+        console.error("Erro na detecção do dispositivo:", err);
     }
 }
-
-// Garante chamada em qualquer cenário de carregamento
-detectDevice();
-document.addEventListener("DOMContentLoaded", detectDevice);
 
   function confirmInspector() {
     const nameInput = document.getElementById('inspector-name').value.trim();
@@ -1445,6 +1447,12 @@ async function assignTaskDateFromInput(unitKey, ncIndex, originalDays) {
             container.style.display = 'none';
         }
     }
+}
+                    // Dispara a detecção imediatamente
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', detectDevice);
+} else {
+    detectDevice();
 }
 </script>
 
