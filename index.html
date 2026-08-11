@@ -49,8 +49,9 @@
         .btn-neutral { background: #e0e0e0; color: #333; }
 
         .nc-box { background: #fff5f5; border: 1px solid #f5c6cb; border-left: 5px solid var(--danger); border-radius: 6px; padding: 12px; margin-top: 10px; position: relative; }
-        .nc-header { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: bold; color: var(--danger); margin-bottom: 8px; }
-        .btn-remove { background: #ff4d4d; color: white; border: none; border-radius: 3px; padding: 2px 6px; font-size: 0.75rem; cursor: pointer; }
+        .nc-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: bold; color: var(--danger); margin-bottom: 8px; }
+        .btn-remove { background: #ff4d4d; color: white; border: none; border-radius: 3px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
+        .btn-sanar { background: #28a745; color: white; border: none; border-radius: 3px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-right: 5px; }
 
         .checklist-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #eee; }
         .chk-label { font-size: 0.8rem; font-weight: normal; display: flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; color: #333; }
@@ -458,8 +459,57 @@
         if (selectedCategory && selectedStage) {
             document.getElementById('unit-title').innerText = `Unidade: Apto ${selectedUnitNum} (${selectedCategory} - ${selectedStage})`;
             document.getElementById('inspection-area').style.display = 'block';
+            
+            // Tenta carregar pendências não resolvidas da última vistoria
+            loadPreviousActivePendencies();
             buildInspectionForm();
         }
+    }
+
+    // CARREGA PENDÊNCIAS ANTERIORES PARA A REVISTORIA
+    function loadPreviousActivePendencies() {
+        pendingNCs = {};
+        const historyKey = `unit_${selectedUnitNum}`;
+        const history = dbUnitsCache[historyKey] || [];
+        
+        if (history.length === 0) return;
+
+        const lastInsp = history[history.length - 1];
+        if (!lastInsp.details || lastInsp.details.length === 0) return;
+
+        lastInsp.details.forEach(d => {
+            if (d.status !== 'Concluído') {
+                // Mapeia ambiente e item de volta para a chave de controle
+                let roomKey = Object.keys(roomNames).find(k => roomNames[k] === d.room) || 'room-dorm';
+                let itemObj = checklist.find(i => i.cleanName === d.item) || checklist[0];
+                let key = `${roomKey}_${itemObj.id}`;
+
+                if (!pendingNCs[key]) pendingNCs[key] = [];
+
+                // Separa opções marcadas das observações
+                let opts = [];
+                let obsText = '';
+
+                if (d.nonConformity) {
+                    let parts = d.nonConformity.split(' (');
+                    opts = parts[0] ? parts[0].split(', ').map(s => s.trim()) : [];
+                    if (parts[1]) obsText = parts[1].replace(')', '').trim();
+                }
+
+                pendingNCs[key].push({
+                    id: d.id || Date.now(),
+                    selectedOpts: opts,
+                    obs: obsText,
+                    resp: d.responsible || '',
+                    respOther: '',
+                    startDate: d.scheduledFor || '',
+                    businessDays: d.businessDays || '',
+                    status: d.status || 'Aguardando',
+                    severity: d.severity || 'Baixa',
+                    photos: d.photos || []
+                });
+            }
+        });
     }
 
     function buildInspectionForm() {
@@ -471,6 +521,7 @@
                 const key = `${roomId}_${item.id}`;
                 if (!pendingNCs[key]) pendingNCs[key] = [];
 
+                let hasPending = pendingNCs[key].length > 0;
                 let ncBoxesHTML = renderNCBoxes(key, item);
 
                 container.innerHTML += `
@@ -478,16 +529,19 @@
                         <div class="item-header">
                             <span class="item-title">${item.name}</span>
                             <div>
-                                <button class="btn-status btn-neutral" id="btn_ok_${key}" onclick="setItemStatus('${key}', 'OK', '${item.id}')">Conforme ✓</button>
-                                <button class="btn-status btn-neutral" id="btn_nok_${key}" onclick="setItemStatus('${key}', 'NOK', '${item.id}')">Não Conforme ✕</button>
+                                <button class="btn-status ${hasPending ? 'btn-neutral' : 'btn-ok-active'}" id="btn_ok_${key}" onclick="setItemStatus('${key}', 'OK', '${item.id}')">Conforme ✓</button>
+                                <button class="btn-status ${hasPending ? 'btn-nok-active' : 'btn-neutral'}" id="btn_nok_${key}" onclick="setItemStatus('${key}', 'NOK', '${item.id}')">Não Conforme ✕</button>
                             </div>
                         </div>
                         <div id="nc_container_${key}">${ncBoxesHTML}</div>
-                        <button class="btn-add-nc" id="btn_add_${key}" style="display:${pendingNCs[key].length > 0 ? 'block' : 'none'};" onclick="addNC('${key}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
+                        <button class="btn-add-nc" id="btn_add_${key}" style="display:${hasPending ? 'block' : 'none'};" onclick="addNC('${key}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
                     </div>
                 `;
             });
         });
+
+        // Restaura valores e estados dos checkboxes e inputs após renderizar o HTML
+        Object.keys(pendingNCs).forEach(key => restaurarValoresInputs(key));
     }
 
     function toggleOutroResp(key, index) {
@@ -507,31 +561,36 @@
     function handleStatusChange(key, index, itemId) {
         const statusEl = document.getElementById(`status_${key}_${index}`);
         if (statusEl && statusEl.value === 'Concluído') {
-            const confirmAction = confirm("Confirma que apenas ESTA pendência foi sanada?");
-            if (confirmAction) {
-                pendingNCs[key].splice(index, 1);
-                
-                const itemObj = checklist.find(i => i.id === itemId);
-                const container = document.getElementById(`nc_container_${key}`);
-                if (container) {
-                    container.innerHTML = renderNCBoxes(key, itemObj);
-                    restaurarValoresInputs(key);
-                }
-
-                if (pendingNCs[key].length === 0) {
-                    const btnOk = document.getElementById(`btn_ok_${key}`);
-                    const btnNok = document.getElementById(`btn_nok_${key}`);
-                    const btnAdd = document.getElementById(`btn_add_${key}`);
-                    if (btnOk) btnOk.className = "btn-status btn-ok-active";
-                    if (btnNok) btnNok.className = "btn-status btn-neutral";
-                    if (btnAdd) btnAdd.style.display = 'none';
-                }
-                return;
-            } else {
-                statusEl.value = 'Aguardando';
-            }
+            sanarNC(key, index, itemId);
+            return;
         }
         salvarEstadoAtualInput(key);
+    }
+
+    function sanarNC(key, index, itemId) {
+        const confirmAction = confirm("Confirma que esta pendência foi SANADA e resolvida?");
+        if (confirmAction) {
+            pendingNCs[key].splice(index, 1);
+            
+            const itemObj = checklist.find(i => i.id === itemId);
+            const container = document.getElementById(`nc_container_${key}`);
+            if (container) {
+                container.innerHTML = renderNCBoxes(key, itemObj);
+                restaurarValoresInputs(key);
+            }
+
+            if (pendingNCs[key].length === 0) {
+                const btnOk = document.getElementById(`btn_ok_${key}`);
+                const btnNok = document.getElementById(`btn_nok_${key}`);
+                const btnAdd = document.getElementById(`btn_add_${key}`);
+                if (btnOk) btnOk.className = "btn-status btn-ok-active";
+                if (btnNok) btnNok.className = "btn-status btn-neutral";
+                if (btnAdd) btnAdd.style.display = 'none';
+            }
+        } else {
+            const statusEl = document.getElementById(`status_${key}_${index}`);
+            if (statusEl) statusEl.value = 'Aguardando';
+        }
     }
 
     function salvarEstadoAtualInput(key) {
@@ -599,7 +658,7 @@
             resp: '',
             respOther: '',
             startDate: '',
-            businessDays: '', // INICIA VAZIO / A DEFINIR
+            businessDays: '',
             status: 'Aguardando',
             severity: 'Baixa',
             photos: []
@@ -697,7 +756,10 @@
                 <div class="nc-box">
                     <div class="nc-header">
                         <span>PENDÊNCIA #${index + 1}</span>
-                        <button class="btn-remove" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
+                        <div>
+                            <button class="btn-sanar" onclick="sanarNC('${key}', ${index}, '${itemObj.id}')">✓ Sanar / Concluir</button>
+                            <button class="btn-remove" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
+                        </div>
                     </div>
                     <div class="checklist-group">${chkBoxes}</div>
                     
@@ -782,11 +844,14 @@
 
             if (obsEl && nc.obs) obsEl.value = nc.obs;
             if (respEl && nc.resp) {
-                respEl.value = nc.resp;
-                if (nc.resp === 'Outro') {
+                let options = Array.from(respEl.options).map(o => o.value);
+                if (options.includes(nc.resp)) {
+                    respEl.value = nc.resp;
+                } else {
+                    respEl.value = 'Outro';
                     if (respOtherEl) {
                         respOtherEl.style.display = 'block';
-                        if (nc.respOther) respOtherEl.value = nc.respOther;
+                        respOtherEl.value = nc.resp;
                     }
                 }
             }
@@ -935,7 +1000,6 @@
         window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
     }
 
-    // EDITA E SALVA PRAZO DIRETO NA ABA DE CALENDÁRIO / CRONOGRAMA
     function updateTaskScheduleFromCalendar(unitNum, historyIndex, detailIndex) {
         const historyKey = `unit_${unitNum}`;
         if (!dbUnitsCache[historyKey] || !dbUnitsCache[historyKey][historyIndex]) return;
@@ -1229,7 +1293,6 @@
         document.getElementById('history-panel').style.display = 'none';
     }
 
-    // RENDERIZAÇÃO DO CALENDÁRIO COM FORMULÁRIO DE EDIÇÃO DE PRAZO
     function renderInteractiveCalendar() {
         const calendarEl = document.getElementById('calendar');
         if (!calendarEl) return;
