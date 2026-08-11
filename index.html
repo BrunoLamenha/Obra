@@ -1427,24 +1427,17 @@ async function assignTaskDateFromInput(unitKey, ncIndex, originalDays) {
             dbUnitsCache[unitKey] = history;
             renderInteractiveCalendar();
         } catch (err) {
-            console.error("Erro ao atualizar dados no Firebase:", err);
-            alert("⚠️ Não foi possível salvar as alterações no banco de dados.");
-        }
-    }
-}
-    function toggleOtherRespField(boxId, selectEl) {
-    const container = document.getElementById(`other-resp-container-${boxId}`);
-    if (container) {
-        if (selectEl.value === 'Outro') {
-            container.style.display = 'block';
-       // Bloco final de inicialização seguro
+// ==========================================
+// FECHAMENTO SEGURO DO ARQUIVO JS
+// ==========================================
+
 function initApp() {
     try {
         if (typeof detectDevice === 'function') {
             detectDevice();
         }
     } catch (e) {
-        console.error("Erro na inicialização:", e);
+        console.error("Erro ao inicializar:", e);
     }
 }
 
