@@ -613,6 +613,42 @@
         `).join('');
     }
 
+function toggleOutroResp(key, index) {
+    const select = document.getElementById(`resp_${key}_${index}`);
+    const otherInput = document.getElementById(`resp_other_${key}_${index}`);
+    if (select && otherInput) {
+        if (select.value === 'Outro') {
+            otherInput.style.display = 'block';
+        } else {
+            otherInput.style.display = 'none';
+            otherInput.value = '';
+        }
+    }
+    salvarEstadoAtualInput(key);
+}
+
+function salvarEstadoAtualInput(key) {
+    if (!pendingNCs[key]) return;
+    pendingNCs[key].forEach((nc, index) => {
+        const obsEl = document.getElementById(`obs_${key}_${index}`);
+        const respEl = document.getElementById(`resp_${key}_${index}`);
+        const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
+        const dateEl = document.getElementById(`date_${key}_${index}`);
+        const statusEl = document.getElementById(`status_${key}_${index}`);
+
+        if (obsEl) nc.obs = obsEl.value;
+        if (respEl) nc.resp = respEl.value;
+        if (respOtherEl) nc.respOther = respOtherEl.value;
+        if (dateEl) nc.startDate = dateEl.value;
+        if (statusEl) nc.status = statusEl.value;
+
+        nc.selectedOpts = [];
+        document.querySelectorAll(`.chk_${key}_${index}:checked`).forEach(chk => {
+            nc.selectedOpts.push(chk.value);
+        });
+    });
+}
+
 function renderNCBoxes(key, itemObj) {
     if (!pendingNCs[key] || pendingNCs[key].length === 0) return '';
 
@@ -633,8 +669,9 @@ function renderNCBoxes(key, itemObj) {
                 
                 <div class="grid-two" style="margin-top: 5px;">
                     <div>
-                        <label>Responsável / Subempreiteiro:</label>
-                        <select id="resp_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                        <label>Responsável / Subempreiteiro: <span style="color:red;">*</span></label>
+                        <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
+                            <option value="" disabled selected>Escolha o Responsável...</option>
                             <option value="Pintura / Emassamento">Pintura / Emassamento</option>
                             <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
                             <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
@@ -643,7 +680,13 @@ function renderNCBoxes(key, itemObj) {
                             <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
                             <option value="Piso e Revestimento">Piso e Revestimento</option>
                             <option value="Gesso / Sancas">Gesso / Sancas</option>
+                            <option value="Serralharia / Portões">Serralharia / Portões</option>
+                            <option value="Impermeabilização">Impermeabilização</option>
+                            <option value="Limpeza Pós-Obra">Limpeza Pós-Obra</option>
+                            <option value="Gás Encanado">Gás Encanado</option>
+                            <option value="Outro">Outro (Especifique)</option>
                         </select>
+                        <input type="text" id="resp_other_${key}_${index}" placeholder="Digite o responsável..." style="display:none; margin-top:6px;" oninput="salvarEstadoAtualInput('${key}')">
                     </div>
                     <div>
                         <label>Prazo / Data de Início do Reparo:</label>
@@ -681,11 +724,20 @@ function restaurarValoresInputs(key) {
     pendingNCs[key].forEach((nc, index) => {
         const obsEl = document.getElementById(`obs_${key}_${index}`);
         const respEl = document.getElementById(`resp_${key}_${index}`);
+        const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
         const dateEl = document.getElementById(`date_${key}_${index}`);
         const statusEl = document.getElementById(`status_${key}_${index}`);
 
         if (obsEl && nc.obs) obsEl.value = nc.obs;
-        if (respEl && nc.resp) respEl.value = nc.resp;
+        if (respEl && nc.resp) {
+            respEl.value = nc.resp;
+            if (nc.resp === 'Outro') {
+                if (respOtherEl) {
+                    respOtherEl.style.display = 'block';
+                    if (nc.respOther) respOtherEl.value = nc.respOther;
+                }
+            }
+        }
         if (dateEl && nc.startDate) dateEl.value = nc.startDate;
         if (statusEl && nc.status) statusEl.value = nc.status;
 
@@ -701,6 +753,21 @@ function restaurarValoresInputs(key) {
 }
 
     function generateTechnicalPDF() {
+        // Adicione no topo da função generateTechnicalPDF():
+let hasMissingResp = false;
+Object.keys(pendingNCs).forEach(key => {
+    salvarEstadoAtualInput(key);
+    pendingNCs[key].forEach(nc => {
+        if (!nc.resp || nc.resp === "" || (nc.resp === "Outro" && !nc.respOther?.trim())) {
+            hasMissingResp = true;
+        }
+    });
+});
+
+if (hasMissingResp) {
+    alert("Por favor, selecione um Responsável/Subempreiteiro para todas as pendências antes de finalizar!");
+    return;
+}
         Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
 
         let totalPendencies = 0;
