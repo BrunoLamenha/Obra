@@ -5,58 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vistoria Interna de Obra - Pro</title>
 
-    <!-- LIBS EXTERNAS (Excel, Calendário e Firebase Compat) -->
+    <!-- LIBS EXTERNAS -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        body { background: #f4f6f9; padding: 10px; color: #333; }
-        .header { background: #004a8f; color: white; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 12px; }
-        .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: #e2e8f0; font-weight: bold; border-radius: 6px; cursor: pointer; }
-        .tab-btn.active { background: #004a8f; color: white; }
+        :root {
+            --primary: #004a8f;
+            --primary-hover: #003366;
+            --secondary: #0891b2;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg-body: #f4f6f9;
+            --card-bg: #ffffff;
+            --border-color: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background: var(--bg-body); padding: 15px; color: #1e293b; max-width: 1200px; margin: 0 auto; }
         
-        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; margin-top: 10px; }
-        .btn { padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer; }
-        .btn.active { background: #004a8f; color: white; border-color: #004a8f; }
+        .header { background: var(--primary); color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .header h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+        .header small { font-size: 0.85rem; opacity: 0.9; }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 14px; border: none; background: #e2e8f0; font-weight: bold; font-size: 0.95rem; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; color: #475569; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 4px rgba(0,74,143,0.3); }
+
+        .card { background: var(--card-bg); padding: 18px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+        .card h3, .card h4 { color: var(--primary); font-size: 1.1rem; margin-bottom: 12px; }
+
+        .btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 10px; margin-top: 10px; }
+        .btn { padding: 12px 8px; border: 1px solid var(--border-color); background: #f8fafc; border-radius: 6px; text-align: center; font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: 0.15s; }
+        .btn:hover { background: #e2e8f0; }
+        .btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         .unit-ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #065f46; }
         .unit-nok { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b; }
-        
-        .item-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #fafafa; }
-        .item-header { display: flex; justify-content: space-between; align-items: center; }
-        .item-title { font-weight: bold; font-size: 0.9rem; width: 55%; }
-        .btn-status { padding: 6px 10px; border: none; border-radius: 4px; font-weight: bold; font-size: 0.75rem; cursor: pointer; margin-left: 4px; }
-        .btn-neutral { background: #cbd5e1; color: #334155; }
-        .btn-ok-active { background: #16a34a; color: white; }
-        .btn-nok-active { background: #dc2626; color: white; }
-        
-        .nc-box { background: #fff; border: 1px dashed #dc2626; padding: 10px; border-radius: 6px; margin-top: 8px; }
-        .nc-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.8rem; color: #dc2626; margin-bottom: 6px; }
-        .checklist-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
-        .chk-label { font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
-        
-        .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.82rem; }
-        label { font-size: 0.75rem; font-weight: bold; color: #475569; display: block; margin-bottom: 3px; }
-        
-        .photo-area { margin-top: 8px; border-top: 1px solid #eee; padding-top: 6px; }
-        .photo-gallery { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-        .photo-container { position: relative; width: 60px; height: 60px; }
-        .photo-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
-        .btn-remove-photo { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; }
 
-        .btn-main { width: 100%; padding: 14px; background: #0891b2; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; }
-        .btn-add-nc { width: 100%; padding: 8px; background: #64748b; color: white; border: none; border-radius: 4px; font-size: 0.8rem; margin-top: 6px; cursor: pointer; }
+        .item-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px; background: #fafafa; }
+        .item-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .item-title { font-weight: 600; font-size: 0.95rem; flex: 1; }
         
-        .kpi-container { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .kpi-card { background: white; padding: 12px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .kpi-num { font-size: 1.4rem; font-weight: bold; margin-top: 5px; }
+        .btn-status { padding: 8px 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .btn-neutral { background: #e2e8f0; color: #475569; }
+        .btn-ok-active { background: var(--success); color: white; }
+        .btn-nok-active { background: var(--danger); color: white; }
 
-        .badge-resp { display: inline-block; padding: 3px 8px; border-radius: 12px; color: white; font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; }
+        .nc-box { background: #fff; border: 1px dashed var(--danger); padding: 12px; border-radius: 8px; margin-top: 10px; }
+        .nc-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.85rem; color: var(--danger); margin-bottom: 10px; }
+
+        .checklist-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; margin-bottom: 10px; background: #f8fafc; padding: 8px; border-radius: 6px; }
+        .chk-label { font-size: 0.82rem; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+        .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media(max-width: 600px) { .grid-two { grid-template-columns: 1fr; } }
+
+        input, select { width: 100%; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.85rem; background: #fff; }
+        input:focus, select:focus { outline: 2px solid var(--primary); border-color: transparent; }
+        label { font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px; text-transform: uppercase; }
+
+        .photo-area { margin-top: 10px; border-top: 1px solid #eee; padding-top: 8px; }
+        .photo-gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .photo-container { position: relative; width: 70px; height: 70px; }
+        .photo-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer; }
+        .btn-remove-photo { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; font-weight: bold; }
+
+        .btn-main { width: 100%; padding: 14px; background: var(--secondary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 12px; transition: 0.2s; }
+        .btn-main:hover { opacity: 0.95; }
+        .btn-add-nc { width: 100%; padding: 9px; background: #64748b; color: white; border: none; border-radius: 6px; font-size: 0.82rem; margin-top: 8px; cursor: pointer; font-weight: 600; }
+
+        .kpi-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 15px; }
+        .kpi-card { background: white; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; }
+        .kpi-card small { font-size: 0.75rem; font-weight: 700; color: #64748b; }
+        .kpi-num { font-size: 1.6rem; font-weight: bold; margin-top: 4px; }
+
+        .badge-resp { display: inline-block; padding: 4px 10px; border-radius: 12px; color: white; font-size: 0.75rem; font-weight: bold; }
+
+        /* Modal Galeria */
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:9999; }
+        .modal-overlay img { max-width:90%; max-height:80vh; border-radius:8px; }
     </style>
 </head>
 <body>
@@ -66,20 +95,21 @@
         <small>Controle Técnico de Qualidade & Nuvem Pro</small>
     </div>
 
+    <!-- NAVEGAÇÃO DE ABAS -->
     <div class="tabs">
         <button class="tab-btn active" id="tab-vistorias-btn" onclick="switchTab('vistorias')">📝 Vistorias</button>
         <button class="tab-btn" id="tab-mapa-btn" onclick="switchTab('mapa')">📊 Mapa & Indicadores</button>
         <button class="tab-btn" id="tab-cronograma-btn" onclick="switchTab('cronograma')">📅 Cronograma</button>
     </div>
 
-    <!-- TAB 1: VISTORIAS -->
+    <!-- ABA 1: VISTORIAS -->
     <div id="tab-vistorias">
         <div class="card" id="inspector-card">
             <h3>👤 Identificação do Vistoriador</h3>
             <label style="margin-top:8px;">Nome Completo do Engenheiro / Vistoriador:</label>
             <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha">
             <div id="device-info-text" style="margin-top:8px; font-size:0.8rem; color:#666;"></div>
-            <button class="btn-main" style="background:#16a34a;" onclick="confirmInspector()">Confirmar & Iniciar Vistoria ✓</button>
+            <button class="btn-main" style="background:var(--success);" onclick="confirmInspector()">Confirmar & Iniciar Vistoria ✓</button>
         </div>
 
         <div class="card" id="floor-card" style="display:none;">
@@ -103,52 +133,53 @@
                 <button class="tab-btn btn-opt" id="btn-cat-padrao" onclick="setCategory('Padrão (Construtora)', this)">Padrão Construtora</button>
                 <button class="tab-btn btn-opt" id="btn-cat-reforma" onclick="setCategory('Reforma / Aditivo', this)">Reforma / Aditivo</button>
             </div>
-            <div id="suggested-stage-box" style="margin-top:10px; font-size:0.85rem; color:#004a8f;"></div>
+            <div id="suggested-stage-box" style="margin-top:10px; font-size:0.85rem; color:var(--primary);"></div>
         </div>
 
+        <!-- AMBIENTES DA UNIDADE -->
         <div id="inspection-area" style="display:none;">
-            <div class="card" style="background:#004a8f; color:white;">
-                <h3 id="unit-title">Unidade</h3>
+            <div class="card" style="background:var(--primary); color:white;">
+                <h3 id="unit-title" style="color:white; margin-bottom:0;">Unidade</h3>
             </div>
 
             <div class="card">
-                <h4 style="color:#004a8f; margin-bottom:10px;">Dormitório / Cozinha</h4>
+                <h4>Dormitório / Cozinha</h4>
                 <div id="room-dorm"></div>
             </div>
 
             <div class="card">
-                <h4 style="color:#004a8f; margin-bottom:10px;">Banheiro</h4>
+                <h4>Banheiro</h4>
                 <div id="room-bath"></div>
             </div>
 
             <div class="card">
-                <h4 style="color:#004a8f; margin-bottom:10px;">Varanda</h4>
+                <h4>Varanda</h4>
                 <div id="room-balcony"></div>
             </div>
 
             <button class="btn-main" onclick="generateTechnicalPDF()">📄 Finalizar & Salvar Vistoria</button>
-            <button class="btn-main" id="btn-next" style="background:#16a34a; display:none; margin-top:8px;" onclick="sendWhatsAppSummary()">📲 Enviar Resumo WhatsApp</button>
+            <button class="btn-main" id="btn-next" style="background:var(--success); display:none; margin-top:8px;" onclick="sendWhatsAppSummary()">📲 Enviar Resumo WhatsApp</button>
         </div>
     </div>
 
-    <!-- TAB 2: MAPA E INDICADORES -->
+    <!-- ABA 2: MAPA E INDICADORES -->
     <div id="tab-mapa" style="display:none;">
         <div class="kpi-container">
             <div class="kpi-card">
                 <small>UNIDADES VISTORIADAS</small>
-                <div class="kpi-num" id="unidades-vistoriadas" style="color:#004a8f;">0 / 76</div>
+                <div class="kpi-num" id="unidades-vistoriadas" style="color:var(--primary);">0 / 76</div>
             </div>
             <div class="kpi-card">
                 <small>APROVADAS</small>
-                <div class="kpi-num" id="unidades-aprovadas" style="color:#16a34a;">0</div>
+                <div class="kpi-num" id="unidades-aprovadas" style="color:var(--success);">0</div>
             </div>
             <div class="kpi-card">
                 <small>PENDÊNCIAS ABERTAS</small>
-                <div class="kpi-num" id="pendencias-abertas" style="color:#dc2626;">0</div>
+                <div class="kpi-num" id="pendencias-abertas" style="color:var(--danger);">0</div>
             </div>
         </div>
 
-        <button class="btn-main" style="background:#16a34a; margin-bottom:12px;" onclick="exportToExcelXLSX()">📊 Baixar Dados em Excel (.xlsx)</button>
+        <button class="btn-main" style="background:var(--success); margin-bottom:12px;" onclick="exportToExcelXLSX()">📊 Baixar Dados em Excel (.xlsx)</button>
 
         <div class="card">
             <h4>🔥 Top Não Conformidades Mais Recorrentes na Obra</h4>
@@ -161,7 +192,7 @@
         </div>
     </div>
 
-    <!-- TAB 3: CRONOGRAMA -->
+    <!-- ABA 3: CRONOGRAMA & CALENDÁRIO -->
     <div id="tab-cronograma" style="display:none;">
         <div class="card">
             <label>Filtrar Responsável:</label>
@@ -177,15 +208,23 @@
                 <option value="Gesso / Sancas">Gesso / Sancas</option>
             </select>
         </div>
+        
         <div class="card">
             <div id="calendar"></div>
         </div>
+
         <div class="card">
             <h4>📋 Atividades Agendadas</h4>
             <div id="scheduled-activities-list" style="margin-top:10px;"></div>
         </div>
     </div>
 
+    <!-- MODAL PARA EXPANDIR FOTO -->
+    <div class="modal-overlay" id="img-modal" onclick="this.style.display='none'">
+        <img id="modal-img-src" src="">
+    </div>
+
+    <!-- LÓGICA E SCRIPT PRINCIPAL -->
     <script>
         const firebaseConfig = {
           apiKey: "AIzaSyBqtptEp5QjIOoAjwx0wT--cswUhSvcsGM",
@@ -271,7 +310,7 @@
 
             document.getElementById('inspector-card').innerHTML = `
                 <h3>👤 Responsável Confirmado</h3>
-                <p style="margin-top:5px; color:#004a8f;"><strong>Vistoriador:</strong> ${inspectorName}</p>
+                <p style="margin-top:5px; color:var(--primary);"><strong>Vistoriador:</strong> ${inspectorName}</p>
             `;
             document.getElementById('floor-card').style.display = 'block';
         }
@@ -290,15 +329,26 @@
                     snapshot.forEach(doc => { dbUnitsCache[doc.id] = doc.data().history || []; });
                     localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
                     updateDashboardData();
-                }).catch(err => console.log("Carregado via LocalStorage"));
+                }).catch(err => console.log("Carregado localmente"));
             }
         }
 
+        function parseBrazilianDateToISO(dateStr) {
+            if (!dateStr) return new Date().toISOString().split('T')[0];
+            if (dateStr.includes('-')) return dateStr;
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return new Date().toISOString().split('T')[0];
+        }
+
         function addBusinessDays(dateStr, days) {
-            if (!dateStr || isNaN(days) || days <= 0) return null;
-            let date = new Date(dateStr + 'T00:00:00');
+            let isoDate = parseBrazilianDateToISO(dateStr);
+            let daysToAdd = parseInt(days) || 3;
+            let date = new Date(isoDate + 'T00:00:00');
             let added = 0;
-            while (added < days) {
+            while (added < daysToAdd) {
                 date.setDate(date.getDate() + 1);
                 if (date.getDay() !== 0 && date.getDay() !== 6) added++;
             }
@@ -459,8 +509,8 @@
                         <div class="nc-header">
                             <span>PENDÊNCIA #${index + 1}</span>
                             <div>
-                                <button style="color:green; background:none; border:none; font-weight:bold; cursor:pointer; margin-right:8px;" onclick="sanarNC('${key}', ${index}, '${itemObj.id}')">✓ Sanar</button>
-                                <button style="color:red; background:none; border:none; font-weight:bold; cursor:pointer;" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
+                                <button style="color:var(--success); background:none; border:none; font-weight:bold; cursor:pointer; margin-right:8px;" onclick="sanarNC('${key}', ${index}, '${itemObj.id}')">✓ Sanar</button>
+                                <button style="color:var(--danger); background:none; border:none; font-weight:bold; cursor:pointer;" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
                             </div>
                         </div>
                         <div class="checklist-group">${chkBoxes}</div>
@@ -490,12 +540,12 @@
                                 </div>
                                 <div>
                                     <label>Prazo (Dias Úteis):</label>
-                                    <input type="number" id="days_${key}_${index}" min="1" placeholder="Dias" value="${nc.businessDays || ''}" oninput="salvarEstadoAtualInput('${key}')">
+                                    <input type="number" id="days_${key}_${index}" min="1" placeholder="3" value="${nc.businessDays || ''}" oninput="salvarEstadoAtualInput('${key}')">
                                 </div>
                             </div>
                         </div>
 
-                        <div class="grid-two" style="margin-top: 5px;">
+                        <div class="grid-two" style="margin-top: 6px;">
                             <div>
                                 <label>Status:</label>
                                 <select id="status_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
@@ -514,13 +564,13 @@
                             </div>
                         </div>
 
-                        <div style="margin-top: 5px;">
-                            <label>Observação:</label>
+                        <div style="margin-top: 6px;">
+                            <label>Observação Técnica:</label>
                             <input type="text" id="obs_${key}_${index}" placeholder="Detalhes..." oninput="salvarEstadoAtualInput('${key}')">
                         </div>
 
                         <div class="photo-area">
-                            <label>📷 Fotos:</label>
+                            <label>📷 Fotos Anexadas:</label>
                             <input type="file" accept="image/*" multiple capture="environment" onchange="handleMultiplePhotos(this, '${key}', ${index})">
                             <div class="photo-gallery" id="gallery_${key}_${index}"></div>
                         </div>
@@ -604,7 +654,7 @@
                 resp: '',
                 respOther: '',
                 startDate: '',
-                businessDays: '',
+                businessDays: '3',
                 status: 'Aguardando',
                 severity: 'Baixa',
                 photos: []
@@ -662,10 +712,15 @@
             
             galleryEl.innerHTML = photos.map((p, pIdx) => `
                 <div class="photo-container">
-                    <img src="${p}" class="photo-thumb">
+                    <img src="${p}" class="photo-thumb" onclick="openModal('${p}')">
                     <button type="button" class="btn-remove-photo" onclick="removePhoto('${key}', ${index}, ${pIdx})">✕</button>
                 </div>
             `).join('');
+        }
+
+        function openModal(src) {
+            document.getElementById('modal-img-src').src = src;
+            document.getElementById('img-modal').style.display = 'flex';
         }
 
         function removePhoto(key, ncIndex, photoIndex) {
@@ -716,10 +771,127 @@
             });
         }
 
+        function renderInteractiveCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            const listEl = document.getElementById('scheduled-activities-list');
+            const filterResp = document.getElementById('calendar-resp-filter')?.value || 'TODOS';
+
+            if (!calendarEl) return;
+
+            let events = [];
+            let scheduledList = [];
+
+            Object.keys(dbUnitsCache).forEach(key => {
+                const unitNum = key.replace('unit_', '');
+                const history = dbUnitsCache[key] || [];
+
+                if (history.length > 0) {
+                    const lastHistoryIndex = history.length - 1;
+                    const last = history[lastHistoryIndex];
+
+                    (last.details || []).forEach((d, detailIdx) => {
+                        if (d.status !== 'Concluído') {
+                            if (filterResp === 'TODOS' || d.responsible === filterResp) {
+                                let startDateISO = d.scheduledFor ? parseBrazilianDateToISO(d.scheduledFor) : parseBrazilianDateToISO(last.date);
+                                let days = parseInt(d.businessDays) || 3;
+                                let deadline = d.deadlineDate || addBusinessDays(startDateISO, days);
+
+                                events.push({
+                                    title: `Apto ${unitNum}: ${d.responsible}`,
+                                    start: startDateISO,
+                                    backgroundColor: respColors[d.responsible] || '#004a8f'
+                                });
+
+                                scheduledList.push(`
+                                    <div style="border-left: 4px solid ${respColors[d.responsible] || '#004a8f'}; background:#fff; padding:12px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.08); border:1px solid #e2e8f0;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                                            <strong>Apto ${unitNum} — ${d.responsible}</strong>
+                                            <span style="font-size:0.75rem; background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:12px; font-weight:bold;">${d.status || 'Aguardando'}</span>
+                                        </div>
+                                        <div style="font-size:0.85rem; color:#334155; margin:6px 0;">
+                                            <strong>Item:</strong> ${d.item} (${d.nonConformity})
+                                        </div>
+                                        <div style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">
+                                            📅 Início: <strong>${startDateISO}</strong> | Prazo Final: <strong>${deadline}</strong> (${days} dias úteis)
+                                        </div>
+                                        <div style="display:flex; gap:8px;">
+                                            <button onclick="editarPrazoCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="padding:6px 12px; font-size:0.78rem; background:var(--secondary); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✏️ Alterar Agendamento / Prazo</button>
+                                            <button onclick="concluirPendenciaCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="padding:6px 12px; font-size:0.78rem; background:var(--success); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✓ Sanar / Concluir</button>
+                                        </div>
+                                    </div>
+                                `);
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (fullCalendarInstance) fullCalendarInstance.destroy();
+
+            fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'pt-br',
+                events: events,
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                }
+            });
+
+            fullCalendarInstance.render();
+            if (listEl) listEl.innerHTML = scheduledList.join('') || '<p style="color:#666;">Nenhuma atividade pendente agendada.</p>';
+        }
+
+        function editarPrazoCalendar(unitKey, historyIdx, detailIdx) {
+            const item = dbUnitsCache[unitKey][historyIdx].details[detailIdx];
+            const novaData = prompt("Nova Data de Início (AAAA-MM-DD):", item.scheduledFor || new Date().toISOString().split('T')[0]);
+            if (!novaData) return;
+
+            const novosDias = prompt("Novo Prazo em Dias Úteis:", item.businessDays || "3");
+            if (!novosDias) return;
+
+            item.scheduledFor = novaData;
+            item.businessDays = novosDias;
+            item.deadlineDate = addBusinessDays(novaData, novosDias);
+
+            salvarAlteracaoGlobal(unitKey);
+        }
+
+        function concluirPendenciaCalendar(unitKey, historyIdx, detailIdx) {
+            if (confirm("Deseja marcar esta pendência como SANADA / CONCLUÍDA?")) {
+                const item = dbUnitsCache[unitKey][historyIdx].details[detailIdx];
+                item.status = "Concluído";
+                item.resolvedAt = new Date().toLocaleString('pt-BR');
+
+                salvarAlteracaoGlobal(unitKey);
+            }
+        }
+
+        function salvarAlteracaoGlobal(unitKey) {
+            localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
+
+            if (db && db.collection) {
+                db.collection('vistorias').doc(unitKey).set({
+                    unit: unitKey.replace('unit_', ''),
+                    history: dbUnitsCache[unitKey]
+                }, { merge: true }).then(() => {
+                    alert("Alteração salva no Firebase e LocalStorage!");
+                    renderInteractiveCalendar();
+                    updateDashboardData();
+                });
+            } else {
+                alert("Alteração salva localmente!");
+                renderInteractiveCalendar();
+                updateDashboardData();
+            }
+        }
+
         function generateTechnicalPDF() {
             let totalNCs = 0;
             let ncList = [];
-            const nowIso = new Date().toLocaleString('pt-BR');
+            const nowIso = new Date().toLocaleDateString('pt-BR');
+            const defaultStartDate = new Date().toISOString().split('T')[0];
 
             Object.keys(pendingNCs).forEach(key => {
                 salvarEstadoAtualInput(key);
@@ -730,8 +902,9 @@
 
                 pendingNCs[key].forEach(nc => {
                     totalNCs++;
-                    let days = parseInt(nc.businessDays);
-                    let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
+                    let startDate = nc.startDate ? parseBrazilianDateToISO(nc.startDate) : defaultStartDate;
+                    let days = parseInt(nc.businessDays) || 3;
+                    let deadlineDate = addBusinessDays(startDate, days);
                     let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
                     let obsText = nc.obs ? ` (${nc.obs})` : '';
 
@@ -744,9 +917,9 @@
                         severity: nc.severity || 'Baixa',
                         status: nc.status || 'Aguardando',
                         inspectedAt: nowIso,
-                        scheduledFor: nc.startDate || null,
-                        businessDays: nc.businessDays || null,
-                        deadlineDate: deadlineDate || null,
+                        scheduledFor: startDate,
+                        businessDays: days,
+                        deadlineDate: deadlineDate,
                         photos: nc.photos || []
                     });
                 });
@@ -775,7 +948,7 @@
                 }, { merge: true });
             }
 
-            alert(`Vistoria da Unidade ${selectedUnitNum} salva!`);
+            alert(`Vistoria da Unidade ${selectedUnitNum} salva com sucesso!`);
             updateDashboardData();
             document.getElementById('btn-next').style.display = 'block';
         }
@@ -829,88 +1002,31 @@
             document.getElementById('unidades-aprovadas').innerText = totalAprovadas;
             document.getElementById('pendencias-abertas').innerText = totalPendenciasAbertas;
 
-            // Top NCs
             const topNcEl = document.getElementById('top-nc-list');
             const sortedNCs = Object.keys(ncCount).sort((a,b) => ncCount[b] - ncCount[a]);
             if (sortedNCs.length > 0) {
                 topNcEl.innerHTML = sortedNCs.slice(0, 5).map(nc => `
-                    <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; font-size:0.85rem;">
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; font-size:0.85rem;">
                         <span>${nc}</span>
-                        <strong style="color:#dc2626;">${ncCount[nc]}x</strong>
+                        <strong style="color:var(--danger);">${ncCount[nc]}x</strong>
                     </div>
                 `).join('');
             } else {
                 topNcEl.innerHTML = "Nenhuma pendência registrada ainda.";
             }
 
-            // Fila Responsáveis
             const queueEl = document.getElementById('resp-queue-list');
             const sortedResps = Object.keys(respQueue).sort((a,b) => respQueue[b] - respQueue[a]);
             if (sortedResps.length > 0) {
                 queueEl.innerHTML = sortedResps.map(r => `
-                    <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; font-size:0.85rem;">
-                        <span class="badge-resp" style="background:${respColors[r] || '#004a8f'}">${r}</span>
-                        <strong>${respQueue[r]} pendências</strong>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee; font-size:0.85rem;">
+                        <span class="badge-resp" style="background:${respColors[r] || 'var(--primary)'}">${r}</span>
+                        <strong>${respQueue[r]} pendência(s)</strong>
                     </div>
                 `).join('');
             } else {
                 queueEl.innerHTML = "Nenhuma pendência ativa para exibição.";
             }
-        }
-
-        function renderInteractiveCalendar() {
-            const calendarEl = document.getElementById('calendar');
-            const listEl = document.getElementById('scheduled-activities-list');
-            const filterResp = document.getElementById('calendar-resp-filter')?.value || 'TODOS';
-
-            if (!calendarEl) return;
-
-            let events = [];
-            let scheduledList = [];
-
-            Object.keys(dbUnitsCache).forEach(key => {
-                const unitNum = key.replace('unit_', '');
-                const history = dbUnitsCache[key] || [];
-
-                if (history.length > 0) {
-                    const last = history[history.length - 1];
-                    (last.details || []).forEach(d => {
-                        if (d.status !== 'Concluído' && d.scheduledFor) {
-                            if (filterResp === 'TODOS' || d.responsible === filterResp) {
-                                events.push({
-                                    title: `Apto ${unitNum}: ${d.responsible}`,
-                                    start: d.scheduledFor,
-                                    backgroundColor: respColors[d.responsible] || '#004a8f'
-                                });
-
-                                scheduledList.push(`
-                                    <div style="border-left: 3px solid ${respColors[d.responsible] || '#004a8f'}; padding-left:8px; margin-bottom:8px; font-size:0.82rem;">
-                                        <strong>Apto ${unitNum}</strong> - ${d.responsible}<br>
-                                        <small>Item: ${d.item} (${d.nonConformity})</small><br>
-                                        <small>Início: ${d.scheduledFor} | Prazo: ${d.deadlineDate || 'Não definido'}</small>
-                                    </div>
-                                `);
-                            }
-                        }
-                    });
-                }
-            });
-
-            if (fullCalendarInstance) fullCalendarInstance.destroy();
-
-            fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'pt-br',
-                events: events,
-                headerToolbar: {
-                    left: 'prev,next',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek'
-                }
-            });
-
-            fullCalendarInstance.render();
-            if (listEl) listEl.innerHTML = scheduledList.join('') || 'Nenhuma atividade agendada.';
         }
 
         function exportToExcelXLSX() {
