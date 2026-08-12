@@ -386,7 +386,7 @@
 
             if (parts.length === 3) {
                 if (parts[0].length === 2 && parts[2].length === 4) {
-                    return new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T00:00:00`);
+                    return new Date(`${parts[2]}-${parts[1].padStart(2, '0')}T00:00:00`);
                 }
                 if (parts[0].length === 4 && parts[2].length === 2) {
                     return new Date(`${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}T00:00:00`);
@@ -424,10 +424,6 @@
                 if (date.getDay() !== 0 && date.getDay() !== 6) added++;
             }
             return formatDateToDDMMAAAA(date);
-        }
-
-        function getTodayFormatted() {
-            return formatDateToDDMMAAAA(new Date());
         }
 
         function setFloor(f, el) {
@@ -1097,6 +1093,19 @@
             let events = [];
             let scheduledList = [];
 
+            let respOpcoesHTML = `
+                <option value="">A definir...</option>
+                <option value="Piso e Revestimento">Piso e Revestimento</option>
+                <option value="Gesso / Sancas">Gesso / Sancas</option>
+                <option value="Eletricista">Eletricista</option>
+                <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
+                <option value="Climatização / Ar-Condicionado">Climatização / Ar-Condicionado</option>
+                <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
+                <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
+                <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
+                <option value="Pintura / Emassamento">Pintura / Emassamento</option>
+            `;
+
             Object.keys(dbUnitsCache).forEach(key => {
                 const unitNum = key.replace('unit_', '');
                 const history = dbUnitsCache[key] || [];
@@ -1107,15 +1116,14 @@
 
                     (last.details || []).forEach((d, detailIdx) => {
                         if (d.status !== 'Concluído') {
-                            let respText = d.responsible || 'A definir';
+                            let respText = d.responsible || '';
                             if (filterResp === 'TODOS' || d.responsible === filterResp) {
                                 let dateObj = parseToDate(d.scheduledFor);
-                                let startDateFormatted = dateObj ? formatDateToDDMMAAAA(dateObj) : 'Não definida';
-                                let startDateISO = dateObj ? formatDateToISO(dateObj) : null;
+                                let startDateISO = dateObj ? formatDateToISO(dateObj) : '';
                                 
                                 let bDaysStr = String(d.businessDays || '').trim();
                                 let daysText = (bDaysStr !== '') ? `${bDaysStr} dias úteis` : "Prazo não informado";
-                                let deadline = d.deadlineDate || (startDateFormatted !== 'Não definida' && bDaysStr ? addBusinessDays(startDateFormatted, bDaysStr) : "Não calculada");
+                                let deadline = d.deadlineDate || (startDateISO && bDaysStr ? addBusinessDays(d.scheduledFor, bDaysStr) : "Não calculada");
 
                                 if (startDateISO) {
                                     events.push({
@@ -1126,21 +1134,43 @@
                                     });
                                 }
 
+                                let selectRespHTML = respOpcoesHTML.replace(`value="${respText}"`, `value="${respText}" selected`);
+
                                 scheduledList.push(`
-                                    <div style="border-left: 4px solid ${respColors[d.responsible] || '#004a8f'}; background:#fff; padding:12px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.08); border:1px solid #e2e8f0;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                                            <strong>Apto ${unitNum} — ${respText}</strong>
+                                    <div style="border-left: 4px solid ${respColors[d.responsible] || '#004a8f'}; background:#fff; padding:12px; margin-bottom:12px; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.08); border:1px solid #e2e8f0;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                            <strong>Apto ${unitNum}</strong>
                                             <span style="font-size:0.75rem; background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:12px; font-weight:bold;">${d.status || 'Aguardando'}</span>
                                         </div>
-                                        <div style="font-size:0.85rem; color:#334155; margin:6px 0;">
+                                        <div style="font-size:0.85rem; color:#334155; margin-bottom:8px;">
                                             <strong>Item:</strong> ${d.item} (${d.nonConformity})
                                         </div>
-                                        <div style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">
-                                            📅 Início: <strong>${startDateFormatted}</strong> | Prazo Final: <strong>${deadline}</strong> (${daysText})
+                                        
+                                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
+                                            <div>
+                                                <label>Responsável:</label>
+                                                <select id="cal_resp_${key}_${lastHistoryIndex}_${detailIdx}" onchange="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})">
+                                                    ${selectRespHTML}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label>Início:</label>
+                                                <input type="date" id="cal_date_${key}_${lastHistoryIndex}_${detailIdx}" value="${startDateISO}" onchange="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})">
+                                            </div>
                                         </div>
-                                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                            <button onclick="editarPrazoCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="padding:6px 10px; font-size:0.78rem; background:var(--secondary); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✏️ Alterar Agendamento / Prazo / Resp.</button>
-                                            <button onclick="concluirPendenciaCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="padding:6px 10px; font-size:0.78rem; background:var(--success); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✓ Sanar / Concluir</button>
+
+                                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px; align-items:center;">
+                                            <div>
+                                                <label>Dias Úteis:</label>
+                                                <input type="number" min="1" id="cal_days_${key}_${lastHistoryIndex}_${detailIdx}" value="${d.businessDays || '3'}" oninput="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})">
+                                            </div>
+                                            <div style="font-size:0.78rem; color:#64748b; padding-top:14px;">
+                                                Prazo Final: <strong id="cal_deadline_${key}_${lastHistoryIndex}_${detailIdx}">${deadline}</strong>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <button onclick="concluirPendenciaCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="width:100%; padding:8px; font-size:0.8rem; background:var(--success); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✓ Sanar / Concluir Pendência</button>
                                         </div>
                                     </div>
                                 `);
@@ -1171,42 +1201,28 @@
             if (listEl) listEl.innerHTML = scheduledList.join('') || '<p style="color:#666;">Nenhuma atividade pendente agendada.</p>';
         }
 
-        function editarPrazoCalendar(unitKey, historyIdx, detailIdx) {
+        function atualizarDadosCalendarInline(unitKey, historyIdx, detailIdx) {
             const item = dbUnitsCache[unitKey][historyIdx].details[detailIdx];
-            
-            let respOpcoes = [
-                "Piso e Revestimento", "Gesso / Sancas", "Eletricista",
-                "Instalações Hidráulicas", "Climatização / Ar-Condicionado",
-                "Marmoraria / Graniteiro", "Esquadrias de Alumínio / Vidros",
-                "Marcenaria / Portas de Madeira", "Pintura / Emassamento"
-            ];
-            
-            let novoResp = prompt(`Defina o Responsável (Atualmente: ${item.responsible || 'Não definido'}):\n\nOpções:\n${respOpcoes.join('\n')}`, item.responsible || '');
-            if (novoResp === null) return;
 
-            let dataAtualISO = "";
-            if (item.scheduledFor) {
-                let dParsed = parseToDate(item.scheduledFor);
-                if (dParsed) dataAtualISO = formatDateToISO(dParsed);
-            }
-            
-            const novaData = prompt("Defina/Altere a Data de Início (Formato AAAA-MM-DD):", dataAtualISO || "");
-            if (novaData === null) return;
+            const respEl = document.getElementById(`cal_resp_${unitKey}_${historyIdx}_${detailIdx}`);
+            const dateEl = document.getElementById(`cal_date_${unitKey}_${historyIdx}_${detailIdx}`);
+            const daysEl = document.getElementById(`cal_days_${unitKey}_${historyIdx}_${detailIdx}`);
+            const deadlineEl = document.getElementById(`cal_deadline_${unitKey}_${historyIdx}_${detailIdx}`);
 
-            const novosDias = prompt("Defina/Altere o Prazo em Dias Úteis (Ex: 1, 2, 3, 5, 10):", item.businessDays || "3");
-            if (novosDias === null) return;
-
-            item.responsible = novoResp.trim();
-            if (novaData.trim()) {
-                let parsedNew = parseToDate(novaData.trim());
+            if (respEl) item.responsible = respEl.value;
+            if (dateEl && dateEl.value) {
+                let parsedNew = parseToDate(dateEl.value);
                 item.scheduledFor = formatDateToDDMMAAAA(parsedNew);
             } else {
                 item.scheduledFor = "";
             }
-            item.businessDays = String(novosDias).trim();
-            item.deadlineDate = addBusinessDays(item.scheduledFor, item.businessDays);
+            if (daysEl) item.businessDays = daysEl.value;
 
-            salvarAlteracaoGlobal(unitKey);
+            let calculatedDeadline = addBusinessDays(item.scheduledFor, item.businessDays);
+            item.deadlineDate = calculatedDeadline;
+            if (deadlineEl) deadlineEl.innerText = calculatedDeadline;
+
+            salvarAlteracaoGlobalSilencioso(unitKey);
         }
 
         function concluirPendenciaCalendar(unitKey, historyIdx, detailIdx) {
@@ -1216,6 +1232,23 @@
                 item.resolvedAt = formatDateToDDMMAAAA(new Date());
 
                 salvarAlteracaoGlobal(unitKey);
+            }
+        }
+
+        function salvarAlteracaoGlobalSilencioso(unitKey) {
+            localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
+
+            if (db && db.collection) {
+                db.collection('vistorias').doc(unitKey).set({
+                    unit: unitKey.replace('unit_', ''),
+                    history: dbUnitsCache[unitKey]
+                }, { merge: true }).then(() => {
+                    renderInteractiveCalendar();
+                    updateDashboardData();
+                });
+            } else {
+                renderInteractiveCalendar();
+                updateDashboardData();
             }
         }
 
