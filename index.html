@@ -363,7 +363,16 @@
     </div>
 </div>
 
-<script>
+<!-- Bibliotecas externas necessárias -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+<script type="module">
+    // Importações do Firebase v10
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBqtptEp5QjIOoAjwx0wT--cswUhSvcsGM",
       authDomain: "vistoria-obra.firebaseapp.com",
@@ -374,10 +383,12 @@
       measurementId: "G-GP1QQVWR50"
     };
 
-    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    // Inicialização do App e Firestore
+    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    const db = getFirestore(app);
+
+    // Constantes do Sistema
+    const TOTAL_UNIDADES = 76;
 
     const roomNames = {
         'room-dorm': 'Dormitório / Cozinha',
@@ -421,11 +432,6 @@
     let deviceDetails = "";
     let dbUnitsCache = {};
     let fullCalendarInstance = null;
-
-    window.onload = function() {
-        try { detectDevice(); } catch(e) { console.warn(e); }
-        try { loadAllUnitsData(); } catch(e) { console.warn(e); }
-    };
 
     function detectDevice() {
         let deviceId = "DEV-LOCAL";
@@ -476,28 +482,26 @@
         }
     }
 
-    function loadAllUnitsData() {
+    async function loadAllUnitsData() {
         try {
             const localData = localStorage.getItem('vistorias_db');
             if (localData) {
                 dbUnitsCache = JSON.parse(localData);
-                updateMapAndKPIs();
-                renderMapGrid();
-                renderDashboards();
                 updateDashboardData();
+                renderInteractiveCalendar();
             }
         } catch (e) {}
 
-        if (db && db.collection) {
-            db.collection('vistorias').get().then(snapshot => {
-                snapshot.forEach(doc => {
-                    dbUnitsCache[doc.id] = doc.data().history || [];
-                });
-                try { localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache)); } catch (e) {}
-                updateMapAndKPIs();
-                renderMapGrid();
-                renderDashboards();
-            }).catch(err => console.log("Carregando localmente"));
+        try {
+            const querySnapshot = await getDocs(collection(db, 'vistorias'));
+            querySnapshot.forEach((docSnap) => {
+                dbUnitsCache[docSnap.id] = docSnap.data().history || [];
+            });
+            try { localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache)); } catch (e) {}
+            updateDashboardData();
+            renderInteractiveCalendar();
+        } catch (err) {
+            console.log("Carregando localmente:", err);
         }
     }
 
@@ -520,6 +524,7 @@
         el.classList.add('active');
         
         const u = document.getElementById('units');
+        if (!u) return;
         u.innerHTML = '';
         
         for (let i = 1; i <= 19; i++) {
@@ -536,9 +541,12 @@
             u.innerHTML += `<div class="btn ${statusClass}" onclick="selectUnit(${num}, this)">${num}</div>`;
         }
 
-        document.getElementById('unit-card').style.display = 'block';
-        document.getElementById('type-card').style.display = 'none';
-        document.getElementById('inspection-area').style.display = 'none';
+        const unitCard = document.getElementById('unit-card');
+        if (unitCard) unitCard.style.display = 'block';
+        const typeCard = document.getElementById('type-card');
+        if (typeCard) typeCard.style.display = 'none';
+        const inspArea = document.getElementById('inspection-area');
+        if (inspArea) inspArea.style.display = 'none';
     }
 
     function selectUnit(u, el) {
@@ -546,8 +554,10 @@
         document.querySelectorAll('#units .btn').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
         
-        document.getElementById('type-card').style.display = 'block';
-        document.getElementById('inspection-area').style.display = 'none';
+        const typeCard = document.getElementById('type-card');
+        if (typeCard) typeCard.style.display = 'block';
+        const inspArea = document.getElementById('inspection-area');
+        if (inspArea) inspArea.style.display = 'none';
 
         if (selectedCategory) {
             let catBtn = selectedCategory.includes('Reforma') ? document.getElementById('btn-cat-reforma') : document.getElementById('btn-cat-padrao');
@@ -579,14 +589,18 @@
             selectedStage = `${sameCatHistory.length}ª Revistoria`;
         }
 
-        document.getElementById('suggested-stage-box').innerHTML = `🔄 <strong>${selectedStage}</strong> (Calculado pelo Histórico)`;
+        const stageBox = document.getElementById('suggested-stage-box');
+        if (stageBox) stageBox.innerHTML = `🔄 <strong>${selectedStage}</strong> (Calculado pelo Histórico)`;
         checkAndShowInspection();
     }
 
     function checkAndShowInspection() {
         if (selectedCategory && selectedStage) {
-            document.getElementById('unit-title').innerText = `Unidade: Apto ${selectedUnitNum} (${selectedCategory} - ${selectedStage})`;
-            document.getElementById('inspection-area').style.display = 'block';
+            const titleEl = document.getElementById('unit-title');
+            if (titleEl) titleEl.innerText = `Unidade: Apto ${selectedUnitNum} (${selectedCategory} - ${selectedStage})`;
+            
+            const inspArea = document.getElementById('inspection-area');
+            if (inspArea) inspArea.style.display = 'block';
             
             loadPreviousActivePendencies();
             buildInspectionForm();
@@ -845,14 +859,15 @@
         const btnAdd = document.getElementById(`btn_add_${key}`);
 
         if (status === 'OK') {
-            btnOk.className = "btn-status btn-ok-active";
-            btnNok.className = "btn-status btn-neutral";
+            if (btnOk) btnOk.className = "btn-status btn-ok-active";
+            if (btnNok) btnNok.className = "btn-status btn-neutral";
             pendingNCs[key] = [];
-            document.getElementById(`nc_container_${key}`).innerHTML = '';
+            const ncContainer = document.getElementById(`nc_container_${key}`);
+            if (ncContainer) ncContainer.innerHTML = '';
             if (btnAdd) btnAdd.style.display = 'none';
         } else {
-            btnOk.className = "btn-status btn-neutral";
-            btnNok.className = "btn-status btn-nok-active";
+            if (btnOk) btnOk.className = "btn-status btn-neutral";
+            if (btnNok) btnNok.className = "btn-status btn-nok-active";
             if (btnAdd) btnAdd.style.display = 'block';
 
             if (!pendingNCs[key] || pendingNCs[key].length === 0) {
@@ -860,7 +875,8 @@
             } else {
                 salvarEstadoAtualInput(key);
                 const itemObj = checklist.find(i => i.id === itemId);
-                document.getElementById(`nc_container_${key}`).innerHTML = renderNCBoxes(key, itemObj);
+                const ncContainer = document.getElementById(`nc_container_${key}`);
+                if (ncContainer) ncContainer.innerHTML = renderNCBoxes(key, itemObj);
                 restaurarValoresInputs(key);
             }
         }
@@ -999,7 +1015,7 @@
         });
     }
 
-    function generateTechnicalPDF() {
+    async function generateTechnicalPDF() {
         let hasMissingResp = false;
         Object.keys(pendingNCs).forEach(key => {
             salvarEstadoAtualInput(key);
@@ -1070,24 +1086,20 @@
 
         try { localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache)); } catch(e) {}
 
-        if (db && db.collection) {
-            db.collection('vistorias').doc(historyKey).set({
+        try {
+            await setDoc(doc(db, 'vistorias', historyKey), {
                 unit: selectedUnitNum,
                 history: dbUnitsCache[historyKey]
-            }, { merge: true }).then(() => {
-                alert(`Vistoria da Unidade ${selectedUnitNum} finalizada!`);
-                loadAllUnitsData();
-                document.getElementById('btn-next').style.display = 'block';
-            }).catch(err => {
-                alert(`Vistoria salva localmente!`);
-                loadAllUnitsData();
-                document.getElementById('btn-next').style.display = 'block';
-            });
-        } else {
-            alert(`Vistoria salva localmente no navegador!`);
-            loadAllUnitsData();
-            document.getElementById('btn-next').style.display = 'block';
+            }, { merge: true });
+            alert(`Vistoria da Unidade ${selectedUnitNum} finalizada e salva em nuvem!`);
+        } catch (err) {
+            console.error(err);
+            alert(`Vistoria salva localmente!`);
         }
+        
+        loadAllUnitsData();
+        const btnNext = document.getElementById('btn-next');
+        if (btnNext) btnNext.style.display = 'block';
     }
 
     async function sendWhatsAppSummary() {
@@ -1170,7 +1182,8 @@
         let events = [];
         let unassignedHTML = '';
         let scheduledTasksHTML = '';
-        const filterResp = document.getElementById('calendar-resp-filter').value;
+        const filterEl = document.getElementById('calendar-resp-filter');
+        const filterResp = filterEl ? filterEl.value : 'TODOS';
 
         Object.keys(dbUnitsCache).forEach(key => {
             const unitNum = key.replace('unit_', '');
@@ -1195,31 +1208,6 @@
                                             <strong style="color:${serviceColor}; font-size:0.9rem;">Apto ${unitNum}</strong> - ${d.item}<br>
                                             <small style="color:#dc2626; font-weight:bold;">${d.nonConformity}</small><br>
                                             <small><strong>Resp:</strong> ${respName}</small>
-                                        </div>
-                                        <button onclick="resolveTaskFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
-                                                style="background:#28a745; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; font-weight:bold;">
-                                            ✓ Sanar
-                                        </button>
-                                    </div>
-
-                                    <div style="background:#f1f5f9; padding:8px; border-radius:4px; margin-top:6px; font-size:0.75rem;">
-                                        <div style="font-weight:bold; color:#334155; margin-bottom:4px;">⚙️ Definir / Alterar Prazo:</div>
-                                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
-                                            <div>
-                                                <label style="font-size:0.7rem; margin:0;">Início:</label>
-                                                <input type="date" id="cal_date_${unitNum}_${hIndex}_${dIndex}" value="${d.scheduledFor || ''}" style="padding:4px; font-size:0.75rem;">
-                                            </div>
-                                            <div>
-                                                <label style="font-size:0.7rem; margin:0;">Dias Úteis:</label>
-                                                <input type="number" id="cal_days_${unitNum}_${hIndex}_${dIndex}" min="1" placeholder="A definir" value="${d.businessDays || ''}" style="padding:4px; font-size:0.75rem;">
-                                            </div>
-                                        </div>
-                                        <button onclick="updateTaskScheduleFromCalendar(${unitNum}, ${hIndex}, ${dIndex})" 
-                                                style="width:100%; margin-top:6px; background:#007bff; color:white; border:none; padding:5px; border-radius:3px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
-                                            💾 Salvar Prazo
-                                        </button>
-                                        <div style="margin-top:4px; color:#d97706; font-weight:bold;">
-                                            Prazo Final: ${deadline || 'Não calculada'}
                                         </div>
                                     </div>
                                 </div>
@@ -1262,7 +1250,8 @@
             }
         });
 
-        document.getElementById('unassigned-tasks-list').innerHTML = unassignedHTML || '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência pendente.</p>';
+        const unassignedEl = document.getElementById('unassigned-tasks-list');
+        if (unassignedEl) unassignedEl.innerHTML = unassignedHTML || '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência pendente.</p>';
         
         const activityListEl = document.getElementById('scheduled-activities-list');
         if (activityListEl) {
@@ -1271,21 +1260,22 @@
 
         if (fullCalendarInstance) fullCalendarInstance.destroy();
 
-        fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'pt-br',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,listWeek'
-            },
-            events: events,
-            eventClick: function(info) {
-                if (info.event.id) highlightTaskCard(info.event.id);
-            }
-        });
-        
-        fullCalendarInstance.render();
+        if (typeof FullCalendar !== 'undefined') {
+            fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'pt-br',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,listWeek'
+                },
+                events: events,
+                eventClick: function(info) {
+                    if (info.event.id) highlightTaskCard(info.event.id);
+                }
+            });
+            fullCalendarInstance.render();
+        }
     }
 
     function highlightTaskCard(cardId) {
@@ -1344,338 +1334,112 @@
             return;
         }
 
-        const worksheet = XLSX.utils.json_to_sheet(exportData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Vistorias");
-        
-        // Nome do arquivo formatado por concatenação simples
-        var fileName = "Relatorio_Vistorias_" + new Date().toISOString().slice(0, 10) + ".xlsx";
-        XLSX.writeFile(workbook, fileName);
+        if (typeof XLSX !== 'undefined') {
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Vistorias");
+            
+            var fileName = "Relatorio_Vistorias_" + new Date().toISOString().slice(0, 10) + ".xlsx";
+            XLSX.writeFile(workbook, fileName);
+        }
     }
 
     function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById("tab-" + tab + "-btn").classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        const tabBtn = document.getElementById("tab-" + tab + "-btn");
+        if (tabBtn) tabBtn.classList.add('active');
 
-    document.getElementById('tab-vistorias').style.display = tab === 'vistorias' ? 'block' : 'none';
-    document.getElementById('tab-mapa').style.display = tab === 'mapa' ? 'block' : 'none';
-    document.getElementById('tab-cronograma').style.display = tab === 'cronograma' ? 'block' : 'none';
+        const tabVistorias = document.getElementById('tab-vistorias');
+        if (tabVistorias) tabVistorias.style.display = tab === 'vistorias' ? 'block' : 'none';
+        
+        const tabMapa = document.getElementById('tab-mapa');
+        if (tabMapa) tabMapa.style.display = tab === 'mapa' ? 'block' : 'none';
+        
+        const tabCronograma = document.getElementById('tab-cronograma');
+        if (tabCronograma) tabCronograma.style.display = tab === 'cronograma' ? 'block' : 'none';
 
-    if (tab === 'mapa' || tab === 'cronograma') {
-        loadAllUnitsData();
-        if (tab === 'mapa') setTimeout(updateDashboardData, 100); // <-- Adicione esta linha
-        if (tab === 'cronograma') setTimeout(renderInteractiveCalendar, 200);
+        if (tab === 'mapa' || tab === 'cronograma') {
+            loadAllUnitsData();
+            if (tab === 'mapa') setTimeout(updateDashboardData, 100);
+            if (tab === 'cronograma') setTimeout(renderInteractiveCalendar, 200);
+        }
     }
-}
 
-    function toggle(id) {
-        const el = document.getElementById(id);
-        if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
-    }
     function updateDashboardData() {
-    let totalVistoriadas = 0;
-    let totalAprovadas = 0;
-    let totalPendenciasAbertas = 0;
-    let ncCount = {};
-    let respQueue = [];
+        let totalVistoriadas = 0;
+        let totalAprovadas = 0;
+        let totalPendenciasAbertas = 0;
+        let ncCount = {};
+        let respQueue = [];
 
-    // Lógica idêntica à do Calendário para ler todas as pendências ativas
-    Object.keys(dbUnitsCache).forEach(key => {
-        const history = dbUnitsCache[key] || [];
-        if (history.length > 0) {
-            totalVistoriadas++;
-            const last = history[history.length - 1];
+        Object.keys(dbUnitsCache).forEach(key => {
+            const history = dbUnitsCache[key] || [];
+            if (history.length > 0) {
+                totalVistoriadas++;
+                const last = history[history.length - 1];
 
-            if (last.details && last.details.length > 0) {
-                let activeNCs = last.details.filter(d => d.status !== 'Concluído');
+                if (last.details && last.details.length > 0) {
+                    let activeNCs = last.details.filter(d => d.status !== 'Concluído');
 
-                if (activeNCs.length === 0) {
-                    totalAprovadas++;
-                } else {
-                    totalPendenciasAbertas += activeNCs.length;
+                    if (activeNCs.length === 0) {
+                        totalAprovadas++;
+                    } else {
+                        totalPendenciasAbertas += activeNCs.length;
 
-                    activeNCs.forEach(d => {
-                        const ncName = d.nonConformity || 'Não especificada';
-                        ncCount[ncName] = (ncCount[ncName] || 0) + 1;
+                        activeNCs.forEach(d => {
+                            const ncName = d.nonConformity || 'Não especificada';
+                            ncCount[ncName] = (ncCount[ncName] || 0) + 1;
 
-                        respQueue.push({
-                            unit: key.replace('unit_', ''),
-                            item: d.item,
-                            nonConformity: d.nonConformity,
-                            responsible: d.responsible || 'A definir',
-                            severity: d.severity || 'Baixa'
+                            respQueue.push({
+                                unit: key.replace('unit_', ''),
+                                item: d.item,
+                                nonConformity: d.nonConformity,
+                                responsible: d.responsible || 'A definir',
+                                severity: d.severity || 'Baixa'
+                            });
                         });
-                    });
-                }
-            } else if (last.status === '100_ok' || last.pendenciesCount === 0) {
-                totalAprovadas++;
-            }
-        }
-    });
-
-    // Atualiza os contadores de tela procurando pelo texto do elemento no Mapa & Indicadores
-    const mapaTab = document.getElementById('tab-mapa');
-    if (mapaTab) {
-        // Atualiza os 3 grandes números do Dashboard
-        const cardNumbers = mapaTab.querySelectorAll('div, h2, h3, span');
-        cardNumbers.forEach(el => {
-            if (el.children.length === 0) { // procura elementos de texto puro com número '0'
-                if (el.innerText === '0 / 76' || el.innerText.includes('/ 76')) {
-                    el.innerText = `${totalVistoriadas} / 76`;
+                    }
+                } else if (last.status === '100_ok' || last.pendenciesCount === 0) {
+                    totalAprovadas++;
                 }
             }
         });
 
-        // Procura os cards específicos pelas caixas dos KPIs
-        const kpiContainers = mapaTab.querySelectorAll('div');
-        kpiContainers.forEach(div => {
-            if (div.innerText && div.innerText.includes('APROVADAS')) {
-                const num = div.querySelector('div, span, h2, strong');
-                if (num) num.innerText = totalAprovadas;
-            }
-            if (div.innerText && div.innerText.includes('PENDÊNCIAS ABERTAS')) {
-                const num = div.querySelector('div, span, h2, strong');
-                if (num) num.innerText = totalPendenciasAbertas;
-            }
-        });
+        const elVistoriadas = document.getElementById('unidades-vistoriadas');
+        const elAprovadas = document.getElementById('unidades-aprovadas');
+        const elPendencias = document.getElementById('pendencias-abertas');
 
-        // Preenche o bloco "Top Não Conformidades"
-        const topBlock = Array.from(mapaTab.querySelectorAll('div')).find(d => d.innerText && d.innerText.includes('Top Não Conformidades'));
-        if (topBlock) {
-            const sortedNCs = Object.entries(ncCount).sort((a, b) => b[1] - a[1]);
-            let listHTML = '<h4 style="font-size:0.9rem; margin-bottom:8px;">🔥 Top Não Conformidades Mais Recorrentes na Obra</h4>';
-            
-            if (sortedNCs.length > 0) {
-                sortedNCs.forEach(([name, count]) => {
-                    listHTML += `
-                        <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; font-size:0.82rem;">
-                            <span>📌 ${name}</span>
-                            <strong style="color:#dc2626;">${count} ocorrência(s)</strong>
-                        </div>`;
-                });
-            } else {
-                listHTML += '<p style="font-size:0.8rem; color:#666;">Nenhuma pendência registrada ainda.</p>';
-            }
-            topBlock.innerHTML = listHTML;
-        }
-
-        // Preenche a "Fila de Pendências por Responsável"
-        const queueBlock = Array.from(mapaTab.querySelectorAll('div')).find(d => d.innerText && d.innerText.includes('Fila de Pendências por Responsável'));
-        if (queueBlock) {
-            let queueHTML = '<h4 style="font-size:0.9rem; margin-bottom:8px;">👷 Fila de Pendências por Responsável</h4>';
-            
-            if (respQueue.length > 0) {
-                respQueue.forEach(item => {
-                    queueHTML += `
-                        <div style="background:#fff; border:1px solid #e2e8f0; border-left:4px solid ${item.severity === 'Alta' ? '#dc3545' : (item.severity === 'Média' ? '#ffc107' : '#004a8f')}; padding:8px; margin-bottom:6px; border-radius:4px; font-size:0.8rem;">
-                            <strong>Apto ${item.unit}</strong> — <span style="color:#004a8f;">${item.responsible}</span><br>
-                            <small>${item.item}: <strong>${item.nonConformity}</strong></small>
-                        </div>`;
-                });
-            } else {
-                queueHTML += '<p style="font-size:0.8rem; color:#666;">Nenhuma pendência ativa para exibição.</p>';
-            }
-            queueBlock.innerHTML = queueHTML;
-        }
+        if (elVistoriadas) elVistoriadas.innerText = `${totalVistoriadas} / ${TOTAL_UNIDADES}`;
+        if (elAprovadas) elAprovadas.innerText = totalAprovadas;
+        if (elPendencias) elPendencias.innerText = totalPendenciasAbertas;
     }
-}
 
-    // ==========================================
-// CONFIGURAÇÃO DO FIREBASE (PROJETO: VISTORIA-OBRA)
-// ==========================================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    // Exposição global de funções para eventos HTML (onclick, onchange, etc)
+    window.confirmInspector = confirmInspector;
+    window.setFloor = setFloor;
+    window.selectUnit = selectUnit;
+    window.setCategory = setCategory;
+    window.setItemStatus = setItemStatus;
+    window.addNC = addNC;
+    window.removeNC = removeNC;
+    window.sanarNC = sanarNC;
+    window.toggleOutroResp = toggleOutroResp;
+    window.handleStatusChange = handleStatusChange;
+    window.handleMultiplePhotos = handleMultiplePhotos;
+    window.removePhoto = removePhoto;
+    window.salvarEstadoAtualInput = salvarEstadoAtualInput;
+    window.generateTechnicalPDF = generateTechnicalPDF;
+    window.sendWhatsAppSummary = sendWhatsAppSummary;
+    window.exportToExcelXLSX = exportToExcelXLSX;
+    window.switchTab = switchTab;
+    window.highlightTaskCard = highlightTaskCard;
 
-const firebaseConfig = {
-    apiKey: "AIzaSy_SUA_API_KEY_AQUI", // Encontre em: Firebase Console > Configurações do Projeto > Geral > Seus aplicativos
-    authDomain: "vistoria-obra.firebaseapp.com",
-    databaseURL: "https://vistoria-obra-default-rtdb.firebaseio.com",
-    projectId: "vistoria-obra",
-    storageBucket: "vistoria-obra.appspot.com",
-    messagingSenderId: "123456789012",
-    appId: "1:123456789012:web:abcdef123456"
-};
-
-// Inicializa o Firebase
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-const TOTAL_UNIDADES = 76;
-
-// ==========================================
-// FUNÇÃO DE ATUALIZAÇÃO DO DASHBOARD
-// ==========================================
-function atualizarDashboard(vistorias) {
-    let vistoriadas = 0;
-    let aprovadas = 0;
-    let comPendencias = 0;
-
-    Object.values(vistorias).forEach(unidade => {
-        if (unidade.status === 'OK' || unidade.status === 'PENDENCIA') {
-            vistoriadas++;
-        }
-        if (unidade.status === 'OK') {
-            aprovadas++;
-        }
-        if (unidade.status === 'PENDENCIA') {
-            comPendencias++;
-        }
+    // Inicialização da Página
+    document.addEventListener('DOMContentLoaded', () => {
+        detectDevice();
+        loadAllUnitsData();
     });
-
-    // Atualiza os contadores na aba "Mapa & Indicadores"
-    const elVistoriadas = document.getElementById('unidades-vistoriadas');
-    const elAprovadas = document.getElementById('unidades-aprovadas');
-    const elPendencias = document.getElementById('pendencias-abertas');
-
-    if (elVistoriadas) elVistoriadas.innerText = `${vistoriadas} / ${TOTAL_UNIDADES}`;
-    if (elAprovadas) elAprovadas.innerText = aprovadas;
-    if (elPendencias) elPendencias.innerText = comPendencias;
-}
-
-// ==========================================
-// SALVAR NO LOCALSTORAGE + FIREBASE
-// ==========================================
-function salvarStatusUnidade(unidadeNum, novoStatus, detalhes = {}) {
-    let vistorias = JSON.parse(localStorage.getItem('vistorias_obra')) || {};
-
-    vistorias[unidadeNum] = {
-        unidade: unidadeNum,
-        status: novoStatus,
-        dataAtualizacao: new Date().toISOString(),
-        ...detalhes
-    };
-
-    // 1. Salva imediatamente no celular (LocalStorage)
-    localStorage.setItem('vistorias_obra', JSON.stringify(vistorias));
-    atualizarDashboard(vistorias);
-
-    // 2. Envia para o Banco do Firebase em nuvem
-    set(ref(db, 'vistorias/' + unidadeNum), vistorias[unidadeNum])
-        .then(() => {
-            console.log(`Unidade ${unidadeNum} atualizada no Firebase!`);
-        })
-        .catch((error) => {
-            console.error("Erro ao sincronizar com Firebase:", error);
-        });
-}
-
-// ==========================================
-// SINCRONIZAÇÃO EM TEMPO REAL
-// ==========================================
-function inicializarSincronizacao() {
-    // Carrega versão local de imediato
-    const dadosLocais = JSON.parse(localStorage.getItem('vistorias_obra')) || {};
-    atualizarDashboard(dadosLocais);
-
-    // Escuta atualizações do Firebase
-    const vistoriasRef = ref(db, 'vistorias');
-    onValue(vistoriasRef, (snapshot) => {
-        const dadosFirebase = snapshot.val() || {};
-        
-        // Sincroniza local com o banco
-        localStorage.setItem('vistorias_obra', JSON.stringify(dadosFirebase));
-        
-        // Atualiza a tela
-        atualizarDashboard(dadosFirebase);
-    });
-}
-
-// Inicializa no carregamento da página
-document.addEventListener('DOMContentLoaded', () => {
-    inicializarSincronizacao();
-});
-    <!-- SEU CÓDIGO HTML EXISTENTE ACIMA ... -->
-
-    <!-- ADICIONE ESTE BLOCO LOGO ANTES DE </body> -->
-    <script type="module">
-      // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-      const firebaseConfig = {
-  apiKey: "AIzaSyBqtptEp5QjIOoAjwx0wT--cswUhSvcsGM",
-  authDomain: "vistoria-obra.firebaseapp.com",
-  projectId: "vistoria-obra",
-  storageBucket: "vistoria-obra.firebasestorage.app",
-  messagingSenderId: "269277062191",
-  appId: "1:269277062191:web:ab9a9d404129df66cd12da",
-  measurementId: "G-GP1QQVWR50"
-};
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
-      const TOTAL_UNIDADES = 76;
-
-      function atualizarDashboard(vistorias) {
-          let vistoriadas = 0;
-          let aprovadas = 0;
-          let comPendencias = 0;
-
-          Object.values(vistorias).forEach(unidade => {
-              if (unidade.status === 'OK' || unidade.status === 'PENDENCIA') {
-                  vistoriadas++;
-              }
-              if (unidade.status === 'OK') {
-                  aprovadas++;
-              }
-              if (unidade.status === 'PENDENCIA') {
-                  comPendencias++;
-              }
-          });
-
-          const elVistoriadas = document.getElementById('unidades-vistoriadas');
-          const elAprovadas = document.getElementById('unidades-aprovadas');
-          const elPendencias = document.getElementById('pendencias-abertas');
-
-          if (elVistoriadas) elVistoriadas.innerText = `${vistoriadas} / ${TOTAL_UNIDADES}`;
-          if (elAprovadas) elAprovadas.innerText = aprovadas;
-          if (elPendencias) elPendencias.innerText = comPendencias;
-      }
-
-      function salvarStatusUnidade(unidadeNum, novoStatus, detalhes = {}) {
-          let vistorias = JSON.parse(localStorage.getItem('vistorias_obra')) || {};
-
-          vistorias[unidadeNum] = {
-              unidade: unidadeNum,
-              status: novoStatus,
-              dataAtualizacao: new Date().toISOString(),
-              ...detalhes
-          };
-
-          localStorage.setItem('vistorias_obra', JSON.stringify(vistorias));
-          atualizarDashboard(vistorias);
-
-          set(ref(db, 'vistorias/' + unidadeNum), vistorias[unidadeNum])
-              .then(() => {
-                  console.log(`Unidade ${unidadeNum} atualizada no Firebase!`);
-              })
-              .catch((error) => {
-                  console.error("Erro ao sincronizar com Firebase:", error);
-              });
-      }
-
-      // Torna a função acessível nos botões do HTML
-      window.salvarStatusUnidade = salvarStatusUnidade;
-
-      function inicializarSincronizacao() {
-          const dadosLocais = JSON.parse(localStorage.getItem('vistorias_obra')) || {};
-          atualizarDashboard(dadosLocais);
-
-          const vistoriasRef = ref(db, 'vistorias');
-          onValue(vistoriasRef, (snapshot) => {
-              const dadosFirebase = snapshot.val() || {};
-              localStorage.setItem('vistorias_obra', JSON.stringify(dadosFirebase));
-              atualizarDashboard(dadosFirebase);
-          });
-      }
-
-      document.addEventListener('DOMContentLoaded', () => {
-          inicializarSincronizacao();
-      });
-    </script>
+</script>
 </body>
 </html>
  
