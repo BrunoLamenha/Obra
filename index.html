@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vistoria Interna de Obra - Pro</title>
 
-    <!-- LIBS EXTERNAS (FULLCALENDAR CSS & JS CORRIGIDOS) -->
+    <!-- LIBS EXTERNAS -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -93,8 +93,8 @@
         .cronograma-layout { display: grid; grid-template-columns: 2fr 1.2fr; gap: 15px; }
         @media(max-width: 900px) { .cronograma-layout { grid-template-columns: 1fr; } }
 
-        /* Estilização para garantir exibição correta do Calendário */
-        #calendar { min-height: 500px; }
+        /* Correção para forçar altura e visibilidade perfeita do FullCalendar */
+        #calendar { width: 100%; height: 600px; }
 
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:9999; }
         .modal-overlay img { max-width:90%; max-height:80vh; border-radius:8px; }
@@ -1158,7 +1158,6 @@
         function editarPrazoCalendar(unitKey, historyIdx, detailIdx) {
             const item = dbUnitsCache[unitKey][historyIdx].details[detailIdx];
             
-            // 1. Escolher Responsável
             let respOpcoes = [
                 "Piso e Revestimento", "Gesso / Sancas", "Eletricista",
                 "Instalações Hidráulicas", "Climatização / Ar-Condicionado",
@@ -1169,14 +1168,12 @@
             let novoResp = prompt(`Defina o Responsável (Atualmente: ${item.responsible || 'Não definido'}):\n\nOpções:\n${respOpcoes.join('\n')}`, item.responsible || '');
             if (novoResp === null) return;
 
-            // 2. Escolher Data de Início
             const dataHoje = getTodayFormatted();
             const dataAtual = item.scheduledFor || dataHoje;
             
             const novaData = prompt("Defina/Altere a Data de Início (Formato: DD-MM-AAAA):", dataAtual);
             if (novaData === null) return;
 
-            // 3. Escolher Prazo
             const novosDias = prompt("Defina/Altere o Prazo em Dias Úteis (Ex: 1, 2, 3, 5, 10):", item.businessDays || "3");
             if (novosDias === null) return;
 
@@ -1315,11 +1312,10 @@
                 loadAllUnitsData();
                 if (tab === 'mapa') updateDashboardData();
                 if (tab === 'cronograma') {
-                    // Timeout garante que a div visível tenha dimensões calculadas antes de renderizar
                     setTimeout(() => {
                         renderInteractiveCalendar();
                         if (fullCalendarInstance) fullCalendarInstance.updateSize();
-                    }, 50);
+                    }, 100);
                 }
             }
         }
