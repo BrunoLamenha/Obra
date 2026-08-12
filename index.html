@@ -18,38 +18,38 @@
             --secondary: #0891b2;
             --success: #16a34a;
             --danger: #dc2626;
-            --bg-body: #f4f6f9;
+            --bg-body: #f8fafc;
             --card-bg: #ffffff;
-            --border-color: #cbd5e1;
+            --border-color: #e2e8f0;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background: var(--bg-body); padding: 15px; color: #1e293b; max-width: 1400px; margin: 0 auto; }
         
-        .header { background: var(--primary); color: white; padding: 18px; text-align: center; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header { background: var(--primary); color: white; padding: 20px; text-align: center; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,74,143,0.15); }
         .header h2 { font-size: 1.6rem; font-weight: 700; }
         .header small { font-size: 0.85rem; opacity: 0.9; }
 
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: #e2e8f0; font-weight: bold; font-size: 0.95rem; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; color: #475569; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 4px rgba(0,74,143,0.3); }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: #e2e8f0; font-weight: bold; font-size: 0.95rem; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; color: #475569; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,74,143,0.25); }
 
-        .card { background: var(--card-bg); padding: 18px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+        .card { background: var(--card-bg); padding: 22px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); border: 1px solid var(--border-color); }
         .card h3, .card h4 { color: var(--primary); font-size: 1.1rem; margin-bottom: 12px; }
 
         .text-center { text-align: center; }
         .btn-group-center { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 
         .btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 10px; }
-        .btn { padding: 12px 18px; border: 1px solid var(--border-color); background: #f8fafc; border-radius: 6px; text-align: center; font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: 0.15s; }
-        .btn:hover { background: #e2e8f0; }
+        .btn { padding: 12px 18px; border: 1px solid var(--border-color); background: #f8fafc; border-radius: 8px; text-align: center; font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: 0.15s; }
+        .btn:hover { background: #f1f5f9; }
         .btn.active { outline: 3px solid var(--primary); outline-offset: -3px; }
         
         .unit-ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #065f46; }
         .unit-nok { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b; }
         .unit-pending { background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b; }
 
-        .item-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 12px; background: #fafafa; }
+        .item-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 12px; background: #fafafa; }
         .item-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
         .item-title { font-weight: 600; font-size: 0.95rem; flex: 1; }
         
@@ -58,48 +58,54 @@
         .btn-ok-active { background: var(--success); color: white; }
         .btn-nok-active { background: var(--danger); color: white; }
 
-        .nc-box { background: #fff; border: 1px dashed var(--danger); padding: 14px; border-radius: 8px; margin-top: 10px; }
+        .nc-box { background: #fff; border: 1px dashed var(--danger); padding: 16px; border-radius: 10px; margin-top: 10px; }
         .nc-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.85rem; color: var(--danger); margin-bottom: 10px; }
 
-        .checklist-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin-bottom: 12px; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .checklist-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin-bottom: 12px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
         .chk-label { font-size: 0.82rem; display: flex; align-items: center; gap: 8px; cursor: pointer; line-height: 1.2; }
         .chk-label input { width: auto; margin: 0; cursor: pointer; }
 
         .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         @media(max-width: 768px) { .grid-two { grid-template-columns: 1fr; } }
 
-        input, select { width: 100%; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.85rem; background: #fff; }
+        input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.85rem; background: #fff; }
         input:focus, select:focus { outline: 2px solid var(--primary); border-color: transparent; }
         label { font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px; text-transform: uppercase; }
 
         .photo-area { margin-top: 10px; border-top: 1px solid #eee; padding-top: 8px; }
         .photo-gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .photo-container { position: relative; width: 70px; height: 70px; }
-        .photo-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer; }
+        .photo-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer; }
         .btn-remove-photo { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; font-weight: bold; }
 
-        .btn-main { width: 100%; padding: 14px; background: var(--secondary); color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 12px; transition: 0.2s; }
+        .btn-main { width: 100%; padding: 14px; background: var(--secondary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 12px; transition: 0.2s; box-shadow: 0 2px 6px rgba(8,145,178,0.2); }
         .btn-main:hover { opacity: 0.95; }
-        .btn-add-nc { width: 100%; padding: 9px; background: #64748b; color: white; border: none; border-radius: 6px; font-size: 0.82rem; margin-top: 8px; cursor: pointer; font-weight: 600; }
+        .btn-add-nc { width: 100%; padding: 10px; background: #64748b; color: white; border: none; border-radius: 8px; font-size: 0.82rem; margin-top: 8px; cursor: pointer; font-weight: 600; }
 
         .kpi-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 15px; }
-        .kpi-card { background: white; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; }
+        .kpi-card { background: white; padding: 18px; border-radius: 12px; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
         .kpi-card small { font-size: 0.75rem; font-weight: 700; color: #64748b; }
         .kpi-num { font-size: 1.6rem; font-weight: bold; margin-top: 4px; }
 
         .badge-resp { display: inline-block; padding: 4px 10px; border-radius: 12px; color: white; font-size: 0.75rem; font-weight: bold; }
 
-        .cronograma-layout { display: grid; grid-template-columns: 2fr 1.2fr; gap: 15px; }
+        .cronograma-layout { display: grid; grid-template-columns: 2fr 1.5fr; gap: 15px; }
         @media(max-width: 900px) { .cronograma-layout { grid-template-columns: 1fr; } }
 
         #calendar { width: 100%; height: 600px; }
 
+        /* Estilos do agrupamento por serviço e unidades no cronograma */
+        .service-group-card { background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .service-group-header { padding: 12px 16px; font-weight: bold; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; color: white; }
+        .service-group-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; background: #fafafa; }
+        .unit-subcard { background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:9999; }
         .modal-overlay img { max-width:90%; max-height:80vh; border-radius:8px; }
 
-        .history-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-bottom: 10px; }
+        .history-card { background: #f8fafc; border: 1px solid var(--border-color); padding: 14px; border-radius: 8px; margin-bottom: 10px; }
         .history-actions { display: flex; gap: 8px; margin-top: 8px; }
-        .btn-hist { padding: 6px 10px; border: none; border-radius: 4px; font-size: 0.78rem; font-weight: bold; cursor: pointer; color: white; }
+        .btn-hist { padding: 6px 10px; border: none; border-radius: 6px; font-size: 0.78rem; font-weight: bold; cursor: pointer; color: white; }
     </style>
 </head>
 <body>
@@ -221,9 +227,9 @@
     <!-- ABA 3: CRONOGRAMA & CALENDÁRIO -->
     <div id="tab-cronograma" style="display:none;">
         <div class="card">
-            <label>Filtrar Responsável:</label>
+            <label>Filtrar Responsável / Serviço:</label>
             <select id="calendar-resp-filter" onchange="renderInteractiveCalendar()">
-                <option value="TODOS">Todos os Responsáveis</option>
+                <option value="TODOS">Todos os Serviços / Responsáveis</option>
                 <option value="Piso e Revestimento">Piso e Revestimento</option>
                 <option value="Gesso / Sancas">Gesso / Sancas</option>
                 <option value="Eletricista">Eletricista</option>
@@ -242,7 +248,7 @@
             </div>
 
             <div class="card">
-                <h4>📋 Atividades Agendadas</h4>
+                <h4>📋 Atividades por Serviço e Unidades</h4>
                 <div id="scheduled-activities-list" style="margin-top:10px; max-height:700px; overflow-y:auto;"></div>
             </div>
         </div>
@@ -813,7 +819,7 @@
                         
                         <div class="grid-two">
                             <div>
-                                <label>Responsável (Opcional):</label>
+                                <label>Responsável / Serviço:</label>
                                 <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
                                     <option value="" selected>Escolher depois / A definir...</option>
                                     <option value="Piso e Revestimento">Piso e Revestimento</option>
@@ -1091,7 +1097,7 @@
             if (!calendarEl) return;
 
             let events = [];
-            let scheduledList = [];
+            let groupedActivities = {};
 
             let respOpcoesHTML = `
                 <option value="">A definir...</option>
@@ -1116,28 +1122,31 @@
 
                     (last.details || []).forEach((d, detailIdx) => {
                         if (d.status !== 'Concluído') {
-                            let respText = d.responsible || '';
-                            if (filterResp === 'TODOS' || d.responsible === filterResp) {
+                            let respText = d.responsible || 'Sem Serviço Atribuído';
+                            if (filterResp === 'TODOS' || respText === filterResp) {
                                 let dateObj = parseToDate(d.scheduledFor);
                                 let startDateISO = dateObj ? formatDateToISO(dateObj) : '';
                                 
                                 let bDaysStr = String(d.businessDays || '').trim();
-                                let daysText = (bDaysStr !== '') ? `${bDaysStr} dias úteis` : "Prazo não informado";
                                 let deadline = d.deadlineDate || (startDateISO && bDaysStr ? addBusinessDays(d.scheduledFor, bDaysStr) : "Não calculada");
 
                                 if (startDateISO) {
                                     events.push({
                                         title: `Apto ${unitNum}`,
                                         start: startDateISO,
-                                        backgroundColor: respColors[d.responsible] || '#004a8f',
-                                        borderColor: respColors[d.responsible] || '#004a8f'
+                                        backgroundColor: respColors[respText] || '#004a8f',
+                                        borderColor: respColors[respText] || '#004a8f'
                                     });
                                 }
 
-                                let selectRespHTML = respOpcoesHTML.replace(`value="${respText}"`, `value="${respText}" selected`);
+                                if (!groupedActivities[respText]) {
+                                    groupedActivities[respText] = [];
+                                }
 
-                                scheduledList.push(`
-                                    <div style="border-left: 4px solid ${respColors[d.responsible] || '#004a8f'}; background:#fff; padding:12px; margin-bottom:12px; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.08); border:1px solid #e2e8f0;">
+                                let selectRespHTML = respOpcoesHTML.replace(`value="${d.responsible || ''}"`, `value="${d.responsible || ''}" selected`);
+
+                                groupedActivities[respText].push(`
+                                    <div class="unit-subcard">
                                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                                             <strong>Apto ${unitNum}</strong>
                                             <span style="font-size:0.75rem; background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:12px; font-weight:bold;">${d.status || 'Aguardando'}</span>
@@ -1148,7 +1157,7 @@
                                         
                                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
                                             <div>
-                                                <label>Responsável:</label>
+                                                <label>Serviço / Responsável:</label>
                                                 <select id="cal_resp_${key}_${lastHistoryIndex}_${detailIdx}" onchange="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})">
                                                     ${selectRespHTML}
                                                 </select>
@@ -1170,7 +1179,7 @@
                                         </div>
 
                                         <div>
-                                            <button onclick="concluirPendenciaCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="width:100%; padding:8px; font-size:0.8rem; background:var(--success); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✓ Sanar / Concluir Pendência</button>
+                                            <button onclick="concluirPendenciaCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="width:100%; padding:8px; font-size:0.8rem; background:var(--success); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">✓ Sanar / Concluir Pendência</button>
                                         </div>
                                     </div>
                                 `);
@@ -1179,6 +1188,29 @@
                     });
                 }
             });
+
+            // Renderizar agrupamentos por serviço no HTML lateral
+            let groupedHTML = '';
+            const services = Object.keys(groupedActivities);
+
+            if (services.length > 0) {
+                services.forEach(service => {
+                    const serviceColor = respColors[service] || '#004a8f';
+                    groupedHTML += `
+                        <div class="service-group-card">
+                            <div class="service-group-header" style="background-color: ${serviceColor};">
+                                <span>🛠️ ${service}</span>
+                                <span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">${groupedActivities[service].length} unidade(s)</span>
+                            </div>
+                            <div class="service-group-body">
+                                ${groupedActivities[service].join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                groupedHTML = '<p style="color:#666; text-align:center; padding:20px;">Nenhuma atividade pendente agendada.</p>';
+            }
 
             if (!fullCalendarInstance) {
                 fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
@@ -1198,7 +1230,7 @@
                 fullCalendarInstance.render();
             }
 
-            if (listEl) listEl.innerHTML = scheduledList.join('') || '<p style="color:#666;">Nenhuma atividade pendente agendada.</p>';
+            if (listEl) listEl.innerHTML = groupedHTML;
         }
 
         function atualizarDadosCalendarInline(unitKey, historyIdx, detailIdx) {
