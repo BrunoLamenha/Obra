@@ -24,24 +24,24 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background: var(--bg-body); padding: 15px; color: #1e293b; max-width: 1400px; margin: 0 auto; }
+        body { background: var(--bg-body); padding: 12px; color: #1e293b; max-width: 1400px; margin: 0 auto; overflow-x: hidden; }
         
-        .header { background: var(--primary); color: white; padding: 20px; text-align: center; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,74,143,0.15); }
-        .header h2 { font-size: 1.6rem; font-weight: 700; }
-        .header small { font-size: 0.85rem; opacity: 0.9; }
+        .header { background: var(--primary); color: white; padding: 18px; text-align: center; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,74,143,0.15); }
+        .header h2 { font-size: 1.5rem; font-weight: 700; }
+        .header small { font-size: 0.8rem; opacity: 0.9; }
 
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: #e2e8f0; font-weight: bold; font-size: 0.95rem; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; color: #475569; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 4px; }
+        .tab-btn { flex: 1; min-width: 110px; padding: 10px 12px; border: none; background: #e2e8f0; font-weight: bold; font-size: 0.85rem; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; color: #475569; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
         .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,74,143,0.25); }
 
-        .card { background: var(--card-bg); padding: 22px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); border: 1px solid var(--border-color); }
-        .card h3, .card h4 { color: var(--primary); font-size: 1.1rem; margin-bottom: 12px; }
+        .card { background: var(--card-bg); padding: 16px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); border: 1px solid var(--border-color); width: 100%; }
+        .card h3, .card h4 { color: var(--primary); font-size: 1.05rem; margin-bottom: 10px; }
 
         .text-center { text-align: center; }
-        .btn-group-center { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .btn-group-center { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 
-        .btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 10px; }
-        .btn { padding: 12px 18px; border: 1px solid var(--border-color); background: #f8fafc; border-radius: 8px; text-align: center; font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: 0.15s; }
+        .btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 6px; margin-top: 10px; }
+        .btn { padding: 10px 12px; border: 1px solid var(--border-color); background: #f8fafc; border-radius: 8px; text-align: center; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: 0.15s; }
         .btn:hover { background: #f1f5f9; }
         .btn.active { outline: 3px solid var(--primary); outline-offset: -3px; }
         
@@ -49,63 +49,72 @@
         .unit-nok { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b; }
         .unit-pending { background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b; }
 
-        .item-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 12px; background: #fafafa; }
-        .item-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .item-title { font-weight: 600; font-size: 0.95rem; flex: 1; }
+        .item-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; margin-bottom: 12px; background: #fafafa; }
+        .item-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .item-title { font-weight: 600; font-size: 0.9rem; flex: 1; min-width: 150px; }
         
-        .btn-status { padding: 8px 14px; border: none; border-radius: 6px; font-weight: bold; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .btn-status { padding: 8px 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
         .btn-neutral { background: #e2e8f0; color: #475569; }
         .btn-ok-active { background: var(--success); color: white; }
         .btn-nok-active { background: var(--danger); color: white; }
 
-        .nc-box { background: #fff; border: 1px dashed var(--danger); padding: 16px; border-radius: 10px; margin-top: 10px; }
-        .nc-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.85rem; color: var(--danger); margin-bottom: 10px; }
+        .nc-box { background: #fff; border: 1px dashed var(--danger); padding: 12px; border-radius: 10px; margin-top: 10px; }
+        .nc-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.8rem; color: var(--danger); margin-bottom: 8px; }
 
-        .checklist-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin-bottom: 12px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
-        .chk-label { font-size: 0.82rem; display: flex; align-items: center; gap: 8px; cursor: pointer; line-height: 1.2; }
+        .checklist-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .chk-label { font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer; line-height: 1.2; }
         .chk-label input { width: auto; margin: 0; cursor: pointer; }
 
-        .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         @media(max-width: 768px) { .grid-two { grid-template-columns: 1fr; } }
 
-        input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.85rem; background: #fff; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.85rem; background: #fff; }
         input:focus, select:focus { outline: 2px solid var(--primary); border-color: transparent; }
-        label { font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px; text-transform: uppercase; }
+        label { font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px; text-transform: uppercase; }
 
-        .photo-area { margin-top: 10px; border-top: 1px solid #eee; padding-top: 8px; }
-        .photo-gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-        .photo-container { position: relative; width: 70px; height: 70px; }
-        .photo-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer; }
-        .btn-remove-photo { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; font-weight: bold; }
+        .photo-area { margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px; }
+        .photo-gallery { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .photo-container { position: relative; width: 60px; height: 60px; }
+        .photo-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer; }
+        .btn-remove-photo { position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; font-weight: bold; }
 
-        .btn-main { width: 100%; padding: 14px; background: var(--secondary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 12px; transition: 0.2s; box-shadow: 0 2px 6px rgba(8,145,178,0.2); }
+        .btn-main { width: 100%; padding: 12px; background: var(--secondary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; margin-top: 10px; transition: 0.2s; box-shadow: 0 2px 6px rgba(8,145,178,0.2); }
         .btn-main:hover { opacity: 0.95; }
-        .btn-add-nc { width: 100%; padding: 10px; background: #64748b; color: white; border: none; border-radius: 8px; font-size: 0.82rem; margin-top: 8px; cursor: pointer; font-weight: 600; }
+        .btn-add-nc { width: 100%; padding: 8px; background: #64748b; color: white; border: none; border-radius: 8px; font-size: 0.8rem; margin-top: 6px; cursor: pointer; font-weight: 600; }
 
-        .kpi-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 15px; }
-        .kpi-card { background: white; padding: 18px; border-radius: 12px; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
-        .kpi-card small { font-size: 0.75rem; font-weight: 700; color: #64748b; }
-        .kpi-num { font-size: 1.6rem; font-weight: bold; margin-top: 4px; }
+        .kpi-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+        @media(max-width: 600px) { .kpi-container { grid-template-columns: 1fr; } }
+        .kpi-card { background: white; padding: 14px; border-radius: 12px; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+        .kpi-card small { font-size: 0.7rem; font-weight: 700; color: #64748b; }
+        .kpi-num { font-size: 1.4rem; font-weight: bold; margin-top: 4px; }
 
-        .badge-resp { display: inline-block; padding: 4px 10px; border-radius: 12px; color: white; font-size: 0.75rem; font-weight: bold; }
+        .badge-resp { display: inline-block; padding: 3px 8px; border-radius: 12px; color: white; font-size: 0.7rem; font-weight: bold; }
 
-        .cronograma-layout { display: grid; grid-template-columns: 2fr 1.5fr; gap: 15px; }
+        .cronograma-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px; }
         @media(max-width: 900px) { .cronograma-layout { grid-template-columns: 1fr; } }
 
-        #calendar { width: 100%; height: 600px; }
+        #calendar { width: 100%; height: 500px; }
 
         /* Estilos do agrupamento por serviço e unidades no cronograma */
-        .service-group-card { background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-        .service-group-header { padding: 12px 16px; font-weight: bold; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; color: white; }
-        .service-group-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; background: #fafafa; }
-        .unit-subcard { background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .service-group-card { background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .service-group-header { padding: 10px 14px; font-weight: bold; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; color: white; }
+        .service-group-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; background: #fafafa; }
+        .unit-subcard { background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: all 0.3s ease; }
+        .unit-subcard.highlighted { border: 2px solid var(--secondary); background: #f0fdf4; box-shadow: 0 0 12px rgba(8,145,178,0.3); }
 
-        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:9999; }
+        /* Quadro Geral de Unidades (Mapa) */
+        .general-units-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 6px; margin-top: 10px; }
+        .unit-grid-box { padding: 10px 6px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 0.85rem; cursor: pointer; border: 1px solid var(--border-color); transition: transform 0.1s; }
+        .unit-grid-box:hover { transform: scale(1.05); }
+
+        /* Modais gerais */
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:9999; padding: 15px; }
+        .modal-content { background: #fff; width: 100%; max-width: 600px; max-height: 85vh; border-radius: 12px; padding: 20px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-overlay img { max-width:90%; max-height:80vh; border-radius:8px; }
 
-        .history-card { background: #f8fafc; border: 1px solid var(--border-color); padding: 14px; border-radius: 8px; margin-bottom: 10px; }
-        .history-actions { display: flex; gap: 8px; margin-top: 8px; }
-        .btn-hist { padding: 6px 10px; border: none; border-radius: 6px; font-size: 0.78rem; font-weight: bold; cursor: pointer; color: white; }
+        .history-card { background: #f8fafc; border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+        .history-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .btn-hist { padding: 6px 10px; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; color: white; }
     </style>
 </head>
 <body>
@@ -149,13 +158,13 @@
 
         <div class="card" id="type-card" style="display:none;">
             <h3>3. Tipo de Vistoria</h3>
-            <div style="display:flex; gap:10px; margin-top:8px;" id="category-selection-container">
-                <button class="tab-btn btn-opt" id="btn-cat-padrao" onclick="setCategory('Padrão Construtora', this)">Padrão Construtora</button>
-                <button class="tab-btn btn-opt" id="btn-cat-reforma" onclick="setCategory('Reforma / Aditivo', this)">Reforma / Aditivo</button>
+            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;" id="category-selection-container">
+                <button class="tab-btn btn-opt" style="flex:1; min-width:140px;" id="btn-cat-padrao" onclick="setCategory('Padrão Construtora', this)">Padrão Construtora</button>
+                <button class="tab-btn btn-opt" style="flex:1; min-width:140px;" id="btn-cat-reforma" onclick="setCategory('Reforma / Aditivo', this)">Reforma / Aditivo</button>
             </div>
 
             <h3 style="margin-top: 15px;">4. Etapa da Vistoria</h3>
-            <div style="display:flex; gap:10px; margin-top:8px;" id="stage-selection-container">
+            <div style="display:flex; gap:8px; margin-top:8px;" id="stage-selection-container">
                 <button class="btn btn-stage" id="btn-stage-1" style="flex:1;" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</button>
                 <button class="btn btn-stage" id="btn-stage-rev" style="flex:1;" onclick="setStage('Revistoria', this)">🔄 Revistoria</button>
             </div>
@@ -213,6 +222,13 @@
 
         <button class="btn-main" style="background:var(--success); margin-bottom:12px;" onclick="exportToExcelXLSX()">📊 Baixar Dados em Excel (.xlsx)</button>
 
+        <!-- QUADRO GERAL DE UNIDADES -->
+        <div class="card">
+            <h4>🏢 Quadro Geral de Unidades (Clique para ver Vistorias)</h4>
+            <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 8px;">Toque em qualquer apartamento para inspecionar o histórico completo de vistorias realizadas.</div>
+            <div class="general-units-grid" id="general-units-grid-container"></div>
+        </div>
+
         <div class="card">
             <h4>🔥 Top Não Conformidades Mais Recorrentes na Obra</h4>
             <div id="top-nc-list" style="margin-top:10px;">Nenhuma pendência registrada ainda.</div>
@@ -249,8 +265,19 @@
 
             <div class="card">
                 <h4>📋 Atividades por Serviço e Unidades</h4>
-                <div id="scheduled-activities-list" style="margin-top:10px; max-height:700px; overflow-y:auto;"></div>
+                <div id="scheduled-activities-list" style="margin-top:10px; max-height:600px; overflow-y:auto;"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE HISTÓRICO GERAL DA UNIDADE (CLIQUE NO MAPA) -->
+    <div class="modal-overlay" id="unit-modal-overview" onclick="closeUnitOverviewModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 id="modal-overview-title" style="margin:0; color:var(--primary);">Histórico da Unidade</h3>
+                <button onclick="document.getElementById('unit-modal-overview').style.display='none'" style="background:none; border:none; font-size:1.2rem; font-weight:bold; cursor:pointer; color:#64748b;">✕</button>
+            </div>
+            <div id="modal-overview-body"></div>
         </div>
     </div>
 
@@ -357,6 +384,7 @@
                 if (localData) {
                     dbUnitsCache = JSON.parse(localData);
                     updateDashboardData();
+                    renderGeneralUnitsOverview();
                 }
             } catch (e) {}
 
@@ -365,6 +393,7 @@
                     snapshot.forEach(doc => { dbUnitsCache[doc.id] = doc.data().history || []; });
                     localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
                     updateDashboardData();
+                    renderGeneralUnitsOverview();
                     if (selectedFloorNum) renderUnitsGrid();
                 }).catch(err => console.log("Carregado localmente"));
             }
@@ -467,6 +496,162 @@
                 }
                 u.innerHTML += `<div class="btn ${statusClass} ${selectedUnitNum === num ? 'active' : ''}" onclick="selectUnit(${num}, this)">${num}</div>`;
             }
+        }
+
+        function renderGeneralUnitsOverview() {
+            const gridContainer = document.getElementById('general-units-grid-container');
+            if (!gridContainer) return;
+            gridContainer.innerHTML = '';
+
+            for (let f = 1; f <= 4; f++) {
+                for (let i = 1; i <= 19; i++) {
+                    let num = (f * 100) + i;
+                    const historyKey = `unit_${num}`;
+                    const history = dbUnitsCache[historyKey] || [];
+                    
+                    let statusClass = 'unit-pending';
+                    if (history.length > 0) {
+                        const lastInsp = history[history.length - 1];
+                        if (lastInsp.status === '100_ok' && lastInsp.pendenciesCount === 0) {
+                            statusClass = 'unit-ok';
+                        } else {
+                            statusClass = 'unit-nok';
+                        }
+                    }
+
+                    gridContainer.innerHTML += `
+                        <div class="unit-grid-box ${statusClass}" onclick="openUnitOverview(${num})" title="Apto ${num} - ${history.length} vistoria(s)">
+                            ${num}
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function openUnitOverview(unitNum) {
+            const historyKey = `unit_${unitNum}`;
+            const history = dbUnitsCache[historyKey] || [];
+            const modal = document.getElementById('unit-modal-overview');
+            const titleEl = document.getElementById('modal-overview-title');
+            const bodyEl = document.getElementById('modal-overview-body');
+
+            titleEl.innerText = `Histórico de Vistorias - Apto ${unitNum}`;
+
+            if (history.length === 0) {
+                bodyEl.innerHTML = `<p style="color:#64748b; text-align:center; padding:20px;">Nenhuma vistoria realizada nesta unidade ainda.</p>`;
+            } else {
+                bodyEl.innerHTML = history.map((h, idx) => `
+                    <div class="history-card" style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>${h.stage || 'Vistoria'} — ${h.date}</strong>
+                            <span style="font-size:0.75rem; font-weight:bold; color:${(h.pendenciesCount === 0 && h.status === '100_ok') ? 'var(--success)' : 'var(--danger)'}">
+                                ${(h.pendenciesCount === 0 && h.status === '100_ok') ? 'Aprovada ✓' : h.pendenciesCount + ' Pendência(s)'}
+                            </span>
+                        </div>
+                        <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">
+                            Vistoriador: ${h.inspector} | Tipo: ${h.category || 'Padrão'}
+                        </div>
+                        <div class="history-actions">
+                            <button class="btn-hist" style="background:#25D366;" onclick="shareHistoryWhatsAppCustom(${unitNum}, ${idx})">📲 WhatsApp</button>
+                            <button class="btn-hist" style="background:var(--primary);" onclick="printHistoryReportCustom(${unitNum}, ${idx})">🖨️ PDF</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeUnitOverviewModal(event) {
+            if (event.target.id === 'unit-modal-overview') {
+                event.target.style.display = 'none';
+            }
+        }
+
+        function shareHistoryWhatsAppCustom(unitNum, histIdx) {
+            const historyKey = `unit_${unitNum}`;
+            const h = dbUnitsCache[historyKey]?.[histIdx];
+            if (!h) return;
+
+            let text = `*RELATÓRIO DE VISTORIA - APTO ${unitNum}*\n`;
+            text += `*Etapa:* ${h.stage || 'Vistoria'}\n`;
+            text += `*Data:* ${h.date}\n`;
+            text += `*Vistoriador:* ${h.inspector}\n`;
+            text += `*Resultado:* ${(h.pendenciesCount === 0 && h.status === '100_ok') ? 'APROVADO ✓' : h.pendenciesCount + ' pendência(s)'}\n\n`;
+
+            if (h.details && h.details.length > 0) {
+                text += `*PENDÊNCIAS:*\n`;
+                h.details.forEach((d, i) => {
+                    text += `${i+1}. [${d.room}] ${d.item} - ${d.nonConformity} (Resp: ${d.responsible || 'A definir'})\n`;
+                });
+            }
+
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function printHistoryReportCustom(unitNum, histIdx) {
+            const historyKey = `unit_${unitNum}`;
+            const h = dbUnitsCache[historyKey]?.[histIdx];
+            if (!h) return;
+
+            let printWin = window.open('', '_blank');
+            let content = `
+                <html>
+                <head>
+                    <title>Relatório Apto ${unitNum} - ${h.stage}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; }
+                        h2 { color: #004a8f; border-bottom: 2px solid #004a8f; padding-bottom: 5px; }
+                        .info { margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        th, td { border: 1px solid #cbd5e1; padding: 8px; font-size: 0.85rem; text-align: left; }
+                        th { background: #f1f5f9; }
+                    </style>
+                </head>
+                <body>
+                    <h2>Relatório Técnico de Vistoria - Apto ${unitNum}</h2>
+                    <div class="info">
+                        <strong>Etapa:</strong> ${h.stage || 'Vistoria'}<br>
+                        <strong>Data:</strong> ${h.date}<br>
+                        <strong>Vistoriador:</strong> ${h.inspector}<br>
+                        <strong>Categoria:</strong> ${h.category || 'Padrão Construtora'}<br>
+                        <strong>Status:</strong> ${(h.pendenciesCount === 0 && h.status === '100_ok') ? 'Conforme / Aprovado' : h.pendenciesCount + ' Pendência(s)'}
+                    </div>
+            `;
+
+            if (h.details && h.details.length > 0) {
+                content += `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Ambiente</th>
+                                <th>Item</th>
+                                <th>Não Conformidade</th>
+                                <th>Responsável</th>
+                                <th>Prazo Final</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                h.details.forEach((d, i) => {
+                    content += `
+                        <tr>
+                            <td>${i+1}</td>
+                            <td>${d.room}</td>
+                            <td>${d.item}</td>
+                            <td>${d.nonConformity}</td>
+                            <td>${d.responsible || 'A definir'}</td>
+                            <td>${d.deadlineDate || 'Não calculada'}</td>
+                        </tr>
+                    `;
+                });
+                content += `</tbody></table>`;
+            }
+
+            content += `<script>window.onload = function() { window.print(); }<\/script></body></html>`;
+            printWin.document.write(content);
+            printWin.document.close();
         }
 
         function selectUnit(u, el) {
@@ -620,89 +805,11 @@
         }
 
         function shareHistoryWhatsApp(histIdx) {
-            const historyKey = `unit_${selectedUnitNum}`;
-            const h = dbUnitsCache[historyKey]?.[histIdx];
-            if (!h) return;
-
-            let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
-            text += `*Etapa:* ${h.stage || 'Vistoria'}\n`;
-            text += `*Data:* ${h.date}\n`;
-            text += `*Vistoriador:* ${h.inspector}\n`;
-            text += `*Resultado:* ${(h.pendenciesCount === 0 && h.status === '100_ok') ? 'APROVADO ✓' : h.pendenciesCount + ' pendência(s) registrada(s)'}\n\n`;
-
-            if (h.details && h.details.length > 0) {
-                text += `*PENDÊNCIAS:*\n`;
-                h.details.forEach((d, i) => {
-                    text += `${i+1}. [${d.room}] ${d.item} - ${d.nonConformity} (Resp: ${d.responsible || 'A definir'})\n`;
-                });
-            }
-
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+            shareHistoryWhatsAppCustom(selectedUnitNum, histIdx);
         }
 
         function printHistoryReport(histIdx) {
-            const historyKey = `unit_${selectedUnitNum}`;
-            const h = dbUnitsCache[historyKey]?.[histIdx];
-            if (!h) return;
-
-            let printWin = window.open('', '_blank');
-            let content = `
-                <html>
-                <head>
-                    <title>Relatório Apto ${selectedUnitNum} - ${h.stage}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; }
-                        h2 { color: #004a8f; border-bottom: 2px solid #004a8f; padding-bottom: 5px; }
-                        .info { margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-                        th, td { border: 1px solid #cbd5e1; padding: 8px; font-size: 0.85rem; text-align: left; }
-                        th { background: #f1f5f9; }
-                    </style>
-                </head>
-                <body>
-                    <h2>Relatório Técnico de Vistoria - Apto ${selectedUnitNum}</h2>
-                    <div class="info">
-                        <strong>Etapa:</strong> ${h.stage || 'Vistoria'}<br>
-                        <strong>Data:</strong> ${h.date}<br>
-                        <strong>Vistoriador:</strong> ${h.inspector}<br>
-                        <strong>Categoria:</strong> ${h.category || 'Padrão Construtora'}<br>
-                        <strong>Status:</strong> ${(h.pendenciesCount === 0 && h.status === '100_ok') ? 'Conforme / Aprovado' : h.pendenciesCount + ' Pendência(s)'}
-                    </div>
-            `;
-
-            if (h.details && h.details.length > 0) {
-                content += `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Ambiente</th>
-                                <th>Item</th>
-                                <th>Não Conformidade</th>
-                                <th>Responsável</th>
-                                <th>Prazo Final</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                h.details.forEach((d, i) => {
-                    content += `
-                        <tr>
-                            <td>${i+1}</td>
-                            <td>${d.room}</td>
-                            <td>${d.item}</td>
-                            <td>${d.nonConformity}</td>
-                            <td>${d.responsible || 'A definir'}</td>
-                            <td>${d.deadlineDate || 'Não calculada'}</td>
-                        </tr>
-                    `;
-                });
-                content += `</tbody></table>`;
-            }
-
-            content += `<script>window.onload = function() { window.print(); }<\/script></body></html>`;
-            printWin.document.write(content);
-            printWin.document.close();
+            printHistoryReportCustom(selectedUnitNum, histIdx);
         }
 
         function loadPreviousActivePendencies() {
@@ -732,14 +839,21 @@
                         if (parts[1]) obsText = parts[1].replace(')', '').trim();
                     }
 
+                    // Se não tiver data de início definida, define para o dia 1 do mês atual por padrão
+                    let defaultStartDate = d.scheduledFor;
+                    if (!defaultStartDate) {
+                        let now = new Date();
+                        defaultStartDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+                    }
+
                     pendingNCs[key].push({
                         id: d.id || Date.now(),
                         selectedOpts: opts,
                         obs: obsText,
                         resp: d.responsible || '',
                         respOther: '',
-                        startDate: d.scheduledFor || '',
-                        businessDays: d.businessDays || '',
+                        startDate: defaultStartDate,
+                        businessDays: d.businessDays || '3',
                         status: d.status || 'Aguardando',
                         severity: d.severity || 'Baixa',
                         photos: d.photos || []
@@ -819,7 +933,7 @@
                         
                         <div class="grid-two">
                             <div>
-                                <label>Responsável / Serviço:</label>
+                                <label>Serviço / Responsável:</label>
                                 <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
                                     <option value="" selected>Escolher depois / A definir...</option>
                                     <option value="Piso e Revestimento">Piso e Revestimento</option>
@@ -838,11 +952,11 @@
                             
                             <div class="grid-two">
                                 <div>
-                                    <label>Data Início (Opcional):</label>
+                                    <label>Data Início:</label>
                                     <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
                                 </div>
                                 <div>
-                                    <label>Prazo em Dias Úteis (Opcional):</label>
+                                    <label>Dias Úteis:</label>
                                     <input type="number" min="1" id="days_${key}_${index}" placeholder="Ex: 3, 5" oninput="salvarEstadoAtualInput('${key}')">
                                 </div>
                             </div>
@@ -912,7 +1026,7 @@
                 nc.resp = document.getElementById(`resp_${key}_${index}`)?.value || '';
                 nc.respOther = document.getElementById(`resp_other_${key}_${index}`)?.value || '';
                 nc.startDate = document.getElementById(`date_${key}_${index}`)?.value || '';
-                nc.businessDays = document.getElementById(`days_${key}_${index}`)?.value || '';
+                nc.businessDays = document.getElementById(`days_${key}_${index}`)?.value || '3';
                 nc.status = document.getElementById(`status_${key}_${index}`)?.value || 'Aguardando';
                 nc.severity = document.getElementById(`sev_${key}_${index}`)?.value || 'Baixa';
 
@@ -954,14 +1068,17 @@
 
             itemStatuses[key] = 'NOK';
 
+            let now = new Date();
+            let defaultDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+
             pendingNCs[key].push({
                 id: Date.now(),
                 selectedOpts: [],
                 obs: '',
                 resp: '',
                 respOther: '',
-                startDate: '',
-                businessDays: '',
+                startDate: defaultDate,
+                businessDays: '3',
                 status: 'Aguardando',
                 severity: 'Baixa',
                 photos: []
@@ -1068,13 +1185,13 @@
                 }
                 if (dateEl && nc.startDate) {
                     let dClean = nc.startDate;
-                    if (dClean.includes('-') && dClean.indexOf('-') === 2) {
-                        let p = dClean.split('-');
-                        if (p.length === 3 && p[2].length === 4) dClean = `${p[2]}-${p[1]}-${p[0]}`;
+                    if (dClean.includes('/') || (dClean.includes('-') && dClean.indexOf('-') === 2)) {
+                        let parsed = parseToDate(dClean);
+                        dClean = parsed ? formatDateToISO(parsed) : dClean;
                     }
                     dateEl.value = dClean;
                 }
-                if (daysEl) daysEl.value = nc.businessDays || '';
+                if (daysEl) daysEl.value = nc.businessDays || '3';
                 if (statusEl && nc.status) statusEl.value = nc.status;
                 if (sevEl && nc.severity) sevEl.value = nc.severity;
 
@@ -1122,20 +1239,26 @@
 
                     (last.details || []).forEach((d, detailIdx) => {
                         if (d.status !== 'Concluído') {
-                            let respText = d.responsible || 'Sem Serviço Atribuído';
+                            let respText = d.responsible || 'A definir';
                             if (filterResp === 'TODOS' || respText === filterResp) {
                                 let dateObj = parseToDate(d.scheduledFor);
                                 let startDateISO = dateObj ? formatDateToISO(dateObj) : '';
                                 
-                                let bDaysStr = String(d.businessDays || '').trim();
+                                let bDaysStr = String(d.businessDays || '3').trim();
                                 let deadline = d.deadlineDate || (startDateISO && bDaysStr ? addBusinessDays(d.scheduledFor, bDaysStr) : "Não calculada");
 
                                 if (startDateISO) {
                                     events.push({
+                                        id: `${key}_${lastHistoryIndex}_${detailIdx}`,
                                         title: `Apto ${unitNum}`,
                                         start: startDateISO,
                                         backgroundColor: respColors[respText] || '#004a8f',
-                                        borderColor: respColors[respText] || '#004a8f'
+                                        borderColor: respColors[respText] || '#004a8f',
+                                        extendedProps: {
+                                            unitKey: key,
+                                            historyIdx: lastHistoryIndex,
+                                            detailIdx: detailIdx
+                                        }
                                     });
                                 }
 
@@ -1146,7 +1269,7 @@
                                 let selectRespHTML = respOpcoesHTML.replace(`value="${d.responsible || ''}"`, `value="${d.responsible || ''}" selected`);
 
                                 groupedActivities[respText].push(`
-                                    <div class="unit-subcard">
+                                    <div class="unit-subcard" id="card_sub_${key}_${lastHistoryIndex}_${detailIdx}">
                                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                                             <strong>Apto ${unitNum}</strong>
                                             <span style="font-size:0.75rem; background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:12px; font-weight:bold;">${d.status || 'Aguardando'}</span>
@@ -1158,28 +1281,29 @@
                                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
                                             <div>
                                                 <label>Serviço / Responsável:</label>
-                                                <select id="cal_resp_${key}_${lastHistoryIndex}_${detailIdx}" onchange="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})">
+                                                <select id="cal_resp_${key}_${lastHistoryIndex}_${detailIdx}" onblur="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})" onchange="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})">
                                                     ${selectRespHTML}
                                                 </select>
                                             </div>
                                             <div>
                                                 <label>Início:</label>
-                                                <input type="date" id="cal_date_${key}_${lastHistoryIndex}_${detailIdx}" value="${startDateISO}" onchange="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})">
+                                                <input type="date" id="cal_date_${key}_${lastHistoryIndex}_${detailIdx}" value="${startDateISO}" onblur="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})" onchange="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})">
                                             </div>
                                         </div>
 
                                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px; align-items:center;">
                                             <div>
                                                 <label>Dias Úteis:</label>
-                                                <input type="number" min="1" id="cal_days_${key}_${lastHistoryIndex}_${detailIdx}" value="${d.businessDays || '3'}" oninput="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})">
+                                                <input type="number" min="1" id="cal_days_${key}_${lastHistoryIndex}_${detailIdx}" value="${d.businessDays || '3'}" onblur="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})" onchange="atualizarDadosCalendarInline('${key}', ${lastHistoryIndex}, ${detailIdx})">
                                             </div>
                                             <div style="font-size:0.78rem; color:#64748b; padding-top:14px;">
                                                 Prazo Final: <strong id="cal_deadline_${key}_${lastHistoryIndex}_${detailIdx}">${deadline}</strong>
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <button onclick="concluirPendenciaCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="width:100%; padding:8px; font-size:0.8rem; background:var(--success); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">✓ Sanar / Concluir Pendência</button>
+                                        <div style="display:flex; gap:6px;">
+                                            <button type="button" onclick="focarDataNoCalendario('${startDateISO}')" style="flex:1; padding:8px; font-size:0.75rem; background:var(--primary); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">📅 Ver no Calendário</button>
+                                            <button type="button" onclick="concluirPendenciaCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="flex:2; padding:8px; font-size:0.75rem; background:var(--success); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">✓ Concluir Pendência</button>
                                         </div>
                                     </div>
                                 `);
@@ -1189,7 +1313,6 @@
                 }
             });
 
-            // Renderizar agrupamentos por serviço no HTML lateral
             let groupedHTML = '';
             const services = Object.keys(groupedActivities);
 
@@ -1221,6 +1344,18 @@
                         left: 'prev,next today',
                         center: 'title',
                         right: 'dayGridMonth,timeGridWeek'
+                    },
+                    eventClick: function(info) {
+                        const props = info.event.extendedProps;
+                        const cardId = `card_sub_${props.unitKey}_${props.historyIdx}_${props.detailIdx}`;
+                        const cardEl = document.getElementById(cardId);
+                        if (cardEl) {
+                            cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            cardEl.classList.add('highlighted');
+                            setTimeout(() => {
+                                cardEl.classList.remove('highlighted');
+                            }, 2500);
+                        }
                     }
                 });
                 fullCalendarInstance.render();
@@ -1233,8 +1368,18 @@
             if (listEl) listEl.innerHTML = groupedHTML;
         }
 
+        function focarDataNoCalendario(dateISO) {
+            if (fullCalendarInstance && dateISO) {
+                fullCalendarInstance.gotoDate(dateISO);
+                // Mudar para visualização de semana ou dia para destacar se necessário, ou manter mês
+                const calElement = document.getElementById('calendar');
+                if (calElement) calElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
         function atualizarDadosCalendarInline(unitKey, historyIdx, detailIdx) {
-            const item = dbUnitsCache[unitKey][historyIdx].details[detailIdx];
+            const item = dbUnitsCache[unitKey]?.[historyIdx]?.details?.[detailIdx];
+            if (!item) return;
 
             const respEl = document.getElementById(`cal_resp_${unitKey}_${historyIdx}_${detailIdx}`);
             const dateEl = document.getElementById(`cal_date_${unitKey}_${historyIdx}_${detailIdx}`);
@@ -1248,7 +1393,7 @@
             } else {
                 item.scheduledFor = "";
             }
-            if (daysEl) item.businessDays = daysEl.value;
+            if (daysEl) item.businessDays = daysEl.value || '3';
 
             let calculatedDeadline = addBusinessDays(item.scheduledFor, item.businessDays);
             item.deadlineDate = calculatedDeadline;
@@ -1275,12 +1420,12 @@
                     unit: unitKey.replace('unit_', ''),
                     history: dbUnitsCache[unitKey]
                 }, { merge: true }).then(() => {
-                    renderInteractiveCalendar();
                     updateDashboardData();
+                    renderGeneralUnitsOverview();
                 });
             } else {
-                renderInteractiveCalendar();
                 updateDashboardData();
+                renderGeneralUnitsOverview();
             }
         }
 
@@ -1295,13 +1440,15 @@
                     alert("Alteração salva com sucesso!");
                     renderInteractiveCalendar();
                     updateDashboardData();
-                    renderUnitsGrid();
+                    renderGeneralUnitsOverview();
+                    if (selectedFloorNum) renderUnitsGrid();
                 });
             } else {
                 alert("Alteração salva localmente!");
                 renderInteractiveCalendar();
                 updateDashboardData();
-                renderUnitsGrid();
+                renderGeneralUnitsOverview();
+                if (selectedFloorNum) renderUnitsGrid();
             }
         }
 
@@ -1338,7 +1485,7 @@
                         startDateFormatted = parsedD ? formatDateToDDMMAAAA(parsedD) : nc.startDate;
                     }
                     
-                    let days = parseInt(nc.businessDays);
+                    let days = parseInt(nc.businessDays || '3');
                     let deadlineDate = startDateFormatted && !isNaN(days) ? addBusinessDays(startDateFormatted, days) : "Não calculada";
                     let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
                     let obsText = nc.obs ? ` (${nc.obs})` : '';
@@ -1353,7 +1500,7 @@
                         status: nc.status || 'Aguardando',
                         inspectedAt: nowFormatted,
                         scheduledFor: startDateFormatted,
-                        businessDays: String(nc.businessDays || ''),
+                        businessDays: String(nc.businessDays || '3'),
                         deadlineDate: deadlineDate,
                         photos: nc.photos || []
                     });
@@ -1387,7 +1534,8 @@
 
             alert(`Vistoria da Unidade ${selectedUnitNum} salva com sucesso!`);
             
-            renderUnitsGrid();
+            if (selectedFloorNum) renderUnitsGrid();
+            renderGeneralUnitsOverview();
             updateCategoryAndStageState();
             renderUnitHistory();
             updateDashboardData();
@@ -1404,7 +1552,10 @@
 
             if (tab === 'mapa' || tab === 'cronograma') {
                 loadAllUnitsData();
-                if (tab === 'mapa') updateDashboardData();
+                if (tab === 'mapa') {
+                    updateDashboardData();
+                    renderGeneralUnitsOverview();
+                }
                 if (tab === 'cronograma') {
                     setTimeout(() => {
                         renderInteractiveCalendar();
