@@ -363,15 +363,14 @@
     </div>
 </div>
 
-<!-- Bibliotecas externas necessárias -->
+<!-- LIBS EXTERNAS E FIREBASE COMPAT (GARANTE EXIBIÇÃO DOS ITENS E FUNCIONAMENTO DOS BOTÕES) -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 
-<script type="module">
-    // Importações do Firebase v10
-    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
+<script>
     // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBqtptEp5QjIOoAjwx0wT--cswUhSvcsGM",
@@ -383,11 +382,11 @@
       measurementId: "G-GP1QQVWR50"
     };
 
-    // Inicialização do App e Firestore
-    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-    const db = getFirestore(app);
+    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
 
-    // Constantes do Sistema
     const TOTAL_UNIDADES = 76;
 
     const roomNames = {
@@ -432,6 +431,11 @@
     let deviceDetails = "";
     let dbUnitsCache = {};
     let fullCalendarInstance = null;
+
+    window.onload = function() {
+        try { detectDevice(); } catch(e) { console.warn(e); }
+        try { loadAllUnitsData(); } catch(e) { console.warn(e); }
+    };
 
     function detectDevice() {
         let deviceId = "DEV-LOCAL";
@@ -482,26 +486,23 @@
         }
     }
 
-    async function loadAllUnitsData() {
+    function loadAllUnitsData() {
         try {
             const localData = localStorage.getItem('vistorias_db');
             if (localData) {
                 dbUnitsCache = JSON.parse(localData);
                 updateDashboardData();
-                renderInteractiveCalendar();
             }
         } catch (e) {}
 
-        try {
-            const querySnapshot = await getDocs(collection(db, 'vistorias'));
-            querySnapshot.forEach((docSnap) => {
-                dbUnitsCache[docSnap.id] = docSnap.data().history || [];
-            });
-            try { localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache)); } catch (e) {}
-            updateDashboardData();
-            renderInteractiveCalendar();
-        } catch (err) {
-            console.log("Carregando localmente:", err);
+        if (db && db.collection) {
+            db.collection('vistorias').get().then(snapshot => {
+                snapshot.forEach(doc => {
+                    dbUnitsCache[doc.id] = doc.data().history || [];
+                });
+                try { localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache)); } catch (e) {}
+                updateDashboardData();
+            }).catch(err => console.log("Carregando localmente"));
         }
     }
 
@@ -1015,7 +1016,7 @@
         });
     }
 
-    async function generateTechnicalPDF() {
+    function generateTechnicalPDF() {
         let hasMissingResp = false;
         Object.keys(pendingNCs).forEach(key => {
             salvarEstadoAtualInput(key);
@@ -1086,261 +1087,26 @@
 
         try { localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache)); } catch(e) {}
 
-        try {
-            await setDoc(doc(db, 'vistorias', historyKey), {
+        if (db && db.collection) {
+            db.collection('vistorias').doc(historyKey).set({
                 unit: selectedUnitNum,
                 history: dbUnitsCache[historyKey]
-            }, { merge: true });
-            alert(`Vistoria da Unidade ${selectedUnitNum} finalizada e salva em nuvem!`);
-        } catch (err) {
-            console.error(err);
-            alert(`Vistoria salva localmente!`);
-        }
-        
-        loadAllUnitsData();
-        const btnNext = document.getElementById('btn-next');
-        if (btnNext) btnNext.style.display = 'block';
-    }
-
-    async function sendWhatsAppSummary() {
-        if (!selectedUnitNum) { alert("Selecione uma unidade primeiro!"); return; }
-
-        Object.keys(pendingNCs).forEach(key => salvarEstadoAtualInput(key));
-
-        let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
-        text += `Vistoriador: ${inspectorName || 'Não Informado'}\n`;
-        text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
-
-        let imageFiles = [];
-        let count = 0;
-
-        for (const key of Object.keys(pendingNCs)) {
-            if (pendingNCs[key] && pendingNCs[key].length > 0) {
-                const lastUnderscoreIndex = key.lastIndexOf('_');
-                const roomKey = key.substring(0, lastUnderscoreIndex);
-                const itemId = key.substring(lastUnderscoreIndex + 1);
-
-                const roomName = roomNames[roomKey] || 'Ambiente';
-                const itemObj = checklist.find(i => i.id === itemId);
-                const itemName = itemObj ? itemObj.cleanName : 'Item';
-
-                for (const nc of pendingNCs[key]) {
-                    count++;
-                    const resp = nc.resp === 'Outro' ? nc.respOther : nc.resp;
-                    let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
-                    let obsText = nc.obs ? ` (${nc.obs})` : '';
-
-                    let days = parseInt(nc.businessDays);
-                    let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
-
-                    text += `*${count}. ${roomName} - ${itemName}*\n`;
-                    text += `• Pendência: ${(optsText + obsText).trim() || 'Sem detalhes'}\n`;
-                    text += `• Responsável: ${resp || 'A definir'}\n`;
-                    text += `• Data Início: ${nc.startDate || 'Sem data'}\n`;
-                    text += `• Prazo Execução: ${nc.businessDays ? nc.businessDays + ' dias úteis' : 'A definir'}`;
-                    if (deadlineDate) text += ` (Prazo Final: ${deadlineDate})`;
-                    text += `\n• Severidade: ${nc.severity || 'Baixa'}\n\n`;
-
-                    if (nc.photos && nc.photos.length > 0) {
-                        for (let i = 0; i < nc.photos.length; i++) {
-                            if (nc.photos[i].startsWith('data:image')) {
-                                try {
-                                    const blob = await (await fetch(nc.photos[i])).blob();
-                                    const file = new File([blob], `apto${selectedUnitNum}_item${count}_foto${i + 1}.jpg`, { type: 'image/jpeg' });
-                                    imageFiles.push(file);
-                                } catch (e) {}
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (count === 0) text += `✅ *UNIDADE 100% APROVADA - SEM PENDÊNCIAS*`;
-
-        if (navigator.canShare && imageFiles.length > 0) {
-            try {
-                if (navigator.canShare({ files: imageFiles })) {
-                    await navigator.share({
-                        title: `Vistoria Apto ${selectedUnitNum}`,
-                        text: text,
-                        files: imageFiles
-                    });
-                    return;
-                }
-            } catch (err) {}
-        }
-
-        const encoded = encodeURIComponent(text);
-        window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
-    }
-
-    function renderInteractiveCalendar() {
-        const calendarEl = document.getElementById('calendar');
-        if (!calendarEl) return;
-
-        let events = [];
-        let unassignedHTML = '';
-        let scheduledTasksHTML = '';
-        const filterEl = document.getElementById('calendar-resp-filter');
-        const filterResp = filterEl ? filterEl.value : 'TODOS';
-
-        Object.keys(dbUnitsCache).forEach(key => {
-            const unitNum = key.replace('unit_', '');
-            const history = dbUnitsCache[key] || [];
-            if (history.length > 0) {
-                const hIndex = history.length - 1;
-                const last = history[hIndex];
-                if (last.details) {
-                    last.details.forEach((d, dIndex) => {
-                        const respName = d.responsible || 'Outro';
-                        
-                        if ((filterResp === 'TODOS' || respName === filterResp) && d.status !== 'Concluído') {
-                            
-                            let deadline = d.deadlineDate || (d.scheduledFor && d.businessDays ? addBusinessDays(d.scheduledFor, parseInt(d.businessDays)) : null);
-                            let serviceColor = respColors[respName] || '#004a8f';
-                            const cardDomId = `task_card_${unitNum}_${hIndex}_${dIndex}`;
-
-                            unassignedHTML += `
-                                <div class="fc-task-card" id="${cardDomId}" style="background:#fff; border:1px solid #cbd5e1; border-left: 5px solid ${serviceColor}; padding:10px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition: all 0.3s ease;">
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                                        <div>
-                                            <strong style="color:${serviceColor}; font-size:0.9rem;">Apto ${unitNum}</strong> - ${d.item}<br>
-                                            <small style="color:#dc2626; font-weight:bold;">${d.nonConformity}</small><br>
-                                            <small><strong>Resp:</strong> ${respName}</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-
-                            if (d.scheduledFor) {
-                                let endDateIso = null;
-                                if (deadline && deadline.includes('/')) {
-                                    const parts = deadline.split('/');
-                                    endDateIso = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                                }
-
-                                events.push({
-                                    id: cardDomId,
-                                    title: `APTO ${unitNum}`,
-                                    start: d.scheduledFor,
-                                    end: endDateIso || d.scheduledFor,
-                                    backgroundColor: serviceColor,
-                                    borderColor: serviceColor,
-                                    textColor: '#ffffff'
-                                });
-
-                                scheduledTasksHTML += `
-                                    <div class="activity-card" onclick="highlightTaskCard('${cardDomId}')" style="border-left: 6px solid ${serviceColor};">
-                                        <div>
-                                            <span class="activity-badge" style="background:${serviceColor};">APTO ${unitNum}</span>
-                                            <strong>${respName}</strong><br>
-                                            <span style="color:#334155;">${d.item}: <strong>${d.nonConformity}</strong></span>
-                                        </div>
-                                        <div class="activity-dates">
-                                            📅 Início: <strong>${d.scheduledFor}</strong><br>
-                                            ⏳ Prazo Limite: <strong style="color:#d97706;">${deadline || 'Não definida'}</strong>
-                                        </div>
-                                    </div>
-                                `;
-                            }
-                        }
-                    });
-                }
-            }
-        });
-
-        const unassignedEl = document.getElementById('unassigned-tasks-list');
-        if (unassignedEl) unassignedEl.innerHTML = unassignedHTML || '<p style="font-size:0.75rem; color:#888;">Nenhuma pendência pendente.</p>';
-        
-        const activityListEl = document.getElementById('scheduled-activities-list');
-        if (activityListEl) {
-            activityListEl.innerHTML = scheduledTasksHTML || '<p style="font-size:0.8rem; color:#666;">Nenhuma atividade agendada para o filtro selecionado.</p>';
-        }
-
-        if (fullCalendarInstance) fullCalendarInstance.destroy();
-
-        if (typeof FullCalendar !== 'undefined') {
-            fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'pt-br',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,listWeek'
-                },
-                events: events,
-                eventClick: function(info) {
-                    if (info.event.id) highlightTaskCard(info.event.id);
-                }
+            }, { merge: true }).then(() => {
+                alert(`Vistoria da Unidade ${selectedUnitNum} finalizada!`);
+                loadAllUnitsData();
+                const btnNext = document.getElementById('btn-next');
+                if (btnNext) btnNext.style.display = 'block';
+            }).catch(err => {
+                alert(`Vistoria salva localmente!`);
+                loadAllUnitsData();
+                const btnNext = document.getElementById('btn-next');
+                if (btnNext) btnNext.style.display = 'block';
             });
-            fullCalendarInstance.render();
-        }
-    }
-
-    function highlightTaskCard(cardId) {
-        const el = document.getElementById(cardId);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            const originalBg = el.style.backgroundColor;
-            const originalTransform = el.style.transform;
-
-            el.style.backgroundColor = '#fef08a';
-            el.style.transform = 'scale(1.03)';
-            el.style.boxShadow = '0 0 12px rgba(0,0,0,0.2)';
-
-            setTimeout(() => {
-                el.style.backgroundColor = originalBg;
-                el.style.transform = originalTransform;
-                el.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-            }, 1500);
-        }
-    }
-
-    function exportToExcelXLSX() {
-        let exportData = [];
-
-        Object.keys(dbUnitsCache).forEach(key => {
-            const unitNum = key.replace('unit_', '');
-            const history = dbUnitsCache[key] || [];
-            history.forEach(h => {
-                if (h.details && h.details.length > 0) {
-                    h.details.forEach(d => {
-                        exportData.push({
-                            Unidade: unitNum,
-                            Data: h.date,
-                            Vistoriador: h.inspector,
-                            Tipo: h.category,
-                            Etapa: h.stage,
-                            Ambiente: d.room,
-                            Item: d.item,
-                            'Não Conformidade': d.nonConformity,
-                            Responsável: d.responsible,
-                            Severidade: d.severity || 'Baixa',
-                            Status: d.status || 'Aguardando',
-                            'Data Vistoria': d.inspectedAt || h.date,
-                            'Data Início': d.scheduledFor || 'Sem data',
-                            'Prazo (Dias Úteis)': d.businessDays || 'A definir',
-                            'Data Limite': d.deadlineDate || 'Sem prazo',
-                            'Data Realizado': d.resolvedAt || 'Pendente'
-                        });
-                    });
-                }
-            });
-        });
-
-        if (exportData.length === 0) {
-            alert("Nenhum dado de vistoria encontrado para exportar.");
-            return;
-        }
-
-        if (typeof XLSX !== 'undefined') {
-            const worksheet = XLSX.utils.json_to_sheet(exportData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Vistorias");
-            
-            var fileName = "Relatorio_Vistorias_" + new Date().toISOString().slice(0, 10) + ".xlsx";
-            XLSX.writeFile(workbook, fileName);
+        } else {
+            alert(`Vistoria salva localmente no navegador!`);
+            loadAllUnitsData();
+            const btnNext = document.getElementById('btn-next');
+            if (btnNext) btnNext.style.display = 'block';
         }
     }
 
@@ -1369,8 +1135,6 @@
         let totalVistoriadas = 0;
         let totalAprovadas = 0;
         let totalPendenciasAbertas = 0;
-        let ncCount = {};
-        let respQueue = [];
 
         Object.keys(dbUnitsCache).forEach(key => {
             const history = dbUnitsCache[key] || [];
@@ -1380,24 +1144,10 @@
 
                 if (last.details && last.details.length > 0) {
                     let activeNCs = last.details.filter(d => d.status !== 'Concluído');
-
                     if (activeNCs.length === 0) {
                         totalAprovadas++;
                     } else {
                         totalPendenciasAbertas += activeNCs.length;
-
-                        activeNCs.forEach(d => {
-                            const ncName = d.nonConformity || 'Não especificada';
-                            ncCount[ncName] = (ncCount[ncName] || 0) + 1;
-
-                            respQueue.push({
-                                unit: key.replace('unit_', ''),
-                                item: d.item,
-                                nonConformity: d.nonConformity,
-                                responsible: d.responsible || 'A definir',
-                                severity: d.severity || 'Baixa'
-                            });
-                        });
                     }
                 } else if (last.status === '100_ok' || last.pendenciesCount === 0) {
                     totalAprovadas++;
@@ -1413,32 +1163,6 @@
         if (elAprovadas) elAprovadas.innerText = totalAprovadas;
         if (elPendencias) elPendencias.innerText = totalPendenciasAbertas;
     }
-
-    // Exposição global de funções para eventos HTML (onclick, onchange, etc)
-    window.confirmInspector = confirmInspector;
-    window.setFloor = setFloor;
-    window.selectUnit = selectUnit;
-    window.setCategory = setCategory;
-    window.setItemStatus = setItemStatus;
-    window.addNC = addNC;
-    window.removeNC = removeNC;
-    window.sanarNC = sanarNC;
-    window.toggleOutroResp = toggleOutroResp;
-    window.handleStatusChange = handleStatusChange;
-    window.handleMultiplePhotos = handleMultiplePhotos;
-    window.removePhoto = removePhoto;
-    window.salvarEstadoAtualInput = salvarEstadoAtualInput;
-    window.generateTechnicalPDF = generateTechnicalPDF;
-    window.sendWhatsAppSummary = sendWhatsAppSummary;
-    window.exportToExcelXLSX = exportToExcelXLSX;
-    window.switchTab = switchTab;
-    window.highlightTaskCard = highlightTaskCard;
-
-    // Inicialização da Página
-    document.addEventListener('DOMContentLoaded', () => {
-        detectDevice();
-        loadAllUnitsData();
-    });
 </script>
 </body>
 </html>
