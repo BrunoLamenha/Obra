@@ -146,8 +146,8 @@
 
             <h3 style="margin-top: 15px;">4. Etapa da Vistoria</h3>
             <div style="display:flex; gap:10px; margin-top:8px;" id="stage-selection-container">
-                <button class="btn btn-stage" style="flex:1;" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</button>
-                <button class="btn btn-stage" style="flex:1;" onclick="setStage('Revistoria', this)">🔄 Revistoria</button>
+                <button class="btn btn-stage" id="btn-stage-1" style="flex:1;" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</button>
+                <button class="btn btn-stage" id="btn-stage-rev" style="flex:1;" onclick="setStage('Revistoria', this)">🔄 Revistoria</button>
             </div>
             <div id="stage-info-text" style="margin-top:10px; font-weight:bold; color:var(--primary); font-size:0.9rem;"></div>
         </div>
@@ -192,7 +192,7 @@
                 <div class="kpi-num" id="unidades-vistoriadas" style="color:var(--primary);">0 / 76</div>
             </div>
             <div class="kpi-card">
-                <small>APROVADAS</small>
+                <small>APROVADAS (100% OK)</small>
                 <div class="kpi-num" id="unidades-aprovadas" style="color:var(--success);">0</div>
             </div>
             <div class="kpi-card">
@@ -302,6 +302,7 @@
         ];
 
         var pendingNCs = {};
+        var itemStatuses = {};
         let selectedFloorNum = null;
         let selectedUnitNum = null;
         let selectedCategory = "";
@@ -420,21 +421,7 @@
             document.querySelectorAll('#floors .btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
 
-            const u = document.getElementById('units');
-            u.innerHTML = '';
-
-            for (let i = 1; i <= 19; i++) {
-                let num = (f * 100) + i;
-                const historyKey = `unit_${num}`;
-                const existingHistory = dbUnitsCache[historyKey] || [];
-                let statusClass = '';
-
-                if (existingHistory.length > 0) {
-                    const lastInsp = existingHistory[existingHistory.length - 1];
-                    statusClass = (lastInsp.pendenciesCount === 0 || lastInsp.status === '100_ok') ? 'unit-ok' : 'unit-nok';
-                }
-                u.innerHTML += `<div class="btn ${statusClass}" onclick="selectUnit(${num}, this)">${num}</div>`;
-            }
+            renderUnitsGrid();
 
             document.getElementById('unit-card').style.display = 'block';
             document.getElementById('type-card').style.display = 'none';
@@ -442,20 +429,151 @@
             document.getElementById('history-section').style.display = 'none';
         }
 
+        function renderUnitsGrid() {
+            if (!selectedFloorNum) return;
+            const u = document.getElementById('units');
+            u.innerHTML = '';
+
+            for (let i = 1; i <= 19; i++) {
+                let num = (selectedFloorNum * 100) + i;
+                const historyKey = `unit_${num}`;
+                const existingHistory = dbUnitsCache[historyKey] || [];
+                let statusClass = 'unit-nok'; // Padrão é NOK até ser aprovado 100%
+
+                if (existingHistory.length > 0) {
+                    const lastInsp = existingHistory[existingHistory.length - 1];
+                    // Só fica VERDE se status for 100_ok E não houver pendências ativas
+                    if (lastInsp.status === '100_ok' && lastInsp.pendenciesCount === 0) {
+                        statusClass = 'unit-ok';
+                    }
+                }
+                u.innerHTML += `<div class="btn ${statusClass} ${selectedUnitNum === num ? 'active' : ''}" onclick="selectUnit(${num}, this)">${num}</div>`;
+            }
+        }
+
         function selectUnit(u, el) {
             selectedUnitNum = u;
             document.querySelectorAll('#units .btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
+            if (el) el.classList.add('active');
 
             document.getElementById('type-card').style.display = 'block';
             document.getElementById('inspection-area').style.display = 'none';
             document.getElementById('stage-info-text').innerText = '';
+            
             selectedCategory = '';
             selectedStage = '';
+
             document.querySelectorAll('#category-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('#stage-selection-container .btn-stage').forEach(b => b.classList.remove('active'));
 
+            // Auto-seleção ou manutenção do Tipo e Estágio com base no Histórico
+            updateCategoryAndStageState();
             renderUnitHistory();
+        }
+
+        function updateCategoryAndStageState() {
+            const historyKey = `unit_${selectedUnitNum}`;
+            const history = dbUnitsCache[historyKey] || [];
+
+            const btnPadrao = document.getElementById('btn-cat-padrao');
+            const btnReforma = document.getElementById('btn-cat-reforma');
+            const btnStage1 = document.getElementById('btn-stage-1');
+            const btnStageRev = document.getElementById('btn-stage-rev');
+
+            if (history.length > 0) {
+                // Pega a última categoria usada
+                const lastHistory = history[history.length - 1];
+                let categoryToSet = lastHistory.category || 'Padrão Construtora';
+                
+                selectedCategory = categoryToSet;
+                
+                if (categoryToSet === 'Padrão Construtora') {
+                    btnPadrao.classList.add('active');
+                } else {
+                    btnReforma.classList.add('active');
+                }
+
+                // Verifica se já teve 1ª vistoria para este Tipo específico
+                const historyOfCurrentCategory = history.filter(h => h.category === selectedCategory);
+                
+                if (historyOfCurrentCategory.length > 0) {
+                    // Já fez 1ª vistoria -> Exibe Apenas Revistoria
+                    btnStage1.style.display = 'none';
+                    btnStageRev.style.display = 'block';
+                    setStage('Revistoria', btnStageRev, false);
+                } else {
+                    // Não tem histórico desta categoria -> Exibe Apenas 1ª Vistoria
+                    btnStage1.style.display = 'block';
+                    btnStageRev.style.display = 'none';
+                    setStage('1ª Vistoria', btnStage1, false);
+                }
+            } else {
+                // Sem nenhum histórico -> Padrão livre para escolha, mostra 1ª Vistoria
+                btnStage1.style.display = 'block';
+                btnStageRev.style.display = 'none';
+            }
+        }
+
+        function setCategory(cat, el) {
+            const historyKey = `unit_${selectedUnitNum}`;
+            const history = dbUnitsCache[historyKey] || [];
+
+            // Se já tiver uma categoria selecionada e o usuário tentar trocar, solicita confirmação
+            if (selectedCategory && selectedCategory !== cat) {
+                const confirmChange = confirm(`A unidade já está configurada como "${selectedCategory}". Deseja alterar para "${cat}"?\n\nNota: A alteração iniciará o fluxo de 1ª Vistoria para este novo tipo.`);
+                if (!confirmChange) return;
+            }
+
+            selectedCategory = cat;
+            document.querySelectorAll('#category-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+
+            const btnStage1 = document.getElementById('btn-stage-1');
+            const btnStageRev = document.getElementById('btn-stage-rev');
+
+            // Verifica se este Tipo específico já foi vistoriado
+            const historyOfSelectedCategory = history.filter(h => h.category === selectedCategory);
+
+            if (historyOfSelectedCategory.length > 0) {
+                btnStage1.style.display = 'none';
+                btnStageRev.style.display = 'block';
+                setStage('Revistoria', btnStageRev, false);
+            } else {
+                btnStage1.style.display = 'block';
+                btnStageRev.style.display = 'none';
+                setStage('1ª Vistoria', btnStage1, false);
+            }
+
+            checkReadyToInspect();
+        }
+
+        function setStage(stageType, el, triggerReadyCheck = true) {
+            document.querySelectorAll('#stage-selection-container .btn-stage').forEach(b => b.classList.remove('active'));
+            if (el) el.classList.add('active');
+
+            const historyKey = `unit_${selectedUnitNum}`;
+            const history = dbUnitsCache[historyKey] || [];
+
+            if (stageType === '1ª Vistoria') {
+                selectedStage = '1ª Vistoria';
+                document.getElementById('stage-info-text').innerText = '📋 Etapa Definida: 1ª Vistoria Inicial';
+            } else {
+                let revistoriaCount = history.filter(h => h.category === selectedCategory && h.stage && h.stage.includes('Revistoria')).length + 1;
+                selectedStage = `${revistoriaCount}ª Revistoria`;
+                document.getElementById('stage-info-text').innerText = `🔄 Etapa Definida: ${selectedStage}`;
+            }
+
+            if (triggerReadyCheck) checkReadyToInspect();
+        }
+
+        function checkReadyToInspect() {
+            if (selectedCategory && selectedStage) {
+                document.getElementById('unit-title').innerText = `Apto ${selectedUnitNum} — ${selectedCategory} (${selectedStage})`;
+                document.getElementById('inspection-area').style.display = 'block';
+
+                loadPreviousActivePendencies();
+                buildInspectionForm();
+            }
         }
 
         function renderUnitHistory() {
@@ -476,8 +594,8 @@
                 <div class="history-card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <strong>${h.stage || 'Vistoria'} — ${h.date}</strong>
-                        <span style="font-size:0.75rem; font-weight:bold; color:${h.pendenciesCount === 0 ? 'var(--success)' : 'var(--danger)'}">
-                            ${h.pendenciesCount === 0 ? 'Aprovada ✓' : h.pendenciesCount + ' Pendência(s)'}
+                        <span style="font-size:0.75rem; font-weight:bold; color:${(h.pendenciesCount === 0 && h.status === '100_ok') ? 'var(--success)' : 'var(--danger)'}">
+                            ${(h.pendenciesCount === 0 && h.status === '100_ok') ? 'Aprovada ✓' : h.pendenciesCount + ' Pendência(s)'}
                         </span>
                     </div>
                     <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">
@@ -500,7 +618,7 @@
             text += `*Etapa:* ${h.stage || 'Vistoria'}\n`;
             text += `*Data:* ${h.date}\n`;
             text += `*Vistoriador:* ${h.inspector}\n`;
-            text += `*Resultado:* ${h.pendenciesCount === 0 ? 'APROVADO ✓' : h.pendenciesCount + ' pendência(s) registrada(s)'}\n\n`;
+            text += `*Resultado:* ${(h.pendenciesCount === 0 && h.status === '100_ok') ? 'APROVADO ✓' : h.pendenciesCount + ' pendência(s) registrada(s)'}\n\n`;
 
             if (h.details && h.details.length > 0) {
                 text += `*PENDÊNCIAS:*\n`;
@@ -538,7 +656,7 @@
                         <strong>Data:</strong> ${h.date}<br>
                         <strong>Vistoriador:</strong> ${h.inspector}<br>
                         <strong>Categoria:</strong> ${h.category || 'Padrão Construtora'}<br>
-                        <strong>Status:</strong> ${h.pendenciesCount === 0 ? 'Conforme / Aprovado' : h.pendenciesCount + ' Pendência(s)'}
+                        <strong>Status:</strong> ${(h.pendenciesCount === 0 && h.status === '100_ok') ? 'Conforme / Aprovado' : h.pendenciesCount + ' Pendência(s)'}
                     </div>
             `;
 
@@ -577,44 +695,9 @@
             printWin.document.close();
         }
 
-        function setCategory(cat, el) {
-            selectedCategory = cat;
-            document.querySelectorAll('#category-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            checkReadyToInspect();
-        }
-
-        function setStage(stageType, el) {
-            document.querySelectorAll('#stage-selection-container .btn-stage').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-
-            const historyKey = `unit_${selectedUnitNum}`;
-            const history = dbUnitsCache[historyKey] || [];
-
-            if (stageType === '1ª Vistoria') {
-                selectedStage = '1ª Vistoria';
-                document.getElementById('stage-info-text').innerText = '📋 Etapa Definida: 1ª Vistoria Inicial';
-            } else {
-                let revistoriaCount = history.filter(h => h.stage && h.stage.includes('Revistoria')).length + 1;
-                selectedStage = `${revistoriaCount}ª Revistoria`;
-                document.getElementById('stage-info-text').innerText = `🔄 Etapa Definida: ${selectedStage}`;
-            }
-
-            checkReadyToInspect();
-        }
-
-        function checkReadyToInspect() {
-            if (selectedCategory && selectedStage) {
-                document.getElementById('unit-title').innerText = `Apto ${selectedUnitNum} — ${selectedCategory} (${selectedStage})`;
-                document.getElementById('inspection-area').style.display = 'block';
-
-                loadPreviousActivePendencies();
-                buildInspectionForm();
-            }
-        }
-
         function loadPreviousActivePendencies() {
             pendingNCs = {};
+            itemStatuses = {};
             const historyKey = `unit_${selectedUnitNum}`;
             const history = dbUnitsCache[historyKey] || [];
             if (history.length === 0) return;
@@ -651,6 +734,8 @@
                         severity: d.severity || 'Baixa',
                         photos: d.photos || []
                     });
+                    
+                    itemStatuses[key] = 'NOK';
                 }
             });
         }
@@ -666,9 +751,10 @@
                     const key = `${roomId}_${item.id}`;
                     if (!pendingNCs[key]) pendingNCs[key] = [];
 
+                    let status = itemStatuses[key] || (pendingNCs[key].length > 0 ? 'NOK' : '');
+                    let btnOkClass = status === 'OK' ? 'btn-ok-active' : 'btn-neutral';
+                    let btnNokClass = status === 'NOK' ? 'btn-nok-active' : 'btn-neutral';
                     let hasPending = pendingNCs[key].length > 0;
-                    let btnOkClass = 'btn-neutral';
-                    let btnNokClass = hasPending ? 'btn-nok-active' : 'btn-neutral';
 
                     container.innerHTML += `
                         <div class="item-card" id="card_${key}">
@@ -832,6 +918,8 @@
             const btnNok = document.getElementById(`btn_nok_${key}`);
             const btnAdd = document.getElementById(`btn_add_${key}`);
 
+            itemStatuses[key] = status;
+
             if (status === 'OK') {
                 if (btnOk) btnOk.className = "btn-status btn-ok-active";
                 if (btnNok) btnNok.className = "btn-status btn-neutral";
@@ -853,6 +941,8 @@
         function addNC(key, itemId) {
             salvarEstadoAtualInput(key);
             if (!pendingNCs[key]) pendingNCs[key] = [];
+
+            itemStatuses[key] = 'NOK';
 
             pendingNCs[key].push({
                 id: Date.now(),
@@ -1105,7 +1195,21 @@
         function generateTechnicalPDF() {
             let totalNCs = 0;
             let ncList = [];
+            let totalChecklistItems = 0;
+            let totalEvaluatedItems = 0;
             const nowFormatted = formatDateToDDMMAAAA(new Date());
+
+            // Validação de preenchimento completo para definir status 100% OK
+            ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
+                checklist.forEach(item => {
+                    if (item.id === 'ac' && roomId !== 'room-dorm') return;
+                    totalChecklistItems++;
+                    const key = `${roomId}_${item.id}`;
+                    if (itemStatuses[key] === 'OK' || itemStatuses[key] === 'NOK') {
+                        totalEvaluatedItems++;
+                    }
+                });
+            });
 
             Object.keys(pendingNCs).forEach(key => {
                 salvarEstadoAtualInput(key);
@@ -1139,13 +1243,16 @@
                 });
             });
 
+            // Só é considerado 100% OK se TODOS os itens foram avaliados E não há nenhuma pendência
+            const is100Ok = (totalNCs === 0) && (totalEvaluatedItems === totalChecklistItems);
+
             const record = {
                 date: nowFormatted,
                 inspector: inspectorName,
                 category: selectedCategory,
                 stage: selectedStage,
                 pendenciesCount: totalNCs,
-                status: totalNCs === 0 ? '100_ok' : 'com_pendencia',
+                status: is100Ok ? '100_ok' : 'com_pendencia',
                 details: ncList
             };
 
@@ -1163,6 +1270,9 @@
             }
 
             alert(`Vistoria da Unidade ${selectedUnitNum} salva com sucesso!`);
+            
+            renderUnitsGrid();
+            updateCategoryAndStageState();
             renderUnitHistory();
             updateDashboardData();
             document.getElementById('btn-next').style.display = 'block';
@@ -1198,7 +1308,7 @@
 
                     if (last.details && last.details.length > 0) {
                         let activeNCs = last.details.filter(d => d.status !== 'Concluído');
-                        if (activeNCs.length === 0) {
+                        if (activeNCs.length === 0 && last.status === '100_ok') {
                             totalAprovadas++;
                         } else {
                             totalPendenciasAbertas += activeNCs.length;
@@ -1208,7 +1318,7 @@
                                 respQueue[respKey] = (respQueue[respKey] || 0) + 1;
                             });
                         }
-                    } else if (last.status === '100_ok' || last.pendenciesCount === 0) {
+                    } else if (last.status === '100_ok' && last.pendenciesCount === 0) {
                         totalAprovadas++;
                     }
                 }
@@ -1277,6 +1387,7 @@
         function sendWhatsAppSummary() {
             let text = `*VISTORIA REALIZADA - APTO ${selectedUnitNum}*\n`;
             text += `Vistoriador: ${inspectorName}\n`;
+            text += `Tipo: ${selectedCategory} (${selectedStage})\n`;
             text += `Status: Registrado no sistema.`;
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
         }
