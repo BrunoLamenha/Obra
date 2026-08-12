@@ -1479,6 +1479,203 @@
         }
     }
 }
-</script>
+
+    // ==========================================
+// CONFIGURAÇÃO DO FIREBASE (PROJETO: VISTORIA-OBRA)
+// ==========================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSy_SUA_API_KEY_AQUI", // Encontre em: Firebase Console > Configurações do Projeto > Geral > Seus aplicativos
+    authDomain: "vistoria-obra.firebaseapp.com",
+    databaseURL: "https://vistoria-obra-default-rtdb.firebaseio.com",
+    projectId: "vistoria-obra",
+    storageBucket: "vistoria-obra.appspot.com",
+    messagingSenderId: "123456789012",
+    appId: "1:123456789012:web:abcdef123456"
+};
+
+// Inicializa o Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const TOTAL_UNIDADES = 76;
+
+// ==========================================
+// FUNÇÃO DE ATUALIZAÇÃO DO DASHBOARD
+// ==========================================
+function atualizarDashboard(vistorias) {
+    let vistoriadas = 0;
+    let aprovadas = 0;
+    let comPendencias = 0;
+
+    Object.values(vistorias).forEach(unidade => {
+        if (unidade.status === 'OK' || unidade.status === 'PENDENCIA') {
+            vistoriadas++;
+        }
+        if (unidade.status === 'OK') {
+            aprovadas++;
+        }
+        if (unidade.status === 'PENDENCIA') {
+            comPendencias++;
+        }
+    });
+
+    // Atualiza os contadores na aba "Mapa & Indicadores"
+    const elVistoriadas = document.getElementById('unidades-vistoriadas');
+    const elAprovadas = document.getElementById('unidades-aprovadas');
+    const elPendencias = document.getElementById('pendencias-abertas');
+
+    if (elVistoriadas) elVistoriadas.innerText = `${vistoriadas} / ${TOTAL_UNIDADES}`;
+    if (elAprovadas) elAprovadas.innerText = aprovadas;
+    if (elPendencias) elPendencias.innerText = comPendencias;
+}
+
+// ==========================================
+// SALVAR NO LOCALSTORAGE + FIREBASE
+// ==========================================
+function salvarStatusUnidade(unidadeNum, novoStatus, detalhes = {}) {
+    let vistorias = JSON.parse(localStorage.getItem('vistorias_obra')) || {};
+
+    vistorias[unidadeNum] = {
+        unidade: unidadeNum,
+        status: novoStatus,
+        dataAtualizacao: new Date().toISOString(),
+        ...detalhes
+    };
+
+    // 1. Salva imediatamente no celular (LocalStorage)
+    localStorage.setItem('vistorias_obra', JSON.stringify(vistorias));
+    atualizarDashboard(vistorias);
+
+    // 2. Envia para o Banco do Firebase em nuvem
+    set(ref(db, 'vistorias/' + unidadeNum), vistorias[unidadeNum])
+        .then(() => {
+            console.log(`Unidade ${unidadeNum} atualizada no Firebase!`);
+        })
+        .catch((error) => {
+            console.error("Erro ao sincronizar com Firebase:", error);
+        });
+}
+
+// ==========================================
+// SINCRONIZAÇÃO EM TEMPO REAL
+// ==========================================
+function inicializarSincronizacao() {
+    // Carrega versão local de imediato
+    const dadosLocais = JSON.parse(localStorage.getItem('vistorias_obra')) || {};
+    atualizarDashboard(dadosLocais);
+
+    // Escuta atualizações do Firebase
+    const vistoriasRef = ref(db, 'vistorias');
+    onValue(vistoriasRef, (snapshot) => {
+        const dadosFirebase = snapshot.val() || {};
+        
+        // Sincroniza local com o banco
+        localStorage.setItem('vistorias_obra', JSON.stringify(dadosFirebase));
+        
+        // Atualiza a tela
+        atualizarDashboard(dadosFirebase);
+    });
+}
+
+// Inicializa no carregamento da página
+document.addEventListener('DOMContentLoaded', () => {
+    inicializarSincronizacao();
+});
+    <!-- SEU CÓDIGO HTML EXISTENTE ACIMA ... -->
+
+    <!-- ADICIONE ESTE BLOCO LOGO ANTES DE </body> -->
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+      const firebaseConfig = {
+  apiKey: "AIzaSyBqtptEp5QjIOoAjwx0wT--cswUhSvcsGM",
+  authDomain: "vistoria-obra.firebaseapp.com",
+  projectId: "vistoria-obra",
+  storageBucket: "vistoria-obra.firebasestorage.app",
+  messagingSenderId: "269277062191",
+  appId: "1:269277062191:web:ab9a9d404129df66cd12da",
+  measurementId: "G-GP1QQVWR50"
+};
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      const TOTAL_UNIDADES = 76;
+
+      function atualizarDashboard(vistorias) {
+          let vistoriadas = 0;
+          let aprovadas = 0;
+          let comPendencias = 0;
+
+          Object.values(vistorias).forEach(unidade => {
+              if (unidade.status === 'OK' || unidade.status === 'PENDENCIA') {
+                  vistoriadas++;
+              }
+              if (unidade.status === 'OK') {
+                  aprovadas++;
+              }
+              if (unidade.status === 'PENDENCIA') {
+                  comPendencias++;
+              }
+          });
+
+          const elVistoriadas = document.getElementById('unidades-vistoriadas');
+          const elAprovadas = document.getElementById('unidades-aprovadas');
+          const elPendencias = document.getElementById('pendencias-abertas');
+
+          if (elVistoriadas) elVistoriadas.innerText = `${vistoriadas} / ${TOTAL_UNIDADES}`;
+          if (elAprovadas) elAprovadas.innerText = aprovadas;
+          if (elPendencias) elPendencias.innerText = comPendencias;
+      }
+
+      function salvarStatusUnidade(unidadeNum, novoStatus, detalhes = {}) {
+          let vistorias = JSON.parse(localStorage.getItem('vistorias_obra')) || {};
+
+          vistorias[unidadeNum] = {
+              unidade: unidadeNum,
+              status: novoStatus,
+              dataAtualizacao: new Date().toISOString(),
+              ...detalhes
+          };
+
+          localStorage.setItem('vistorias_obra', JSON.stringify(vistorias));
+          atualizarDashboard(vistorias);
+
+          set(ref(db, 'vistorias/' + unidadeNum), vistorias[unidadeNum])
+              .then(() => {
+                  console.log(`Unidade ${unidadeNum} atualizada no Firebase!`);
+              })
+              .catch((error) => {
+                  console.error("Erro ao sincronizar com Firebase:", error);
+              });
+      }
+
+      // Torna a função acessível nos botões do HTML
+      window.salvarStatusUnidade = salvarStatusUnidade;
+
+      function inicializarSincronizacao() {
+          const dadosLocais = JSON.parse(localStorage.getItem('vistorias_obra')) || {};
+          atualizarDashboard(dadosLocais);
+
+          const vistoriasRef = ref(db, 'vistorias');
+          onValue(vistoriasRef, (snapshot) => {
+              const dadosFirebase = snapshot.val() || {};
+              localStorage.setItem('vistorias_obra', JSON.stringify(dadosFirebase));
+              atualizarDashboard(dadosFirebase);
+          });
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+          inicializarSincronizacao();
+      });
+    </script>
 </body>
 </html>
+ 
