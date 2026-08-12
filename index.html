@@ -43,7 +43,9 @@
         .btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 10px; }
         .btn { padding: 12px 18px; border: 1px solid var(--border-color); background: #f8fafc; border-radius: 6px; text-align: center; font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: 0.15s; }
         .btn:hover { background: #e2e8f0; }
-        .btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn.active { outline: 3px solid var(--primary); outline-offset: -3px; }
+        
+        /* STATUS DAS UNIDADES NO MAPA */
         .unit-ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #065f46; }
         .unit-nok { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b; }
         .unit-pending { background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b; }
@@ -356,12 +358,13 @@
                     snapshot.forEach(doc => { dbUnitsCache[doc.id] = doc.data().history || []; });
                     localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
                     updateDashboardData();
+                    if (selectedFloorNum) renderUnitsGrid();
                 }).catch(err => console.log("Carregado localmente"));
             }
         }
 
         function parseToDate(dateStr) {
-            if (!dateStr || dateStr.includes('Não')) return null;
+            if (!dateStr || dateStr.includes('Não') || dateStr.trim() === '') return null;
             let parts;
             if (dateStr.includes('-')) {
                 parts = dateStr.split('-');
@@ -431,31 +434,28 @@
         }
 
         function renderUnitsGrid() {
-    if (!selectedFloorNum) return;
-    const u = document.getElementById('units');
-    u.innerHTML = '';
+            if (!selectedFloorNum) return;
+            const u = document.getElementById('units');
+            u.innerHTML = '';
 
-    for (let i = 1; i <= 19; i++) {
-        let num = (selectedFloorNum * 100) + i;
-        const historyKey = `unit_${num}`;
-        const existingHistory = dbUnitsCache[historyKey] || [];
-        
-        let statusClass = 'unit-pending'; // Padrão: Cinza (Não vistoriado)
+            for (let i = 1; i <= 19; i++) {
+                let num = (selectedFloorNum * 100) + i;
+                const historyKey = `unit_${num}`;
+                const existingHistory = dbUnitsCache[historyKey] || [];
+                
+                let statusClass = 'unit-pending'; // CINZA (Não vistoriado)
 
-        if (existingHistory.length > 0) {
-            const lastInsp = existingHistory[existingHistory.length - 1];
-            
-            // Se possui vistoria, verifica se está 100% OK ou com pendências
-            if (lastInsp.status === '100_ok' && lastInsp.pendenciesCount === 0) {
-                statusClass = 'unit-ok';  // Verde
-            } else {
-                statusClass = 'unit-nok'; // Vermelho
+                if (existingHistory.length > 0) {
+                    const lastInsp = existingHistory[existingHistory.length - 1];
+                    if (lastInsp.status === '100_ok' && lastInsp.pendenciesCount === 0) {
+                        statusClass = 'unit-ok';  // VERDE (100% OK)
+                    } else {
+                        statusClass = 'unit-nok'; // VERMELHO (Com Pendência)
+                    }
+                }
+                u.innerHTML += `<div class="btn ${statusClass} ${selectedUnitNum === num ? 'active' : ''}" onclick="selectUnit(${num}, this)">${num}</div>`;
             }
         }
-        
-        u.innerHTML += `<div class="btn ${statusClass} ${selectedUnitNum === num ? 'active' : ''}" onclick="selectUnit(${num}, this)">${num}</div>`;
-    }
-}
 
         function selectUnit(u, el) {
             selectedUnitNum = u;
@@ -472,7 +472,6 @@
             document.querySelectorAll('#category-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('#stage-selection-container .btn-stage').forEach(b => b.classList.remove('active'));
 
-            // Auto-seleção ou manutenção do Tipo e Estágio com base no Histórico
             updateCategoryAndStageState();
             renderUnitHistory();
         }
@@ -487,7 +486,6 @@
             const btnStageRev = document.getElementById('btn-stage-rev');
 
             if (history.length > 0) {
-                // Pega a última categoria usada
                 const lastHistory = history[history.length - 1];
                 let categoryToSet = lastHistory.category || 'Padrão Construtora';
                 
@@ -499,22 +497,18 @@
                     btnReforma.classList.add('active');
                 }
 
-                // Verifica se já teve 1ª vistoria para este Tipo específico
                 const historyOfCurrentCategory = history.filter(h => h.category === selectedCategory);
                 
                 if (historyOfCurrentCategory.length > 0) {
-                    // Já fez 1ª vistoria -> Exibe Apenas Revistoria
                     btnStage1.style.display = 'none';
                     btnStageRev.style.display = 'block';
                     setStage('Revistoria', btnStageRev, false);
                 } else {
-                    // Não tem histórico desta categoria -> Exibe Apenas 1ª Vistoria
                     btnStage1.style.display = 'block';
                     btnStageRev.style.display = 'none';
                     setStage('1ª Vistoria', btnStage1, false);
                 }
             } else {
-                // Sem nenhum histórico -> Padrão livre para escolha, mostra 1ª Vistoria
                 btnStage1.style.display = 'block';
                 btnStageRev.style.display = 'none';
             }
@@ -524,7 +518,6 @@
             const historyKey = `unit_${selectedUnitNum}`;
             const history = dbUnitsCache[historyKey] || [];
 
-            // Se já tiver uma categoria selecionada e o usuário tentar trocar, solicita confirmação
             if (selectedCategory && selectedCategory !== cat) {
                 const confirmChange = confirm(`A unidade já está configurada como "${selectedCategory}". Deseja alterar para "${cat}"?\n\nNota: A alteração iniciará o fluxo de 1ª Vistoria para este novo tipo.`);
                 if (!confirmChange) return;
@@ -537,7 +530,6 @@
             const btnStage1 = document.getElementById('btn-stage-1');
             const btnStageRev = document.getElementById('btn-stage-rev');
 
-            // Verifica se este Tipo específico já foi vistoriado
             const historyOfSelectedCategory = history.filter(h => h.category === selectedCategory);
 
             if (historyOfSelectedCategory.length > 0) {
@@ -629,7 +621,7 @@
             if (h.details && h.details.length > 0) {
                 text += `*PENDÊNCIAS:*\n`;
                 h.details.forEach((d, i) => {
-                    text += `${i+1}. [${d.room}] ${d.item} - ${d.nonConformity} (Resp: ${d.responsible || 'N/I'})\n`;
+                    text += `${i+1}. [${d.room}] ${d.item} - ${d.nonConformity} (Resp: ${d.responsible || 'A definir'})\n`;
                 });
             }
 
@@ -676,7 +668,7 @@
                                 <th>Item</th>
                                 <th>Não Conformidade</th>
                                 <th>Responsável</th>
-                                <th>Prazo</th>
+                                <th>Prazo Final</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -688,8 +680,8 @@
                             <td>${d.room}</td>
                             <td>${d.item}</td>
                             <td>${d.nonConformity}</td>
-                            <td>${d.responsible || 'N/I'}</td>
-                            <td>${d.deadlineDate || 'Não definido'}</td>
+                            <td>${d.responsible || 'A definir'}</td>
+                            <td>${d.deadlineDate || 'Não calculada'}</td>
                         </tr>
                     `;
                 });
@@ -735,7 +727,7 @@
                         resp: d.responsible || '',
                         respOther: '',
                         startDate: d.scheduledFor || '',
-                        businessDays: d.businessDays || '3',
+                        businessDays: d.businessDays || '',
                         status: d.status || 'Aguardando',
                         severity: d.severity || 'Baixa',
                         photos: d.photos || []
@@ -815,9 +807,9 @@
                         
                         <div class="grid-two">
                             <div>
-                                <label>Responsável:</label>
+                                <label>Responsável (Opcional):</label>
                                 <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
-                                    <option value="" disabled selected>Escolha...</option>
+                                    <option value="" selected>Escolher depois / A definir...</option>
                                     <option value="Piso e Revestimento">Piso e Revestimento</option>
                                     <option value="Gesso / Sancas">Gesso / Sancas</option>
                                     <option value="Eletricista">Eletricista</option>
@@ -834,12 +826,12 @@
                             
                             <div class="grid-two">
                                 <div>
-                                    <label>Data Início (DD-MM-AAAA):</label>
-                                    <input type="text" id="date_${key}_${index}" placeholder="Ex: 12-08-2026" onchange="salvarEstadoAtualInput('${key}')">
+                                    <label>Data Início (Opcional):</label>
+                                    <input type="text" id="date_${key}_${index}" placeholder="DD-MM-AAAA" onchange="salvarEstadoAtualInput('${key}')">
                                 </div>
                                 <div>
-                                    <label>Prazo (Dias Úteis):</label>
-                                    <input type="text" id="days_${key}_${index}" placeholder="Ex: 3, 5, 10" oninput="salvarEstadoAtualInput('${key}')">
+                                    <label>Prazo em Dias Úteis (Opcional):</label>
+                                    <input type="text" id="days_${key}_${index}" placeholder="Ex: 3, 5" oninput="salvarEstadoAtualInput('${key}')">
                                 </div>
                             </div>
                         </div>
@@ -908,7 +900,7 @@
                 nc.resp = document.getElementById(`resp_${key}_${index}`)?.value || '';
                 nc.respOther = document.getElementById(`resp_other_${key}_${index}`)?.value || '';
                 nc.startDate = document.getElementById(`date_${key}_${index}`)?.value || '';
-                nc.businessDays = document.getElementById(`days_${key}_${index}`)?.value || '3';
+                nc.businessDays = document.getElementById(`days_${key}_${index}`)?.value || '';
                 nc.status = document.getElementById(`status_${key}_${index}`)?.value || 'Aguardando';
                 nc.severity = document.getElementById(`sev_${key}_${index}`)?.value || 'Baixa';
 
@@ -956,8 +948,8 @@
                 obs: '',
                 resp: '',
                 respOther: '',
-                startDate: getTodayFormatted(),
-                businessDays: '3',
+                startDate: '',
+                businessDays: '',
                 status: 'Aguardando',
                 severity: 'Baixa',
                 photos: []
@@ -1046,20 +1038,24 @@
                 const sevEl = document.getElementById(`sev_${key}_${index}`);
 
                 if (obsEl && nc.obs) obsEl.value = nc.obs;
-                if (respEl && nc.resp) {
-                    let options = Array.from(respEl.options).map(o => o.value);
-                    if (options.includes(nc.resp)) {
-                        respEl.value = nc.resp;
-                    } else {
-                        respEl.value = 'Outro';
-                        if (respOtherEl) {
-                            respOtherEl.style.display = 'block';
-                            respOtherEl.value = nc.resp;
+                if (respEl) {
+                    if (nc.resp) {
+                        let options = Array.from(respEl.options).map(o => o.value);
+                        if (options.includes(nc.resp)) {
+                            respEl.value = nc.resp;
+                        } else {
+                            respEl.value = 'Outro';
+                            if (respOtherEl) {
+                                respOtherEl.style.display = 'block';
+                                respOtherEl.value = nc.resp;
+                            }
                         }
+                    } else {
+                        respEl.value = '';
                     }
                 }
-                if (dateEl && nc.startDate) dateEl.value = nc.startDate;
-                if (daysEl && nc.businessDays) daysEl.value = nc.businessDays;
+                if (dateEl) dateEl.value = nc.startDate || '';
+                if (daysEl) daysEl.value = nc.businessDays || '';
                 if (statusEl && nc.status) statusEl.value = nc.status;
                 if (sevEl && nc.severity) sevEl.value = nc.severity;
 
@@ -1094,12 +1090,13 @@
 
                     (last.details || []).forEach((d, detailIdx) => {
                         if (d.status !== 'Concluído') {
+                            let respText = d.responsible || 'A definir';
                             if (filterResp === 'TODOS' || d.responsible === filterResp) {
                                 let dateObj = parseToDate(d.scheduledFor);
                                 let startDateFormatted = dateObj ? formatDateToDDMMAAAA(dateObj) : 'Não definida';
                                 let startDateISO = dateObj ? formatDateToISO(dateObj) : null;
-                                let daysText = d.businessDays ? `${d.businessDays} dias úteis` : "Prazo não informado";
-                                let deadline = d.deadlineDate || (startDateFormatted !== 'Não definida' ? addBusinessDays(startDateFormatted, d.businessDays) : "Não calculada");
+                                let daysText = (d.businessDays && d.businessDays.trim() !== '') ? `${d.businessDays} dias úteis` : "Prazo não informado";
+                                let deadline = d.deadlineDate || (startDateFormatted !== 'Não definida' && d.businessDays ? addBusinessDays(startDateFormatted, d.businessDays) : "Não calculada");
 
                                 if (startDateISO) {
                                     events.push({
@@ -1113,7 +1110,7 @@
                                 scheduledList.push(`
                                     <div style="border-left: 4px solid ${respColors[d.responsible] || '#004a8f'}; background:#fff; padding:12px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.08); border:1px solid #e2e8f0;">
                                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                                            <strong>Apto ${unitNum} — ${d.responsible || 'Sem Responsável'}</strong>
+                                            <strong>Apto ${unitNum} — ${respText}</strong>
                                             <span style="font-size:0.75rem; background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:12px; font-weight:bold;">${d.status || 'Aguardando'}</span>
                                         </div>
                                         <div style="font-size:0.85rem; color:#334155; margin:6px 0;">
@@ -1122,8 +1119,8 @@
                                         <div style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">
                                             📅 Início: <strong>${startDateFormatted}</strong> | Prazo Final: <strong>${deadline}</strong> (${daysText})
                                         </div>
-                                        <div style="display:flex; gap:8px;">
-                                            <button onclick="editarPrazoCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="padding:6px 10px; font-size:0.78rem; background:var(--secondary); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✏️ Alterar Agendamento / Prazo</button>
+                                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                            <button onclick="editarPrazoCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="padding:6px 10px; font-size:0.78rem; background:var(--secondary); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✏️ Alterar Agendamento / Prazo / Resp.</button>
                                             <button onclick="concluirPendenciaCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="padding:6px 10px; font-size:0.78rem; background:var(--success); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✓ Sanar / Concluir</button>
                                         </div>
                                     </div>
@@ -1153,15 +1150,30 @@
 
         function editarPrazoCalendar(unitKey, historyIdx, detailIdx) {
             const item = dbUnitsCache[unitKey][historyIdx].details[detailIdx];
+            
+            // 1. Escolher Responsável
+            let respOpcoes = [
+                "Piso e Revestimento", "Gesso / Sancas", "Eletricista",
+                "Instalações Hidráulicas", "Climatização / Ar-Condicionado",
+                "Marmoraria / Graniteiro", "Esquadrias de Alumínio / Vidros",
+                "Marcenaria / Portas de Madeira", "Pintura / Emassamento"
+            ];
+            
+            let novoResp = prompt(`Defina o Responsável (Atualmente: ${item.responsible || 'Não definido'}):\n\nOpções:\n${respOpcoes.join('\n')}`, item.responsible || '');
+            if (novoResp === null) return;
+
+            // 2. Escolher Data de Início
             const dataHoje = getTodayFormatted();
             const dataAtual = item.scheduledFor || dataHoje;
             
             const novaData = prompt("Defina/Altere a Data de Início (Formato: DD-MM-AAAA):", dataAtual);
-            if (!novaData) return;
+            if (novaData === null) return;
 
-            const novosDias = prompt("Defina/Altere o Prazo em Dias Úteis (Ex: 1, 2, 3, 5, 10, 15):", item.businessDays || "3");
+            // 3. Escolher Prazo
+            const novosDias = prompt("Defina/Altere o Prazo em Dias Úteis (Ex: 1, 2, 3, 5, 10):", item.businessDays || "3");
             if (novosDias === null) return;
 
+            item.responsible = novoResp.trim();
             item.scheduledFor = novaData.trim();
             item.businessDays = novosDias.trim();
             item.deadlineDate = addBusinessDays(item.scheduledFor, item.businessDays);
@@ -1190,11 +1202,13 @@
                     alert("Alteração salva com sucesso!");
                     renderInteractiveCalendar();
                     updateDashboardData();
+                    renderUnitsGrid();
                 });
             } else {
                 alert("Alteração salva localmente!");
                 renderInteractiveCalendar();
                 updateDashboardData();
+                renderUnitsGrid();
             }
         }
 
@@ -1205,7 +1219,6 @@
             let totalEvaluatedItems = 0;
             const nowFormatted = formatDateToDDMMAAAA(new Date());
 
-            // Validação de preenchimento completo para definir status 100% OK
             ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
                 checklist.forEach(item => {
                     if (item.id === 'ac' && roomId !== 'room-dorm') return;
@@ -1242,14 +1255,13 @@
                         status: nc.status || 'Aguardando',
                         inspectedAt: nowFormatted,
                         scheduledFor: startDate,
-                        businessDays: nc.businessDays || '3',
+                        businessDays: nc.businessDays || '',
                         deadlineDate: deadlineDate,
                         photos: nc.photos || []
                     });
                 });
             });
 
-            // Só é considerado 100% OK se TODOS os itens foram avaliados E não há nenhuma pendência
             const is100Ok = (totalNCs === 0) && (totalEvaluatedItems === totalChecklistItems);
 
             const record = {
@@ -1320,7 +1332,7 @@
                             totalPendenciasAbertas += activeNCs.length;
                             activeNCs.forEach(d => {
                                 ncCount[d.nonConformity] = (ncCount[d.nonConformity] || 0) + 1;
-                                let respKey = d.responsible || 'Não Identificado';
+                                let respKey = d.responsible || 'A definir';
                                 respQueue[respKey] = (respQueue[respKey] || 0) + 1;
                             });
                         }
@@ -1374,7 +1386,7 @@
                             Ambiente: d.room,
                             Item: d.item,
                             Pendencia: d.nonConformity,
-                            Responsavel: d.responsible || 'N/I',
+                            Responsavel: d.responsible || 'A definir',
                             Severidade: d.severity,
                             Status: d.status
                         });
