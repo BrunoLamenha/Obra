@@ -37,8 +37,12 @@
         .card { background: var(--card-bg); padding: 18px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
         .card h3, .card h4 { color: var(--primary); font-size: 1.1rem; margin-bottom: 12px; }
 
+        /* Centralização dos Pavimentos */
+        .text-center { text-align: center; }
+        .btn-group-center { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+
         .btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 10px; }
-        .btn { padding: 10px 6px; border: 1px solid var(--border-color); background: #f8fafc; border-radius: 6px; text-align: center; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: 0.15s; }
+        .btn { padding: 12px 18px; border: 1px solid var(--border-color); background: #f8fafc; border-radius: 6px; text-align: center; font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: 0.15s; }
         .btn:hover { background: #e2e8f0; }
         .btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         .unit-ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #065f46; }
@@ -56,7 +60,6 @@
         .nc-box { background: #fff; border: 1px dashed var(--danger); padding: 14px; border-radius: 8px; margin-top: 10px; }
         .nc-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.85rem; color: var(--danger); margin-bottom: 10px; }
 
-        /* Checklist alinhado em grid responsivo */
         .checklist-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin-bottom: 12px; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; }
         .chk-label { font-size: 0.82rem; display: flex; align-items: center; gap: 8px; cursor: pointer; line-height: 1.2; }
         .chk-label input { width: auto; margin: 0; cursor: pointer; }
@@ -85,11 +88,9 @@
 
         .badge-resp { display: inline-block; padding: 4px 10px; border-radius: 12px; color: white; font-size: 0.75rem; font-weight: bold; }
 
-        /* Layout Grid do Cronograma */
         .cronograma-layout { display: grid; grid-template-columns: 2fr 1.2fr; gap: 15px; }
         @media(max-width: 900px) { .cronograma-layout { grid-template-columns: 1fr; } }
 
-        /* Modal Galeria */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:9999; }
         .modal-overlay img { max-width:90%; max-height:80vh; border-radius:8px; }
     </style>
@@ -118,9 +119,10 @@
             <button class="btn-main" style="background:var(--success);" onclick="confirmInspector()">Confirmar & Iniciar Vistoria ✓</button>
         </div>
 
-        <div class="card" id="floor-card" style="display:none;">
+        <!-- PAVIMENTOS CENTRALIZADOS -->
+        <div class="card text-center" id="floor-card" style="display:none;">
             <h3>1. Selecione o Pavimento</h3>
-            <div class="btn-group" id="floors">
+            <div class="btn-group-center" id="floors">
                 <div class="btn" onclick="setFloor(1, this)">1º Pav</div>
                 <div class="btn" onclick="setFloor(2, this)">2º Pav</div>
                 <div class="btn" onclick="setFloor(3, this)">3º Pav</div>
@@ -141,12 +143,11 @@
             </div>
 
             <h3 style="margin-top: 15px;">4. Etapa da Vistoria</h3>
-            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:8px; margin-top:8px;" id="stage-selection-container">
-                <button class="btn btn-stage" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</button>
-                <button class="btn btn-stage" onclick="setStage('2ª Vistoria (Revistoria)', this)">🔄 2ª Vistoria</button>
-                <button class="btn btn-stage" onclick="setStage('3ª Vistoria (Revistoria)', this)">🔄 3ª Vistoria</button>
-                <button class="btn btn-stage" onclick="setStage('4ª Vistoria (Revistoria)', this)">🔄 4ª Vistoria</button>
+            <div style="display:flex; gap:10px; margin-top:8px;" id="stage-selection-container">
+                <button class="btn btn-stage" style="flex:1;" onclick="setStage('1ª Vistoria', this)">📋 1ª Vistoria</button>
+                <button class="btn btn-stage" style="flex:1;" onclick="setStage('Revistoria', this)">🔄 Revistoria</button>
             </div>
+            <div id="stage-info-text" style="margin-top:10px; font-weight:bold; color:var(--primary); font-size:0.9rem;"></div>
         </div>
 
         <!-- AMBIENTES DA UNIDADE -->
@@ -239,7 +240,6 @@
         <img id="modal-img-src" src="">
     </div>
 
-    <!-- LÓGICA E SCRIPT PRINCIPAL -->
     <script>
         const firebaseConfig = {
           apiKey: "AIzaSyBqtptEp5QjIOoAjwx0wT--cswUhSvcsGM",
@@ -403,17 +403,11 @@
 
             document.getElementById('type-card').style.display = 'block';
             document.getElementById('inspection-area').style.display = 'none';
-
-            // Auto-selecionar sugestão de etapa
-            const historyKey = `unit_${selectedUnitNum}`;
-            const history = dbUnitsCache[historyKey] || [];
-            let autoStage = history.length === 0 ? "1ª Vistoria" : `${history.length + 1}ª Vistoria (Revistoria)`;
-            
-            document.querySelectorAll('#stage-selection-container .btn-stage').forEach(b => {
-                if (b.innerText.includes(history.length === 0 ? '1ª' : `${history.length + 1}ª`)) {
-                    setStage(autoStage, b);
-                }
-            });
+            document.getElementById('stage-info-text').innerText = '';
+            selectedCategory = '';
+            selectedStage = '';
+            document.querySelectorAll('#category-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#stage-selection-container .btn-stage').forEach(b => b.classList.remove('active'));
         }
 
         function setCategory(cat, el) {
@@ -423,10 +417,23 @@
             checkReadyToInspect();
         }
 
-        function setStage(stage, el) {
-            selectedStage = stage;
+        function setStage(stageType, el) {
             document.querySelectorAll('#stage-selection-container .btn-stage').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
+
+            const historyKey = `unit_${selectedUnitNum}`;
+            const history = dbUnitsCache[historyKey] || [];
+
+            if (stageType === '1ª Vistoria') {
+                selectedStage = '1ª Vistoria';
+                document.getElementById('stage-info-text').innerText = '📋 Etapa Definida: 1ª Vistoria Inicial';
+            } else {
+                // Conta automaticamente quantas revistorias já foram feitas
+                let revistoriaCount = history.filter(h => h.stage && h.stage.includes('Revistoria')).length + 1;
+                selectedStage = `${revistoriaCount}ª Revistoria`;
+                document.getElementById('stage-info-text').innerText = `🔄 Etapa Definida: ${selectedStage}`;
+            }
+
             checkReadyToInspect();
         }
 
@@ -829,7 +836,6 @@
                                 let days = parseInt(d.businessDays) || 3;
                                 let deadline = d.deadlineDate || addBusinessDays(startDateISO, days);
 
-                                // Calendário exibe apenas o Apto e a Cor do Serviço
                                 events.push({
                                     title: `Apto ${unitNum}`,
                                     start: startDateISO,
