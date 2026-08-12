@@ -358,29 +358,61 @@
             }
         }
 
-        function parseBrazilianDateToISO(dateStr) {
-            if (!dateStr) return null;
-            if (dateStr.includes('-')) return dateStr;
-            const parts = dateStr.split('/');
+        function parseToDate(dateStr) {
+            if (!dateStr || dateStr.includes('Não')) return null;
+            let parts;
+            if (dateStr.includes('-')) {
+                parts = dateStr.split('-');
+            } else if (dateStr.includes('/')) {
+                parts = dateStr.split('/');
+            } else {
+                return null;
+            }
+
             if (parts.length === 3) {
-                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                if (parts[0].length === 2 && parts[2].length === 4) {
+                    return new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T00:00:00`);
+                }
+                if (parts[0].length === 4 && parts[2].length === 2) {
+                    return new Date(`${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}T00:00:00`);
+                }
             }
             return null;
         }
 
+        function formatDateToDDMMAAAA(dateObj) {
+            if (!dateObj || isNaN(dateObj.getTime())) return "Não definida";
+            let day = String(dateObj.getDate()).padStart(2, '0');
+            let month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            let year = dateObj.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+
+        function formatDateToISO(dateObj) {
+            if (!dateObj || isNaN(dateObj.getTime())) return null;
+            let day = String(dateObj.getDate()).padStart(2, '0');
+            let month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            let year = dateObj.getFullYear();
+            return `${year}-${month}-${day}`;
+        }
+
         function addBusinessDays(dateStr, days) {
-            let isoDate = parseBrazilianDateToISO(dateStr);
-            if (!isoDate) return "Não calculada";
+            let date = parseToDate(dateStr);
+            if (!date) return "Não calculada";
+
             let daysToAdd = parseInt(days);
             if (isNaN(daysToAdd)) return "Não calculada";
 
-            let date = new Date(isoDate + 'T00:00:00');
             let added = 0;
             while (added < daysToAdd) {
                 date.setDate(date.getDate() + 1);
                 if (date.getDay() !== 0 && date.getDay() !== 6) added++;
             }
-            return date.toLocaleDateString('pt-BR');
+            return formatDateToDDMMAAAA(date);
+        }
+
+        function getTodayFormatted() {
+            return formatDateToDDMMAAAA(new Date());
         }
 
         function setFloor(f, el) {
@@ -473,7 +505,7 @@
             if (h.details && h.details.length > 0) {
                 text += `*PENDÊNCIAS:*\n`;
                 h.details.forEach((d, i) => {
-                    text += `${i+1}. [${d.room}] ${d.item} - ${d.nonConformity} (Resp: ${d.responsible})\n`;
+                    text += `${i+1}. [${d.room}] ${d.item} - ${d.nonConformity} (Resp: ${d.responsible || 'N/I'})\n`;
                 });
             }
 
@@ -532,7 +564,7 @@
                             <td>${d.room}</td>
                             <td>${d.item}</td>
                             <td>${d.nonConformity}</td>
-                            <td>${d.responsible}</td>
+                            <td>${d.responsible || 'N/I'}</td>
                             <td>${d.deadlineDate || 'Não definido'}</td>
                         </tr>
                     `;
@@ -614,7 +646,7 @@
                         resp: d.responsible || '',
                         respOther: '',
                         startDate: d.scheduledFor || '',
-                        businessDays: d.businessDays || '',
+                        businessDays: d.businessDays || '3',
                         status: d.status || 'Aguardando',
                         severity: d.severity || 'Baixa',
                         photos: d.photos || []
@@ -710,12 +742,12 @@
                             
                             <div class="grid-two">
                                 <div>
-                                    <label>Data Início:</label>
-                                    <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                                    <label>Data Início (DD-MM-AAAA):</label>
+                                    <input type="text" id="date_${key}_${index}" placeholder="Ex: 12-08-2026" onchange="salvarEstadoAtualInput('${key}')">
                                 </div>
                                 <div>
                                     <label>Prazo (Dias Úteis):</label>
-                                    <input type="number" id="days_${key}_${index}" min="1" placeholder="Ex: 3" value="${nc.businessDays || ''}" oninput="salvarEstadoAtualInput('${key}')">
+                                    <input type="text" id="days_${key}_${index}" placeholder="Ex: 3, 5, 10" oninput="salvarEstadoAtualInput('${key}')">
                                 </div>
                             </div>
                         </div>
@@ -784,7 +816,7 @@
                 nc.resp = document.getElementById(`resp_${key}_${index}`)?.value || '';
                 nc.respOther = document.getElementById(`resp_other_${key}_${index}`)?.value || '';
                 nc.startDate = document.getElementById(`date_${key}_${index}`)?.value || '';
-                nc.businessDays = document.getElementById(`days_${key}_${index}`)?.value || '';
+                nc.businessDays = document.getElementById(`days_${key}_${index}`)?.value || '3';
                 nc.status = document.getElementById(`status_${key}_${index}`)?.value || 'Aguardando';
                 nc.severity = document.getElementById(`sev_${key}_${index}`)?.value || 'Baixa';
 
@@ -828,8 +860,8 @@
                 obs: '',
                 resp: '',
                 respOther: '',
-                startDate: '',
-                businessDays: '',
+                startDate: getTodayFormatted(),
+                businessDays: '3',
                 status: 'Aguardando',
                 severity: 'Baixa',
                 photos: []
@@ -931,7 +963,7 @@
                     }
                 }
                 if (dateEl && nc.startDate) dateEl.value = nc.startDate;
-                if (daysEl && nc.businessDays !== undefined) daysEl.value = nc.businessDays;
+                if (daysEl && nc.businessDays) daysEl.value = nc.businessDays;
                 if (statusEl && nc.status) statusEl.value = nc.status;
                 if (sevEl && nc.severity) sevEl.value = nc.severity;
 
@@ -967,9 +999,11 @@
                     (last.details || []).forEach((d, detailIdx) => {
                         if (d.status !== 'Concluído') {
                             if (filterResp === 'TODOS' || d.responsible === filterResp) {
-                                let startDateISO = d.scheduledFor ? parseBrazilianDateToISO(d.scheduledFor) : null;
+                                let dateObj = parseToDate(d.scheduledFor);
+                                let startDateFormatted = dateObj ? formatDateToDDMMAAAA(dateObj) : 'Não definida';
+                                let startDateISO = dateObj ? formatDateToISO(dateObj) : null;
                                 let daysText = d.businessDays ? `${d.businessDays} dias úteis` : "Prazo não informado";
-                                let deadline = d.deadlineDate || (startDateISO ? addBusinessDays(startDateISO, d.businessDays) : "Não calculada");
+                                let deadline = d.deadlineDate || (startDateFormatted !== 'Não definida' ? addBusinessDays(startDateFormatted, d.businessDays) : "Não calculada");
 
                                 if (startDateISO) {
                                     events.push({
@@ -990,7 +1024,7 @@
                                             <strong>Item:</strong> ${d.item} (${d.nonConformity})
                                         </div>
                                         <div style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">
-                                            📅 Início: <strong>${startDateISO || 'Não definida'}</strong> | Prazo Final: <strong>${deadline}</strong> (${daysText})
+                                            📅 Início: <strong>${startDateFormatted}</strong> | Prazo Final: <strong>${deadline}</strong> (${daysText})
                                         </div>
                                         <div style="display:flex; gap:8px;">
                                             <button onclick="editarPrazoCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="padding:6px 10px; font-size:0.78rem; background:var(--secondary); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✏️ Alterar Agendamento / Prazo</button>
@@ -1023,17 +1057,18 @@
 
         function editarPrazoCalendar(unitKey, historyIdx, detailIdx) {
             const item = dbUnitsCache[unitKey][historyIdx].details[detailIdx];
-            const dataAtual = item.scheduledFor || new Date().toISOString().split('T')[0];
+            const dataHoje = getTodayFormatted();
+            const dataAtual = item.scheduledFor || dataHoje;
             
-            const novaData = prompt("Defina/Altere a Data de Início (AAAA-MM-DD):", dataAtual);
+            const novaData = prompt("Defina/Altere a Data de Início (Formato: DD-MM-AAAA):", dataAtual);
             if (!novaData) return;
 
-            const novosDias = prompt("Defina/Altere o Prazo em Dias Úteis:", item.businessDays || "3");
-            if (!novosDias) return;
+            const novosDias = prompt("Defina/Altere o Prazo em Dias Úteis (Ex: 1, 2, 3, 5, 10, 15):", item.businessDays || "3");
+            if (novosDias === null) return;
 
-            item.scheduledFor = novaData;
-            item.businessDays = novosDias;
-            item.deadlineDate = addBusinessDays(novaData, novosDias);
+            item.scheduledFor = novaData.trim();
+            item.businessDays = novosDias.trim();
+            item.deadlineDate = addBusinessDays(item.scheduledFor, item.businessDays);
 
             salvarAlteracaoGlobal(unitKey);
         }
@@ -1042,7 +1077,7 @@
             if (confirm("Deseja marcar esta pendência como SANADA / CONCLUÍDA?")) {
                 const item = dbUnitsCache[unitKey][historyIdx].details[detailIdx];
                 item.status = "Concluído";
-                item.resolvedAt = new Date().toLocaleString('pt-BR');
+                item.resolvedAt = formatDateToDDMMAAAA(new Date());
 
                 salvarAlteracaoGlobal(unitKey);
             }
@@ -1070,7 +1105,7 @@
         function generateTechnicalPDF() {
             let totalNCs = 0;
             let ncList = [];
-            const nowIso = new Date().toLocaleDateString('pt-BR');
+            const nowFormatted = formatDateToDDMMAAAA(new Date());
 
             Object.keys(pendingNCs).forEach(key => {
                 salvarEstadoAtualInput(key);
@@ -1081,7 +1116,7 @@
 
                 pendingNCs[key].forEach(nc => {
                     totalNCs++;
-                    let startDate = nc.startDate ? parseBrazilianDateToISO(nc.startDate) : null;
+                    let startDate = nc.startDate ? nc.startDate : null;
                     let days = parseInt(nc.businessDays);
                     let deadlineDate = startDate && !isNaN(days) ? addBusinessDays(startDate, days) : "Não calculada";
                     let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
@@ -1095,9 +1130,9 @@
                         responsible: nc.resp === 'Outro' ? nc.respOther : nc.resp,
                         severity: nc.severity || 'Baixa',
                         status: nc.status || 'Aguardando',
-                        inspectedAt: nowIso,
+                        inspectedAt: nowFormatted,
                         scheduledFor: startDate,
-                        businessDays: nc.businessDays || '',
+                        businessDays: nc.businessDays || '3',
                         deadlineDate: deadlineDate,
                         photos: nc.photos || []
                     });
@@ -1105,7 +1140,7 @@
             });
 
             const record = {
-                date: new Date().toLocaleDateString('pt-BR'),
+                date: nowFormatted,
                 inspector: inspectorName,
                 category: selectedCategory,
                 stage: selectedStage,
@@ -1169,7 +1204,8 @@
                             totalPendenciasAbertas += activeNCs.length;
                             activeNCs.forEach(d => {
                                 ncCount[d.nonConformity] = (ncCount[d.nonConformity] || 0) + 1;
-                                respQueue[d.responsible] = (respQueue[d.responsible] || 0) + 1;
+                                let respKey = d.responsible || 'Não Identificado';
+                                respQueue[respKey] = (respQueue[respKey] || 0) + 1;
                             });
                         }
                     } else if (last.status === '100_ok' || last.pendenciesCount === 0) {
@@ -1222,7 +1258,7 @@
                             Ambiente: d.room,
                             Item: d.item,
                             Pendencia: d.nonConformity,
-                            Responsavel: d.responsible,
+                            Responsavel: d.responsible || 'N/I',
                             Severidade: d.severity,
                             Status: d.status
                         });
