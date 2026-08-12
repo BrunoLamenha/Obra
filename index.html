@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vistoria Interna de Obra - Pro</title>
 
-    <!-- LIBS EXTERNAS -->
+    <!-- LIBS EXTERNAS (FULLCALENDAR CSS & JS CORRIGIDOS) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -92,6 +92,9 @@
 
         .cronograma-layout { display: grid; grid-template-columns: 2fr 1.2fr; gap: 15px; }
         @media(max-width: 900px) { .cronograma-layout { grid-template-columns: 1fr; } }
+
+        /* Estilização para garantir exibição correta do Calendário */
+        #calendar { min-height: 500px; }
 
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:9999; }
         .modal-overlay img { max-width:90%; max-height:80vh; border-radius:8px; }
@@ -443,14 +446,14 @@
                 const historyKey = `unit_${num}`;
                 const existingHistory = dbUnitsCache[historyKey] || [];
                 
-                let statusClass = 'unit-pending'; // CINZA (Não vistoriado)
+                let statusClass = 'unit-pending';
 
                 if (existingHistory.length > 0) {
                     const lastInsp = existingHistory[existingHistory.length - 1];
                     if (lastInsp.status === '100_ok' && lastInsp.pendenciesCount === 0) {
-                        statusClass = 'unit-ok';  // VERDE (100% OK)
+                        statusClass = 'unit-ok';
                     } else {
-                        statusClass = 'unit-nok'; // VERMELHO (Com Pendência)
+                        statusClass = 'unit-nok';
                     }
                 }
                 u.innerHTML += `<div class="btn ${statusClass} ${selectedUnitNum === num ? 'active' : ''}" onclick="selectUnit(${num}, this)">${num}</div>`;
@@ -1131,20 +1134,24 @@
                 }
             });
 
-            if (fullCalendarInstance) fullCalendarInstance.destroy();
+            if (!fullCalendarInstance) {
+                fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'pt-br',
+                    events: events,
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek'
+                    }
+                });
+                fullCalendarInstance.render();
+            } else {
+                fullCalendarInstance.removeAllEvents();
+                fullCalendarInstance.addEventSource(events);
+                fullCalendarInstance.render();
+            }
 
-            fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'pt-br',
-                events: events,
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek'
-                }
-            });
-
-            fullCalendarInstance.render();
             if (listEl) listEl.innerHTML = scheduledList.join('') || '<p style="color:#666;">Nenhuma atividade pendente agendada.</p>';
         }
 
@@ -1307,7 +1314,13 @@
             if (tab === 'mapa' || tab === 'cronograma') {
                 loadAllUnitsData();
                 if (tab === 'mapa') updateDashboardData();
-                if (tab === 'cronograma') renderInteractiveCalendar();
+                if (tab === 'cronograma') {
+                    // Timeout garante que a div visível tenha dimensões calculadas antes de renderizar
+                    setTimeout(() => {
+                        renderInteractiveCalendar();
+                        if (fullCalendarInstance) fullCalendarInstance.updateSize();
+                    }, 50);
+                }
             }
         }
 
