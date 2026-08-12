@@ -46,6 +46,7 @@
         .btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         .unit-ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #065f46; }
         .unit-nok { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b; }
+        .unit-pending { background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b; }
 
         .item-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 12px; background: #fafafa; }
         .item-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -430,26 +431,31 @@
         }
 
         function renderUnitsGrid() {
-            if (!selectedFloorNum) return;
-            const u = document.getElementById('units');
-            u.innerHTML = '';
+    if (!selectedFloorNum) return;
+    const u = document.getElementById('units');
+    u.innerHTML = '';
 
-            for (let i = 1; i <= 19; i++) {
-                let num = (selectedFloorNum * 100) + i;
-                const historyKey = `unit_${num}`;
-                const existingHistory = dbUnitsCache[historyKey] || [];
-                let statusClass = 'unit-nok'; // Padrão é NOK até ser aprovado 100%
+    for (let i = 1; i <= 19; i++) {
+        let num = (selectedFloorNum * 100) + i;
+        const historyKey = `unit_${num}`;
+        const existingHistory = dbUnitsCache[historyKey] || [];
+        
+        let statusClass = 'unit-pending'; // Padrão: Cinza (Não vistoriado)
 
-                if (existingHistory.length > 0) {
-                    const lastInsp = existingHistory[existingHistory.length - 1];
-                    // Só fica VERDE se status for 100_ok E não houver pendências ativas
-                    if (lastInsp.status === '100_ok' && lastInsp.pendenciesCount === 0) {
-                        statusClass = 'unit-ok';
-                    }
-                }
-                u.innerHTML += `<div class="btn ${statusClass} ${selectedUnitNum === num ? 'active' : ''}" onclick="selectUnit(${num}, this)">${num}</div>`;
+        if (existingHistory.length > 0) {
+            const lastInsp = existingHistory[existingHistory.length - 1];
+            
+            // Se possui vistoria, verifica se está 100% OK ou com pendências
+            if (lastInsp.status === '100_ok' && lastInsp.pendenciesCount === 0) {
+                statusClass = 'unit-ok';  // Verde
+            } else {
+                statusClass = 'unit-nok'; // Vermelho
             }
         }
+        
+        u.innerHTML += `<div class="btn ${statusClass} ${selectedUnitNum === num ? 'active' : ''}" onclick="selectUnit(${num}, this)">${num}</div>`;
+    }
+}
 
         function selectUnit(u, el) {
             selectedUnitNum = u;
