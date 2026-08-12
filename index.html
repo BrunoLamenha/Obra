@@ -37,7 +37,6 @@
         .card { background: var(--card-bg); padding: 18px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
         .card h3, .card h4 { color: var(--primary); font-size: 1.1rem; margin-bottom: 12px; }
 
-        /* Centralização dos Pavimentos */
         .text-center { text-align: center; }
         .btn-group-center { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 
@@ -93,6 +92,10 @@
 
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:9999; }
         .modal-overlay img { max-width:90%; max-height:80vh; border-radius:8px; }
+
+        .history-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-bottom: 10px; }
+        .history-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .btn-hist { padding: 6px 10px; border: none; border-radius: 4px; font-size: 0.78rem; font-weight: bold; cursor: pointer; color: white; }
     </style>
 </head>
 <body>
@@ -119,7 +122,6 @@
             <button class="btn-main" style="background:var(--success);" onclick="confirmInspector()">Confirmar & Iniciar Vistoria ✓</button>
         </div>
 
-        <!-- PAVIMENTOS CENTRALIZADOS -->
         <div class="card text-center" id="floor-card" style="display:none;">
             <h3>1. Selecione o Pavimento</h3>
             <div class="btn-group-center" id="floors">
@@ -148,6 +150,12 @@
                 <button class="btn btn-stage" style="flex:1;" onclick="setStage('Revistoria', this)">🔄 Revistoria</button>
             </div>
             <div id="stage-info-text" style="margin-top:10px; font-weight:bold; color:var(--primary); font-size:0.9rem;"></div>
+        </div>
+
+        <!-- HISTÓRICO DA UNIDADE -->
+        <div class="card" id="history-section" style="display:none;">
+            <h4>📜 Histórico de Vistorias da Unidade</h4>
+            <div id="unit-history-list"></div>
         </div>
 
         <!-- AMBIENTES DA UNIDADE -->
@@ -281,7 +289,6 @@
             "Gás Encanado": "#ea580c"
         };
 
-        // Checklist Reordenado por Ordem Cronológica de Execução da Obra
         const checklist = [
             { id: "piso", name: "1. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
             { id: "gesso", name: "2. Forro e Sancas de Gesso", cleanName: "Gesso e Sancas", options: ["Fissura / Trinca na Chapa ou Junta", "Desnível / Placa Oca / Abulada", "Falta Tabica / Junta de Dilatação Deficiente", "Abertura / Recorte Incorreto para Luminária", "Marcas de Parafuso / Rebarbas Expostas", "Falta Emassamento / Rejunte no Gesso", "Umidade / Mofo / Mancha amarelada", "Outros"] },
@@ -352,18 +359,21 @@
         }
 
         function parseBrazilianDateToISO(dateStr) {
-            if (!dateStr) return new Date().toISOString().split('T')[0];
+            if (!dateStr) return null;
             if (dateStr.includes('-')) return dateStr;
             const parts = dateStr.split('/');
             if (parts.length === 3) {
                 return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
             }
-            return new Date().toISOString().split('T')[0];
+            return null;
         }
 
         function addBusinessDays(dateStr, days) {
             let isoDate = parseBrazilianDateToISO(dateStr);
-            let daysToAdd = parseInt(days) || 3;
+            if (!isoDate) return "Não calculada";
+            let daysToAdd = parseInt(days);
+            if (isNaN(daysToAdd)) return "Não calculada";
+
             let date = new Date(isoDate + 'T00:00:00');
             let added = 0;
             while (added < daysToAdd) {
@@ -397,6 +407,7 @@
             document.getElementById('unit-card').style.display = 'block';
             document.getElementById('type-card').style.display = 'none';
             document.getElementById('inspection-area').style.display = 'none';
+            document.getElementById('history-section').style.display = 'none';
         }
 
         function selectUnit(u, el) {
@@ -411,6 +422,127 @@
             selectedStage = '';
             document.querySelectorAll('#category-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('#stage-selection-container .btn-stage').forEach(b => b.classList.remove('active'));
+
+            renderUnitHistory();
+        }
+
+        function renderUnitHistory() {
+            const historyKey = `unit_${selectedUnitNum}`;
+            const history = dbUnitsCache[historyKey] || [];
+            const historyEl = document.getElementById('unit-history-list');
+            const historyCard = document.getElementById('history-section');
+
+            if (!historyEl || !historyCard) return;
+
+            if (history.length === 0) {
+                historyCard.style.display = 'none';
+                return;
+            }
+
+            historyCard.style.display = 'block';
+            historyEl.innerHTML = history.map((h, idx) => `
+                <div class="history-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong>${h.stage || 'Vistoria'} — ${h.date}</strong>
+                        <span style="font-size:0.75rem; font-weight:bold; color:${h.pendenciesCount === 0 ? 'var(--success)' : 'var(--danger)'}">
+                            ${h.pendenciesCount === 0 ? 'Aprovada ✓' : h.pendenciesCount + ' Pendência(s)'}
+                        </span>
+                    </div>
+                    <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">
+                        Vistoriador: ${h.inspector} | Tipo: ${h.category || 'Padrão'}
+                    </div>
+                    <div class="history-actions">
+                        <button class="btn-hist" style="background:#25D366;" onclick="shareHistoryWhatsApp(${idx})">📲 Enviar WhatsApp</button>
+                        <button class="btn-hist" style="background:var(--primary);" onclick="printHistoryReport(${idx})">🖨️ Imprimir / PDF</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function shareHistoryWhatsApp(histIdx) {
+            const historyKey = `unit_${selectedUnitNum}`;
+            const h = dbUnitsCache[historyKey]?.[histIdx];
+            if (!h) return;
+
+            let text = `*RELATÓRIO DE VISTORIA - APTO ${selectedUnitNum}*\n`;
+            text += `*Etapa:* ${h.stage || 'Vistoria'}\n`;
+            text += `*Data:* ${h.date}\n`;
+            text += `*Vistoriador:* ${h.inspector}\n`;
+            text += `*Resultado:* ${h.pendenciesCount === 0 ? 'APROVADO ✓' : h.pendenciesCount + ' pendência(s) registrada(s)'}\n\n`;
+
+            if (h.details && h.details.length > 0) {
+                text += `*PENDÊNCIAS:*\n`;
+                h.details.forEach((d, i) => {
+                    text += `${i+1}. [${d.room}] ${d.item} - ${d.nonConformity} (Resp: ${d.responsible})\n`;
+                });
+            }
+
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function printHistoryReport(histIdx) {
+            const historyKey = `unit_${selectedUnitNum}`;
+            const h = dbUnitsCache[historyKey]?.[histIdx];
+            if (!h) return;
+
+            let printWin = window.open('', '_blank');
+            let content = `
+                <html>
+                <head>
+                    <title>Relatório Apto ${selectedUnitNum} - ${h.stage}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; }
+                        h2 { color: #004a8f; border-bottom: 2px solid #004a8f; padding-bottom: 5px; }
+                        .info { margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        th, td { border: 1px solid #cbd5e1; padding: 8px; font-size: 0.85rem; text-align: left; }
+                        th { background: #f1f5f9; }
+                    </style>
+                </head>
+                <body>
+                    <h2>Relatório Técnico de Vistoria - Apto ${selectedUnitNum}</h2>
+                    <div class="info">
+                        <strong>Etapa:</strong> ${h.stage || 'Vistoria'}<br>
+                        <strong>Data:</strong> ${h.date}<br>
+                        <strong>Vistoriador:</strong> ${h.inspector}<br>
+                        <strong>Categoria:</strong> ${h.category || 'Padrão Construtora'}<br>
+                        <strong>Status:</strong> ${h.pendenciesCount === 0 ? 'Conforme / Aprovado' : h.pendenciesCount + ' Pendência(s)'}
+                    </div>
+            `;
+
+            if (h.details && h.details.length > 0) {
+                content += `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Ambiente</th>
+                                <th>Item</th>
+                                <th>Não Conformidade</th>
+                                <th>Responsável</th>
+                                <th>Prazo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                h.details.forEach((d, i) => {
+                    content += `
+                        <tr>
+                            <td>${i+1}</td>
+                            <td>${d.room}</td>
+                            <td>${d.item}</td>
+                            <td>${d.nonConformity}</td>
+                            <td>${d.responsible}</td>
+                            <td>${d.deadlineDate || 'Não definido'}</td>
+                        </tr>
+                    `;
+                });
+                content += `</tbody></table>`;
+            }
+
+            content += `<script>window.onload = function() { window.print(); }<\/script></body></html>`;
+            printWin.document.write(content);
+            printWin.document.close();
         }
 
         function setCategory(cat, el) {
@@ -482,7 +614,7 @@
                         resp: d.responsible || '',
                         respOther: '',
                         startDate: d.scheduledFor || '',
-                        businessDays: d.businessDays || '3',
+                        businessDays: d.businessDays || '',
                         status: d.status || 'Aguardando',
                         severity: d.severity || 'Baixa',
                         photos: d.photos || []
@@ -583,7 +715,7 @@
                                 </div>
                                 <div>
                                     <label>Prazo (Dias Úteis):</label>
-                                    <input type="number" id="days_${key}_${index}" min="1" placeholder="3" value="${nc.businessDays || '3'}" oninput="salvarEstadoAtualInput('${key}')">
+                                    <input type="number" id="days_${key}_${index}" min="1" placeholder="Ex: 3" value="${nc.businessDays || ''}" oninput="salvarEstadoAtualInput('${key}')">
                                 </div>
                             </div>
                         </div>
@@ -652,7 +784,7 @@
                 nc.resp = document.getElementById(`resp_${key}_${index}`)?.value || '';
                 nc.respOther = document.getElementById(`resp_other_${key}_${index}`)?.value || '';
                 nc.startDate = document.getElementById(`date_${key}_${index}`)?.value || '';
-                nc.businessDays = document.getElementById(`days_${key}_${index}`)?.value || '3';
+                nc.businessDays = document.getElementById(`days_${key}_${index}`)?.value || '';
                 nc.status = document.getElementById(`status_${key}_${index}`)?.value || 'Aguardando';
                 nc.severity = document.getElementById(`sev_${key}_${index}`)?.value || 'Baixa';
 
@@ -697,7 +829,7 @@
                 resp: '',
                 respOther: '',
                 startDate: '',
-                businessDays: '3',
+                businessDays: '',
                 status: 'Aguardando',
                 severity: 'Baixa',
                 photos: []
@@ -835,28 +967,30 @@
                     (last.details || []).forEach((d, detailIdx) => {
                         if (d.status !== 'Concluído') {
                             if (filterResp === 'TODOS' || d.responsible === filterResp) {
-                                let startDateISO = d.scheduledFor ? parseBrazilianDateToISO(d.scheduledFor) : parseBrazilianDateToISO(last.date);
-                                let days = parseInt(d.businessDays) || 3;
-                                let deadline = d.deadlineDate || addBusinessDays(startDateISO, days);
+                                let startDateISO = d.scheduledFor ? parseBrazilianDateToISO(d.scheduledFor) : null;
+                                let daysText = d.businessDays ? `${d.businessDays} dias úteis` : "Prazo não informado";
+                                let deadline = d.deadlineDate || (startDateISO ? addBusinessDays(startDateISO, d.businessDays) : "Não calculada");
 
-                                events.push({
-                                    title: `Apto ${unitNum}`,
-                                    start: startDateISO,
-                                    backgroundColor: respColors[d.responsible] || '#004a8f',
-                                    borderColor: respColors[d.responsible] || '#004a8f'
-                                });
+                                if (startDateISO) {
+                                    events.push({
+                                        title: `Apto ${unitNum}`,
+                                        start: startDateISO,
+                                        backgroundColor: respColors[d.responsible] || '#004a8f',
+                                        borderColor: respColors[d.responsible] || '#004a8f'
+                                    });
+                                }
 
                                 scheduledList.push(`
                                     <div style="border-left: 4px solid ${respColors[d.responsible] || '#004a8f'}; background:#fff; padding:12px; margin-bottom:10px; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.08); border:1px solid #e2e8f0;">
                                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                                            <strong>Apto ${unitNum} — ${d.responsible}</strong>
+                                            <strong>Apto ${unitNum} — ${d.responsible || 'Sem Responsável'}</strong>
                                             <span style="font-size:0.75rem; background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:12px; font-weight:bold;">${d.status || 'Aguardando'}</span>
                                         </div>
                                         <div style="font-size:0.85rem; color:#334155; margin:6px 0;">
                                             <strong>Item:</strong> ${d.item} (${d.nonConformity})
                                         </div>
                                         <div style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">
-                                            📅 Início: <strong>${startDateISO}</strong> | Prazo Final: <strong>${deadline}</strong> (${days} dias úteis)
+                                            📅 Início: <strong>${startDateISO || 'Não definida'}</strong> | Prazo Final: <strong>${deadline}</strong> (${daysText})
                                         </div>
                                         <div style="display:flex; gap:8px;">
                                             <button onclick="editarPrazoCalendar('${key}', ${lastHistoryIndex}, ${detailIdx})" style="padding:6px 10px; font-size:0.78rem; background:var(--secondary); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✏️ Alterar Agendamento / Prazo</button>
@@ -889,10 +1023,12 @@
 
         function editarPrazoCalendar(unitKey, historyIdx, detailIdx) {
             const item = dbUnitsCache[unitKey][historyIdx].details[detailIdx];
-            const novaData = prompt("Nova Data de Início (AAAA-MM-DD):", item.scheduledFor || new Date().toISOString().split('T')[0]);
+            const dataAtual = item.scheduledFor || new Date().toISOString().split('T')[0];
+            
+            const novaData = prompt("Defina/Altere a Data de Início (AAAA-MM-DD):", dataAtual);
             if (!novaData) return;
 
-            const novosDias = prompt("Novo Prazo em Dias Úteis:", item.businessDays || "3");
+            const novosDias = prompt("Defina/Altere o Prazo em Dias Úteis:", item.businessDays || "3");
             if (!novosDias) return;
 
             item.scheduledFor = novaData;
@@ -935,7 +1071,6 @@
             let totalNCs = 0;
             let ncList = [];
             const nowIso = new Date().toLocaleDateString('pt-BR');
-            const defaultStartDate = new Date().toISOString().split('T')[0];
 
             Object.keys(pendingNCs).forEach(key => {
                 salvarEstadoAtualInput(key);
@@ -946,9 +1081,9 @@
 
                 pendingNCs[key].forEach(nc => {
                     totalNCs++;
-                    let startDate = nc.startDate ? parseBrazilianDateToISO(nc.startDate) : defaultStartDate;
-                    let days = parseInt(nc.businessDays) || 3;
-                    let deadlineDate = addBusinessDays(startDate, days);
+                    let startDate = nc.startDate ? parseBrazilianDateToISO(nc.startDate) : null;
+                    let days = parseInt(nc.businessDays);
+                    let deadlineDate = startDate && !isNaN(days) ? addBusinessDays(startDate, days) : "Não calculada";
                     let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
                     let obsText = nc.obs ? ` (${nc.obs})` : '';
 
@@ -962,7 +1097,7 @@
                         status: nc.status || 'Aguardando',
                         inspectedAt: nowIso,
                         scheduledFor: startDate,
-                        businessDays: days,
+                        businessDays: nc.businessDays || '',
                         deadlineDate: deadlineDate,
                         photos: nc.photos || []
                     });
@@ -993,6 +1128,7 @@
             }
 
             alert(`Vistoria da Unidade ${selectedUnitNum} salva com sucesso!`);
+            renderUnitHistory();
             updateDashboardData();
             document.getElementById('btn-next').style.display = 'block';
         }
