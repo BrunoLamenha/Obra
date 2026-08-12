@@ -45,7 +45,6 @@
         .btn:hover { background: #e2e8f0; }
         .btn.active { outline: 3px solid var(--primary); outline-offset: -3px; }
         
-        /* STATUS DAS UNIDADES NO MAPA */
         .unit-ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #065f46; }
         .unit-nok { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b; }
         .unit-pending { background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b; }
@@ -367,8 +366,16 @@
 
         function parseToDate(dateStr) {
             if (!dateStr || String(dateStr).includes('Não') || String(dateStr).trim() === '') return null;
+            let str = String(dateStr).trim();
+
+            if (str.includes('-') && str.indexOf('-') === 4) {
+                let parts = str.split('-');
+                if (parts.length === 3) {
+                    return new Date(`${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}T00:00:00`);
+                }
+            }
+
             let parts;
-            let str = String(dateStr);
             if (str.includes('-')) {
                 parts = str.split('-');
             } else if (str.includes('/')) {
@@ -802,8 +809,8 @@
                         <div class="nc-header">
                             <span>PENDÊNCIA #${index + 1}</span>
                             <div>
-                                <button style="color:var(--success); background:none; border:none; font-weight:bold; cursor:pointer; margin-right:8px;" onclick="sanarNC('${key}', ${index}, '${itemObj.id}')">✓ Sanar</button>
-                                <button style="color:var(--danger); background:none; border:none; font-weight:bold; cursor:pointer;" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
+                                <button type="button" style="color:var(--success); background:none; border:none; font-weight:bold; cursor:pointer; margin-right:8px;" onclick="sanarNC('${key}', ${index}, '${itemObj.id}')">✓ Sanar</button>
+                                <button type="button" style="color:var(--danger); background:none; border:none; font-weight:bold; cursor:pointer;" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
                             </div>
                         </div>
                         <div class="checklist-group">${chkBoxes}</div>
@@ -830,11 +837,11 @@
                             <div class="grid-two">
                                 <div>
                                     <label>Data Início (Opcional):</label>
-                                    <input type="text" id="date_${key}_${index}" placeholder="DD-MM-AAAA" onchange="salvarEstadoAtualInput('${key}')">
+                                    <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
                                 </div>
                                 <div>
                                     <label>Prazo em Dias Úteis (Opcional):</label>
-                                    <input type="text" id="days_${key}_${index}" placeholder="Ex: 3, 5" oninput="salvarEstadoAtualInput('${key}')">
+                                    <input type="number" min="1" id="days_${key}_${index}" placeholder="Ex: 3, 5" oninput="salvarEstadoAtualInput('${key}')">
                                 </div>
                             </div>
                         </div>
@@ -1057,7 +1064,14 @@
                         respEl.value = '';
                     }
                 }
-                if (dateEl) dateEl.value = nc.startDate || '';
+                if (dateEl && nc.startDate) {
+                    let dClean = nc.startDate;
+                    if (dClean.includes('-') && dClean.indexOf('-') === 2) {
+                        let p = dClean.split('-');
+                        if (p.length === 3 && p[2].length === 4) dClean = `${p[2]}-${p[1]}-${p[0]}`;
+                    }
+                    dateEl.value = dClean;
+                }
                 if (daysEl) daysEl.value = nc.businessDays || '';
                 if (statusEl && nc.status) statusEl.value = nc.status;
                 if (sevEl && nc.severity) sevEl.value = nc.severity;
@@ -1099,7 +1113,6 @@
                                 let startDateFormatted = dateObj ? formatDateToDDMMAAAA(dateObj) : 'Não definida';
                                 let startDateISO = dateObj ? formatDateToISO(dateObj) : null;
                                 
-                                // Proteção robusta contra .trim() de campos salvos como números ou vazios
                                 let bDaysStr = String(d.businessDays || '').trim();
                                 let daysText = (bDaysStr !== '') ? `${bDaysStr} dias úteis` : "Prazo não informado";
                                 let deadline = d.deadlineDate || (startDateFormatted !== 'Não definida' && bDaysStr ? addBusinessDays(startDateFormatted, bDaysStr) : "Não calculada");
@@ -1171,17 +1184,25 @@
             let novoResp = prompt(`Defina o Responsável (Atualmente: ${item.responsible || 'Não definido'}):\n\nOpções:\n${respOpcoes.join('\n')}`, item.responsible || '');
             if (novoResp === null) return;
 
-            const dataHoje = getTodayFormatted();
-            const dataAtual = item.scheduledFor || dataHoje;
+            let dataAtualISO = "";
+            if (item.scheduledFor) {
+                let dParsed = parseToDate(item.scheduledFor);
+                if (dParsed) dataAtualISO = formatDateToISO(dParsed);
+            }
             
-            const novaData = prompt("Defina/Altere a Data de Início (Formato: DD-MM-AAAA):", dataAtual);
+            const novaData = prompt("Defina/Altere a Data de Início (Formato AAAA-MM-DD):", dataAtualISO || "");
             if (novaData === null) return;
 
             const novosDias = prompt("Defina/Altere o Prazo em Dias Úteis (Ex: 1, 2, 3, 5, 10):", item.businessDays || "3");
             if (novosDias === null) return;
 
             item.responsible = novoResp.trim();
-            item.scheduledFor = novaData.trim();
+            if (novaData.trim()) {
+                let parsedNew = parseToDate(novaData.trim());
+                item.scheduledFor = formatDateToDDMMAAAA(parsedNew);
+            } else {
+                item.scheduledFor = "";
+            }
             item.businessDays = String(novosDias).trim();
             item.deadlineDate = addBusinessDays(item.scheduledFor, item.businessDays);
 
@@ -1246,9 +1267,14 @@
 
                 pendingNCs[key].forEach(nc => {
                     totalNCs++;
-                    let startDate = nc.startDate ? nc.startDate : null;
+                    let startDateFormatted = "";
+                    if (nc.startDate) {
+                        let parsedD = parseToDate(nc.startDate);
+                        startDateFormatted = parsedD ? formatDateToDDMMAAAA(parsedD) : nc.startDate;
+                    }
+                    
                     let days = parseInt(nc.businessDays);
-                    let deadlineDate = startDate && !isNaN(days) ? addBusinessDays(startDate, days) : "Não calculada";
+                    let deadlineDate = startDateFormatted && !isNaN(days) ? addBusinessDays(startDateFormatted, days) : "Não calculada";
                     let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
                     let obsText = nc.obs ? ` (${nc.obs})` : '';
 
@@ -1261,7 +1287,7 @@
                         severity: nc.severity || 'Baixa',
                         status: nc.status || 'Aguardando',
                         inspectedAt: nowFormatted,
-                        scheduledFor: startDate,
+                        scheduledFor: startDateFormatted,
                         businessDays: String(nc.businessDays || ''),
                         deadlineDate: deadlineDate,
                         photos: nc.photos || []
