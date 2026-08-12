@@ -212,14 +212,15 @@
             <label>Filtrar Responsável:</label>
             <select id="calendar-resp-filter" onchange="renderInteractiveCalendar()">
                 <option value="TODOS">Todos os Responsáveis</option>
-                <option value="Pintura / Emassamento">Pintura / Emassamento</option>
-                <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
-                <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
-                <option value="Eletricista">Eletricista</option>
-                <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
-                <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
                 <option value="Piso e Revestimento">Piso e Revestimento</option>
                 <option value="Gesso / Sancas">Gesso / Sancas</option>
+                <option value="Eletricista">Eletricista</option>
+                <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
+                <option value="Climatização / Ar-Condicionado">Climatização / Ar-Condicionado</option>
+                <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
+                <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
+                <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
+                <option value="Pintura / Emassamento">Pintura / Emassamento</option>
             </select>
         </div>
         
@@ -265,26 +266,28 @@
         };
 
         const respColors = {
-            "Pintura / Emassamento": "#2563eb",
-            "Marmoraria / Graniteiro": "#7c3aed",
-            "Instalações Hidráulicas": "#0284c7",
-            "Eletricista": "#d97706",
-            "Marcenaria / Portas de Madeira": "#78350f",
-            "Esquadrias de Alumínio / Vidros": "#475569",
             "Piso e Revestimento": "#059669",
             "Gesso / Sancas": "#db2777",
+            "Eletricista": "#d97706",
+            "Instalações Hidráulicas": "#0284c7",
+            "Climatização / Ar-Condicionado": "#0891b2",
+            "Marmoraria / Graniteiro": "#7c3aed",
+            "Esquadrias de Alumínio / Vidros": "#475569",
+            "Marcenaria / Portas de Madeira": "#78350f",
+            "Pintura / Emassamento": "#2563eb",
             "Serralharia / Portões": "#525252",
             "Impermeabilização": "#0891b2",
             "Limpeza Pós-Obra": "#16a34a",
             "Gás Encanado": "#ea580c"
         };
 
+        // Checklist Reordenado por Ordem Cronológica de Execução da Obra
         const checklist = [
-            { id: "eletrica", name: "1. Tubulações, Tomadas, Interruptores e Luminárias", cleanName: "Instalações Elétricas e Iluminação", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Adicionar ou Retirar Módulo", "Adicionar ou Retirar Ponto", "Ponto Sem Energia / Fio Solto", "Luminária Não Liga / Danificada", "Quadro de Disjuntores Incompleto", "Outros"] },
-            { id: "hidra", name: "2. Tubulações, Louças, Metais e Sifão", cleanName: "Instalações Hidráulicas e Louças/Metais", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Instalar Torneira e Engate", "Instalar Grelha e Porta Grelha", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
-            { id: "gesso", name: "3. Forro e Sancas de Gesso", cleanName: "Gesso e Sancas", options: ["Fissura / Trinca na Chapa ou Junta", "Desnível / Placa Oca / Abulada", "Falta Tabica / Junta de Dilatação Deficiente", "Abertura / Recorte Incorreto para Luminária", "Marcas de Parafuso / Rebarbas Expostas", "Falta Emassamento / Rejunte no Gesso", "Umidade / Mofo / Mancha amarelada", "Outros"] },
-            { id: "ac", name: "4. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura de Climatização", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] },
-            { id: "piso", name: "5. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
+            { id: "piso", name: "1. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
+            { id: "gesso", name: "2. Forro e Sancas de Gesso", cleanName: "Gesso e Sancas", options: ["Fissura / Trinca na Chapa ou Junta", "Desnível / Placa Oca / Abulada", "Falta Tabica / Junta de Dilatação Deficiente", "Abertura / Recorte Incorreto para Luminária", "Marcas de Parafuso / Rebarbas Expostas", "Falta Emassamento / Rejunte no Gesso", "Umidade / Mofo / Mancha amarelada", "Outros"] },
+            { id: "eletrica", name: "3. Tubulações, Tomadas, Interruptores e Luminárias", cleanName: "Instalações Elétricas e Iluminação", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Adicionar ou Retirar Módulo", "Adicionar ou Retirar Ponto", "Ponto Sem Energia / Fio Solto", "Luminária Não Liga / Danificada", "Quadro de Disjuntores Incompleto", "Outros"] },
+            { id: "hidra", name: "4. Tubulações, Louças, Metais e Sifão", cleanName: "Instalações Hidráulicas e Louças/Metais", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Instalar Torneira e Engate", "Instalar Grelha e Porta Grelha", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
+            { id: "ac", name: "5. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura de Climatização", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] },
             { id: "bancada", name: "6. Bancadas, Soleiras e Peitoris", cleanName: "Marmoraria / Bancadas e Soleiras", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
             { id: "esquadria", name: "7. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias e Vidraçaria", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
             { id: "portas", name: "8. Portas de Madeira e Alizares", cleanName: "Esquadrias de Madeira", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
@@ -428,7 +431,6 @@
                 selectedStage = '1ª Vistoria';
                 document.getElementById('stage-info-text').innerText = '📋 Etapa Definida: 1ª Vistoria Inicial';
             } else {
-                // Conta automaticamente quantas revistorias já foram feitas
                 let revistoriaCount = history.filter(h => h.stage && h.stage.includes('Revistoria')).length + 1;
                 selectedStage = `${revistoriaCount}ª Revistoria`;
                 document.getElementById('stage-info-text').innerText = `🔄 Etapa Definida: ${selectedStage}`;
@@ -560,14 +562,15 @@
                                 <label>Responsável:</label>
                                 <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
                                     <option value="" disabled selected>Escolha...</option>
-                                    <option value="Pintura / Emassamento">Pintura / Emassamento</option>
-                                    <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
-                                    <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
-                                    <option value="Eletricista">Eletricista</option>
-                                    <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
-                                    <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
                                     <option value="Piso e Revestimento">Piso e Revestimento</option>
                                     <option value="Gesso / Sancas">Gesso / Sancas</option>
+                                    <option value="Eletricista">Eletricista</option>
+                                    <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
+                                    <option value="Climatização / Ar-Condicionado">Climatização / Ar-Condicionado</option>
+                                    <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
+                                    <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
+                                    <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
+                                    <option value="Pintura / Emassamento">Pintura / Emassamento</option>
                                     <option value="Outro">Outro</option>
                                 </select>
                                 <input type="text" id="resp_other_${key}_${index}" placeholder="Especifique..." style="display:none; margin-top:4px;" oninput="salvarEstadoAtualInput('${key}')">
