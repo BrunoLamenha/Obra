@@ -3,218 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vistoria Interna de Obra - Cloud Pro</title>
-    
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23004a8f'/><path d='M256 110L120 220h30l106-85 106 85h30z' fill='%23fff'/><rect x='180' y='210' width='152' height='180' rx='16' fill='%23fff'/><rect x='216' y='195' width='80' height='30' rx='8' fill='%23e6ebf5'/><rect x='236' y='185' width='40' height='20' rx='6' fill='%23004a8f'/><rect x='205' y='245' width='102' height='12' rx='4' fill='%23c8d2e1'/><rect x='205' y='270' width='102' height='12' rx='4' fill='%23c8d2e1'/><path d='M210 335l35 35 80-80 20 20-100 100-55-55z' fill='%2328a745'/></svg>">
-    <meta name="theme-color" content="#004a8f">
+    <title>Vistoria Interna de Obra - Pro</title>
 
-    <!-- FullCalendar JS -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-    <!-- SheetJS CDN para Exportação em XLSX -->
+    <!-- LIBS EXTERNAS (Excel, Calendário e Firebase Compat) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --primary: #004a8f; --bg: #f4f6f9; --border: #ccc; --success: #28a745; --danger: #dc3545; --warning: #ffc107; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background: var(--bg); padding: 12px; color: #333; }
-        .container { max-width: 950px; margin: 0 auto; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background: #f4f6f9; padding: 10px; color: #333; }
+        .header { background: #004a8f; color: white; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 12px; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: #e2e8f0; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        .tab-btn.active { background: #004a8f; color: white; }
         
-        header { background: var(--primary); color: #fff; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
-        .nav-tabs { display: flex; gap: 6px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 10px 4px; border: none; background: #e0e6ed; color: #004a8f; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; font-size: 0.85rem; }
-        .tab-btn.active { background: var(--primary); color: white; }
-
-        .card { background: #fff; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-        .grid-map { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
-        .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; margin-top: 10px; }
+        .btn { padding: 10px; border: 1px solid #ccc; background: #f8fafc; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer; }
+        .btn.active { background: #004a8f; color: white; border-color: #004a8f; }
+        .unit-ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #065f46; }
+        .unit-nok { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b; }
         
-        .btn { padding: 10px; background: #eee; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; }
-        .btn.active { outline: 3px solid #000; font-weight: 900; }
-        
-        .map-unit { padding: 10px 4px; font-size: 0.78rem; border-radius: 5px; text-align: center; font-weight: bold; border: 1px solid #ccc; cursor: pointer; background: #fff; }
-        .unit-ok { background: var(--success) !important; color: #fff !important; border-color: #1e7e34 !important; }
-        .unit-nok { background: var(--danger) !important; color: #fff !important; border-color: #bd2130 !important; }
-
-        .btn-opt { padding: 12px; background: #eef4fa; border: 2px solid #b8daff; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; color: var(--primary); }
-        .btn-opt.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-        
-        .item-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+        .item-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #fafafa; }
         .item-header { display: flex; justify-content: space-between; align-items: center; }
-        .item-title { font-weight: bold; font-size: 0.95rem; color: #333; }
+        .item-title { font-weight: bold; font-size: 0.9rem; width: 55%; }
+        .btn-status { padding: 6px 10px; border: none; border-radius: 4px; font-weight: bold; font-size: 0.75rem; cursor: pointer; margin-left: 4px; }
+        .btn-neutral { background: #cbd5e1; color: #334155; }
+        .btn-ok-active { background: #16a34a; color: white; }
+        .btn-nok-active { background: #dc2626; color: white; }
         
-        .btn-status { padding: 6px 12px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
-        .btn-ok-active { background: var(--success); color: white; }
-        .btn-nok-active { background: var(--danger); color: white; }
-        .btn-neutral { background: #e0e0e0; color: #333; }
-
-        .nc-box { background: #fff5f5; border: 1px solid #f5c6cb; border-left: 5px solid var(--danger); border-radius: 6px; padding: 12px; margin-top: 10px; position: relative; }
-        .nc-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: bold; color: var(--danger); margin-bottom: 8px; }
-        .btn-remove { background: #ff4d4d; color: white; border: none; border-radius: 3px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
-        .btn-sanar { background: #28a745; color: white; border: none; border-radius: 3px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-right: 5px; }
-
-        .checklist-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #eee; }
-        .chk-label { font-size: 0.8rem; font-weight: normal; display: flex; align-items: flex-start; gap: 8px; margin: 0; cursor: pointer; color: #333; line-height: 1.2; }
-        .chk-label input[type="checkbox"] { width: auto; margin: 0; margin-top: 2px; cursor: pointer; }
-
-        label { font-size: 0.8rem; font-weight: bold; display: block; margin-top: 8px; color: #444; }
-        input, select { width: 100%; padding: 8px; margin-top: 2px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
+        .nc-box { background: #fff; border: 1px dashed #dc2626; padding: 10px; border-radius: 6px; margin-top: 8px; }
+        .nc-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.8rem; color: #dc2626; margin-bottom: 6px; }
+        .checklist-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+        .chk-label { font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
         
-        .photo-area { margin-top: 10px; padding: 10px; background: #fff; border: 1px dashed var(--border); border-radius: 6px; text-align: center; }
-        .photo-gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-        .photo-container { position: relative; width: 75px; height: 75px; }
-        .photo-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; border: 1px solid #ccc; }
-        .btn-remove-photo { position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; cursor: pointer; font-weight: bold; line-height: 20px; text-align: center; }
-
-        .btn-add-nc { background: #007bff; color: white; border: none; padding: 10px 12px; border-radius: 5px; font-weight: bold; font-size: 0.85rem; margin-top: 10px; cursor: pointer; width: 100%; }
-        .btn-export { width: 100%; padding: 15px; background: #17a2b8; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
-        .btn-whatsapp { width: 100%; padding: 12px; background: #25d366; color: white; font-size: 0.95rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-next-unit { width: 100%; padding: 14px; background: #28a745; color: #fff; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: none; }
-
-        .accordion { width: 100%; padding: 12px; background: #eef4fa; border: 1px solid #b8daff; border-radius: 6px; font-weight: bold; color: var(--primary); text-align: left; margin-top: 10px; cursor: pointer; }
-        .content { display: none; padding-top: 10px; }
-
-        .legend-box { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: 0.75rem; justify-content: center; }
-        .legend-item { display: flex; align-items: center; gap: 4px; background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; }
-        .legend-dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-
-        .device-info-box { background: #eef6ff; border: 1px solid #b8daff; padding: 10px; border-radius: 6px; font-size: 0.8rem; margin-top: 8px; color: #004a8f; }
-
-        .history-card { background: #fff; border: 1px solid #ddd; border-left: 5px solid var(--primary); border-radius: 6px; padding: 12px; margin-bottom: 12px; font-size: 0.85rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .history-card.latest { border-left-color: var(--success); background: #f4fff6; border-top: 2px solid var(--success); }
-
-        .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; }
-        .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; text-align: center; }
-        .kpi-card h5 { font-size: 0.72rem; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
-        .kpi-card .kpi-num { font-size: 1.3rem; font-weight: bold; color: #0f172a; }
-
-        .bar-container { background: #e2e8f0; border-radius: 4px; height: 14px; width: 100%; overflow: hidden; margin-top: 4px; }
-        .bar-fill { background: var(--primary); height: 100%; transition: width 0.3s; }
+        .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.82rem; }
+        label { font-size: 0.75rem; font-weight: bold; color: #475569; display: block; margin-bottom: 3px; }
         
-        .badge-alta { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
-        .badge-media { background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
-        .badge-baixa { background: #e0f2fe; color: #075985; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
-        /* Ajuste de responsividade para celular no Calendário e Lista de Atividades */
+        .photo-area { margin-top: 8px; border-top: 1px solid #eee; padding-top: 6px; }
+        .photo-gallery { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .photo-container { position: relative; width: 60px; height: 60px; }
+        .photo-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
+        .btn-remove-photo { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; }
 
-/* 1. Header do FullCalendar em telas pequenas */
-.fc-header-toolbar {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-    justify-content: center !important;
-    margin-bottom: 10px !important;
-}
+        .btn-main { width: 100%; padding: 14px; background: #0891b2; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        .btn-add-nc { width: 100%; padding: 8px; background: #64748b; color: white; border: none; border-radius: 4px; font-size: 0.8rem; margin-top: 6px; cursor: pointer; }
+        
+        .kpi-container { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .kpi-card { background: white; padding: 12px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .kpi-num { font-size: 1.4rem; font-weight: bold; margin-top: 5px; }
 
-.fc-toolbar-chunk {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-.fc-toolbar-title {
-    font-size: 1.1rem !important;
-    text-align: center;
-}
-
-.fc-button {
-    padding: 4px 8px !important;
-    font-size: 0.75rem !important;
-}
-
-/* 2. Ajuste fino nas tags do calendário para não cortar o texto */
-.fc-event-title {
-    font-size: 0.68rem !important;
-    font-weight: bold !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    padding: 0 2px !important;
-}
-
-/* 3. Estilização responsiva dos cards da Lista Cronológica */
-.activity-card {
-    display: flex;
-    flex-direction: column; /* Empilha no mobile para não espremer */
-    gap: 6px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    padding: 10px 12px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    font-size: 0.82rem;
-    cursor: pointer;
-    transition: transform 0.15s ease;
-}
-
-@media (min-width: 600px) {
-    .activity-card {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
-}
-
-.activity-badge {
-    display: inline-block;
-    padding: 3px 6px;
-    border-radius: 4px;
-    font-size: 0.72rem;
-    font-weight: bold;
-    color: #fff;
-    white-space: nowrap;
-    margin-right: 6px;
-}
-
-.activity-dates {
-    font-size: 0.75rem;
-    color: #64748b;
-    background: #f8fafc;
-    padding: 6px 8px;
-    border-radius: 4px;
-    border: 1px solid #f1f5f9;
-}
+        .badge-resp { display: inline-block; padding: 3px 8px; border-radius: 12px; color: white; font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; }
     </style>
-
-    <!-- SDKs do Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-<div class="container" id="app-content">
-    <header class="no-print">
+    <div class="header">
         <h2>Vistoria Interna de Obra</h2>
-        <p style="font-size:0.8rem;">Controle Técnico de Qualidade & Nuvem Pro</p>
-    </header>
-
-    <!-- Navegação por Abas -->
-    <div class="nav-tabs no-print">
-        <button class="tab-btn active" id="tab-vistorias-btn" onclick="switchTab('vistorias')">📝 Vistorias</button>
-        <button class="tab-btn" id="tab-mapa-btn" onclick="switchTab('mapa')">📊 Mapa & Indicadores</button>
-        <button class="tab-btn" id="tab-cronograma-btn" onclick="switchTab('cronograma')">📅 Cronograma / Calendário</button>
+        <small>Controle Técnico de Qualidade & Nuvem Pro</small>
     </div>
 
-    <!-- ABA 1: VISTORIAS -->
-    <div id="tab-vistorias" class="no-print">
-        <div id="inspector-card" class="card">
-            <h3>👤 Identificação do Vistoriador</h3>
-            <div style="margin-top: 10px;">
-                <label for="inspector-name"><strong>Nome Completo do Engenheiro / Vistoriador:</strong></label>
-                <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha">
-            </div>
-            
-            <div style="margin-top: 15px; background: #eef6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px;">
-                <div class="device-info-box" id="device-info-text">📱 <strong>Dispositivo Detectado</strong></div>
-            </div>
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-vistorias-btn" onclick="switchTab('vistorias')">📝 Vistorias</button>
+        <button class="tab-btn" id="tab-mapa-btn" onclick="switchTab('mapa')">📊 Mapa & Indicadores</button>
+        <button class="tab-btn" id="tab-cronograma-btn" onclick="switchTab('cronograma')">📅 Cronograma</button>
+    </div>
 
-            <button onclick="confirmInspector()" style="width: 100%; margin-top: 15px; background: #28a745; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer;">
-                Confirmar & Iniciar Vistoria ✓
-            </button>
+    <!-- TAB 1: VISTORIAS -->
+    <div id="tab-vistorias">
+        <div class="card" id="inspector-card">
+            <h3>👤 Identificação do Vistoriador</h3>
+            <label style="margin-top:8px;">Nome Completo do Engenheiro / Vistoriador:</label>
+            <input type="text" id="inspector-name" placeholder="Ex: Eng. Bruno Lamenha">
+            <div id="device-info-text" style="margin-top:8px; font-size:0.8rem; color:#666;"></div>
+            <button class="btn-main" style="background:#16a34a;" onclick="confirmInspector()">Confirmar & Iniciar Vistoria ✓</button>
         </div>
 
         <div class="card" id="floor-card" style="display:none;">
             <h3>1. Selecione o Pavimento</h3>
-            <div class="grid" id="floors">
+            <div class="btn-group" id="floors">
                 <div class="btn" onclick="setFloor(1, this)">1º Pav</div>
                 <div class="btn" onclick="setFloor(2, this)">2º Pav</div>
                 <div class="btn" onclick="setFloor(3, this)">3º Pav</div>
@@ -224,946 +94,860 @@
 
         <div class="card" id="unit-card" style="display:none;">
             <h3>2. Selecione a Unidade</h3>
-            <div class="grid" id="units"></div>
-            <div class="legend-box">
-                <div class="legend-item"><div class="legend-dot" style="background:#28a745;"></div> 100% OK</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#dc3545;"></div> Com Pendência</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#eee; border:1px solid #ccc;"></div> Não Vistoriado</div>
-            </div>
+            <div class="btn-group" id="units"></div>
         </div>
 
         <div class="card" id="type-card" style="display:none;">
-            <h3>3. Configuração do Acompanhamento</h3>
-            <div id="category-selection-container">
-                <label>Tipo de Vistoria:</label>
-                <div class="grid-two">
-                    <div class="btn-opt" id="btn-cat-padrao" onclick="setCategory('Padrão (Construtora)', this)">🏗️ Padrão</div>
-                    <div class="btn-opt" id="btn-cat-reforma" onclick="setCategory('Reforma', this)">🔨 Reforma</div>
-                </div>
+            <h3>3. Tipo de Vistoria</h3>
+            <div style="display:flex; gap:10px; margin-top:8px;" id="category-selection-container">
+                <button class="tab-btn btn-opt" id="btn-cat-padrao" onclick="setCategory('Padrão (Construtora)', this)">Padrão Construtora</button>
+                <button class="tab-btn btn-opt" id="btn-cat-reforma" onclick="setCategory('Reforma / Aditivo', this)">Reforma / Aditivo</button>
             </div>
-
-            <div id="stage-selection-container" style="margin-top:12px;">
-                <label>Etapa / Ciclo de Inspeção (Sugerido pelo Histórico):</label>
-                <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; font-weight: bold; color: var(--primary); text-align: center; margin-top: 5px;" id="suggested-stage-box">
-                    ---
-                </div>
-            </div>
+            <div id="suggested-stage-box" style="margin-top:10px; font-size:0.85rem; color:#004a8f;"></div>
         </div>
 
         <div id="inspection-area" style="display:none;">
-            <div class="card" style="background: var(--primary); color: white;">
-                <h3 id="unit-title">Unidade: ---</h3>
+            <div class="card" style="background:#004a8f; color:white;">
+                <h3 id="unit-title">Unidade</h3>
             </div>
 
             <div class="card">
-                <button class="accordion" onclick="toggle('room-dorm')">Dormitório / Cozinha</button>
-                <div class="content" id="room-dorm"></div>
+                <h4 style="color:#004a8f; margin-bottom:10px;">Dormitório / Cozinha</h4>
+                <div id="room-dorm"></div>
             </div>
 
             <div class="card">
-                <button class="accordion" onclick="toggle('room-bath')">Banheiro</button>
-                <div class="content" id="room-bath"></div>
+                <h4 style="color:#004a8f; margin-bottom:10px;">Banheiro</h4>
+                <div id="room-bath"></div>
             </div>
 
             <div class="card">
-                <button class="accordion" onclick="toggle('room-balcony')">Varanda</button>
-                <div class="content" id="room-balcony"></div>
+                <h4 style="color:#004a8f; margin-bottom:10px;">Varanda</h4>
+                <div id="room-balcony"></div>
             </div>
 
-            <button class="btn-export" onclick="generateTechnicalPDF()">📄 Finalizar & Salvar Vistoria</button>
-            <button class="btn-whatsapp" onclick="sendWhatsAppSummary()">📲 Enviar Resumo das Pendências por WhatsApp</button>
-            <button class="btn-next-unit" id="btn-next" onclick="startNextUnit()">➡️ Próxima Unidade</button>
+            <button class="btn-main" onclick="generateTechnicalPDF()">📄 Finalizar & Salvar Vistoria</button>
+            <button class="btn-main" id="btn-next" style="background:#16a34a; display:none; margin-top:8px;" onclick="sendWhatsAppSummary()">📲 Enviar Resumo WhatsApp</button>
         </div>
     </div>
 
-    <!-- ABA 2: MAPA GERAL DA OBRA & INDICADORES -->
-    <div id="tab-mapa" class="no-print" style="display:none;">
+    <!-- TAB 2: MAPA E INDICADORES -->
+    <div id="tab-mapa" style="display:none;">
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <small>UNIDADES VISTORIADAS</small>
+                <div class="kpi-num" id="unidades-vistoriadas" style="color:#004a8f;">0 / 76</div>
+            </div>
+            <div class="kpi-card">
+                <small>APROVADAS</small>
+                <div class="kpi-num" id="unidades-aprovadas" style="color:#16a34a;">0</div>
+            </div>
+            <div class="kpi-card">
+                <small>PENDÊNCIAS ABERTAS</small>
+                <div class="kpi-num" id="pendencias-abertas" style="color:#dc2626;">0</div>
+            </div>
+        </div>
+
+        <button class="btn-main" style="background:#16a34a; margin-bottom:12px;" onclick="exportToExcelXLSX()">📊 Baixar Dados em Excel (.xlsx)</button>
+
         <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-                <h3>📊 Dashboard & Qualidade da Obra</h3>
-                <button onclick="exportToExcelXLSX()" style="background:#16a34a; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; font-size:0.8rem; cursor:pointer;">
-                    📊 Baixar Dados em Excel (.xlsx)
-                </button>
-            </div>
-
-            <div class="kpi-container">
-                <div class="kpi-card"><h5>Unidades Vistoriadas</h5><div class="kpi-num" id="kpi-inspected">0 / 76</div></div>
-                <div class="kpi-card"><h5>Aprovadas (100% OK)</h5><div class="kpi-num" id="kpi-approved" style="color:#16a34a;">0</div></div>
-                <div class="kpi-card"><h5>Pendências Abertas</h5><div class="kpi-num" id="kpi-pending" style="color:#dc2626;">0</div></div>
-            </div>
-
-            <div style="margin-top: 15px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
-                <h4 style="font-size:0.85rem; color:var(--primary); margin-bottom:10px;">🔥 Top Não Conformidades Mais Recorrentes na Obra</h4>
-                <div id="top-nc-container">
-                    <p style="font-size:0.8rem; color:#666;">Nenhuma pendência registrada ainda.</p>
-                </div>
-            </div>
-
-            <div style="margin-top: 15px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
-                <h4 style="font-size:0.85rem; color:var(--primary); margin-bottom:10px;">👷‍♂️ Fila de Pendências por Responsável (Ordenado por Gravidade > Tempo)</h4>
-                <div id="resp-priority-container">
-                    <p style="font-size:0.8rem; color:#666;">Nenhuma pendência ativa para exibição.</p>
-                </div>
-            </div>
-
-            <h4 style="font-size:0.85rem; color:var(--primary); margin-top:20px; margin-bottom:8px;">🗺️ Visão Geral dos Pavimentos</h4>
-            <div id="map-container"></div>
+            <h4>🔥 Top Não Conformidades Mais Recorrentes na Obra</h4>
+            <div id="top-nc-list" style="margin-top:10px;">Nenhuma pendência registrada ainda.</div>
         </div>
 
-        <div class="card" id="history-panel" style="display:none; background:#f8fafc; border:2px solid var(--primary);">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 id="history-unit-title">Histórico: Apto ---</h3>
-                <button onclick="closeHistory()" style="padding:4px 8px; background:#dc3545; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">Fechar ✕</button>
-            </div>
-            <div id="history-content" style="margin-top:12px;"></div>
-        </div>
-    </div>
-
-    <!-- ABA 3: CRONOGRAMA & CALENDÁRIO INTERATIVO -->
-    <div id="tab-cronograma" class="no-print" style="display:none;">
         <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                <h3>📅 Cronograma de Ações & Calendário</h3>
-                
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <label style="margin:0; font-size:0.78rem;">Filtrar Responsável:</label>
-                    <select id="calendar-resp-filter" onchange="renderInteractiveCalendar()" style="padding:4px 8px; font-size:0.78rem; width:auto;">
-                        <option value="TODOS">Todos os Responsáveis</option>
-                        <option value="Pintura / Emassamento">Pintura / Emassamento</option>
-                        <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
-                        <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
-                        <option value="Eletricista">Eletricista</option>
-                        <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
-                        <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
-                        <option value="Piso e Revestimento">Piso e Revestimento</option>
-                        <option value="Gesso / Sancas">Gesso / Sancas</option>
-                    </select>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 300px; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px;" id="external-events-container">
-                    <h4 style="font-size: 0.85rem; color: #004a8f; margin-bottom: 8px;">⏳ Gestão de Prazos das Pendências</h4>
-                    <div id="unassigned-tasks-list"></div>
-                </div>
-
-                <div style="flex: 3; min-width: 320px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
-                    <div id="calendar"></div>
-                    <div style="margin-top: 20px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
-    <h4 style="font-size: 0.88rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-        📋 Lista Cronológica de Atividades Agendadas
-    </h4>
-    <div id="scheduled-activities-list">
-        <p style="font-size:0.8rem; color:#666;">Nenhuma atividade agendada.</p>
-    </div>
-</div>
-                </div>
-            </div>
+            <h4>👷 Fila de Pendências por Responsável</h4>
+            <div id="resp-queue-list" style="margin-top:10px;">Nenhuma pendência ativa para exibição.</div>
         </div>
     </div>
-</div>
 
-<!-- LIBS EXTERNAS E FIREBASE COMPAT (GARANTE EXIBIÇÃO DOS ITENS E FUNCIONAMENTO DOS BOTÕES) -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <!-- TAB 3: CRONOGRAMA -->
+    <div id="tab-cronograma" style="display:none;">
+        <div class="card">
+            <label>Filtrar Responsável:</label>
+            <select id="calendar-resp-filter" onchange="renderInteractiveCalendar()">
+                <option value="TODOS">Todos os Responsáveis</option>
+                <option value="Pintura / Emassamento">Pintura / Emassamento</option>
+                <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
+                <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
+                <option value="Eletricista">Eletricista</option>
+                <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
+                <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
+                <option value="Piso e Revestimento">Piso e Revestimento</option>
+                <option value="Gesso / Sancas">Gesso / Sancas</option>
+            </select>
+        </div>
+        <div class="card">
+            <div id="calendar"></div>
+        </div>
+        <div class="card">
+            <h4>📋 Atividades Agendadas</h4>
+            <div id="scheduled-activities-list" style="margin-top:10px;"></div>
+        </div>
+    </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyBqtptEp5QjIOoAjwx0wT--cswUhSvcsGM",
+          authDomain: "vistoria-obra.firebaseapp.com",
+          projectId: "vistoria-obra",
+          storageBucket: "vistoria-obra.firebasestorage.app",
+          messagingSenderId: "269277062191",
+          appId: "1:269277062191:web:ab9a9d404129df66cd12da",
+          measurementId: "G-GP1QQVWR50"
+        };
 
-<script>
-    // Configuração do Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyBqtptEp5QjIOoAjwx0wT--cswUhSvcsGM",
-      authDomain: "vistoria-obra.firebaseapp.com",
-      projectId: "vistoria-obra",
-      storageBucket: "vistoria-obra.firebasestorage.app",
-      messagingSenderId: "269277062191",
-      appId: "1:269277062191:web:ab9a9d404129df66cd12da",
-      measurementId: "G-GP1QQVWR50"
-    };
-
-    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-
-    const TOTAL_UNIDADES = 76;
-
-    const roomNames = {
-        'room-dorm': 'Dormitório / Cozinha',
-        'room-bath': 'Banheiro',
-        'room-balcony': 'Varanda'
-    };
-
-    const respColors = {
-        "Pintura / Emassamento": "#2563eb",
-        "Marmoraria / Graniteiro": "#7c3aed",
-        "Instalações Hidráulicas": "#0284c7",
-        "Eletricista": "#d97706",
-        "Marcenaria / Portas de Madeira": "#78350f",
-        "Esquadrias de Alumínio / Vidros": "#475569",
-        "Piso e Revestimento": "#059669",
-        "Gesso / Sancas": "#db2777",
-        "Serralharia / Portões": "#525252",
-        "Impermeabilização": "#0891b2",
-        "Limpeza Pós-Obra": "#16a34a",
-        "Gás Encanado": "#ea580c"
-    };
-
-    const checklist = [
-        { id: "eletrica", name: "1. Tubulações, Tomadas, Interruptores e Luminárias", cleanName: "Instalações Elétricas e Iluminação", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Adicionar ou Retirar Módulo", "Adicionar ou Retirar Ponto", "Ponto Sem Energia / Fio Solto", "Luminária Não Liga / Danificada", "Quadro de Disjuntores Incompleto", "Outros"] },
-        { id: "hidra", name: "2. Tubulações, Louças, Metais e Sifão", cleanName: "Instalações Hidráulicas e Louças/Metais", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Instalar Torneira e Engate", "Instalar Grelha e Porta Grelha", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
-        { id: "gesso", name: "3. Forro e Sancas de Gesso", cleanName: "Gesso e Sancas", options: ["Fissura / Trinca na Chapa ou Junta", "Desnível / Placa Oca / Abulada", "Falta Tabica / Junta de Dilatação Deficiente", "Abertura / Recorte Incorreto para Luminária", "Marcas de Parafuso / Rebarbas Expostas", "Falta Emassamento / Rejunte no Gesso", "Umidade / Mofo / Mancha amarelada", "Outros"] },
-        { id: "ac", name: "4. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura de Climatização", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] },
-        { id: "piso", name: "5. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
-        { id: "bancada", name: "6. Bancadas, Soleiras e Peitoris", cleanName: "Marmoraria / Bancadas e Soleiras", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
-        { id: "esquadria", name: "7. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias e Vidraçaria", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
-        { id: "portas", name: "8. Portas de Madeira e Alizares", cleanName: "Esquadrias de Madeira", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
-        { id: "pintura", name: "9. Emassamento, Lixamento e Pintura", cleanName: "Pintura e Acabamento de Parede/Teto", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] }
-    ];
-
-    var pendingNCs = {};
-    let selectedFloorNum = null;
-    let selectedUnitNum = null;
-    let selectedCategory = "";
-    let selectedStage = "";
-    let inspectorName = "";
-    let deviceDetails = "";
-    let dbUnitsCache = {};
-    let fullCalendarInstance = null;
-
-    window.onload = function() {
-        try { detectDevice(); } catch(e) { console.warn(e); }
-        try { loadAllUnitsData(); } catch(e) { console.warn(e); }
-    };
-
-    function detectDevice() {
-        let deviceId = "DEV-LOCAL";
-        try {
-            deviceId = localStorage.getItem('vistoria_device_id') || 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-            localStorage.setItem('vistoria_device_id', deviceId);
-        } catch (e) {}
-
-        deviceDetails = "Android | ID: " + deviceId;
-        
-        const infoEl = document.getElementById('device-info-text');
-        if (infoEl) {
-            infoEl.innerHTML = "📱 <strong>Dispositivo Detectado</strong><br>🆔 Código Único: <strong>" + deviceId + "</strong>";
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
+        const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
 
-        try {
+        const TOTAL_UNIDADES = 76;
+
+        const roomNames = {
+            'room-dorm': 'Dormitório / Cozinha',
+            'room-bath': 'Banheiro',
+            'room-balcony': 'Varanda'
+        };
+
+        const respColors = {
+            "Pintura / Emassamento": "#2563eb",
+            "Marmoraria / Graniteiro": "#7c3aed",
+            "Instalações Hidráulicas": "#0284c7",
+            "Eletricista": "#d97706",
+            "Marcenaria / Portas de Madeira": "#78350f",
+            "Esquadrias de Alumínio / Vidros": "#475569",
+            "Piso e Revestimento": "#059669",
+            "Gesso / Sancas": "#db2777",
+            "Serralharia / Portões": "#525252",
+            "Impermeabilização": "#0891b2",
+            "Limpeza Pós-Obra": "#16a34a",
+            "Gás Encanado": "#ea580c"
+        };
+
+        const checklist = [
+            { id: "eletrica", name: "1. Tubulações, Tomadas, Interruptores e Luminárias", cleanName: "Instalações Elétricas e Iluminação", options: ["Espelho Torto / Descaixado", "Sem Espelho / Módulo", "Adicionar ou Retirar Módulo", "Adicionar ou Retirar Ponto", "Ponto Sem Energia / Fio Solto", "Luminária Não Liga / Danificada", "Quadro de Disjuntores Incompleto", "Outros"] },
+            { id: "hidra", name: "2. Tubulações, Louças, Metais e Sifão", cleanName: "Instalações Hidráulicas e Louças/Metais", options: ["Vazamento / Gotejamento", "Sifão Sem Vedação", "Instalar Torneira e Engate", "Instalar Grelha e Porta Grelha", "Peça Arranhada / Amassada", "Falta Acabamento de Registro", "Vaso Sanitário Solto", "Descarga Sem Funcionamento", "Outros"] },
+            { id: "gesso", name: "3. Forro e Sancas de Gesso", cleanName: "Gesso e Sancas", options: ["Fissura / Trinca na Chapa ou Junta", "Desnível / Placa Oca / Abulada", "Falta Tabica / Junta de Dilatação Deficiente", "Abertura / Recorte Incorreto para Luminária", "Marcas de Parafuso / Rebarbas Expostas", "Falta Emassamento / Rejunte no Gesso", "Umidade / Mofo / Mancha amarelada", "Outros"] },
+            { id: "ac", name: "4. Infraestrutura / Aparelho Ar-Condicionado", cleanName: "Infraestrutura de Climatização", options: ["Dreno Entupido / Sem Vazão", "Falta Ponto Elétrico", "Carga Sem Pressão", "Tubulação Exposta", "Outros"] },
+            { id: "piso", name: "5. Contrapiso, Revestimentos e Rodapés", cleanName: "Contrapiso e Revestimentos Cerâmicos/Porcelanato", options: ["Peça Oca / Solta", "Junta Desalinhada", "Caimento Incorreto (Poça)", "Rodapé Solto / Danificado", "Falta Rejunte no Piso", "Piso Riscado / Manchado", "Outros"] },
+            { id: "bancada", name: "6. Bancadas, Soleiras e Peitoris", cleanName: "Marmoraria / Bancadas e Soleiras", options: ["Peça Trincada / Bicada", "Falta de Rejunte / Silicone", "Falta Rodamão / Espelho", "Desnível / Fora de Prumo", "Mancha no Granito", "Outros"] },
+            { id: "esquadria", name: "7. Esquadrias de Alumínio, Vidros e Vedações", cleanName: "Esquadrias e Vidraçaria", options: ["Vidro Riscado / Trincado", "Falta Vedação de Silicone", "Trilho / Roldana Travando", "Fecho / Trava Danificada", "Guarda-Corpo Desancorado", "Outros"] },
+            { id: "portas", name: "8. Portas de Madeira e Alizares", cleanName: "Esquadrias de Madeira", options: ["Porta Raspando no Piso/Marco", "Fechadura / Maçaneta Ruim", "Alizar Descolando / Fora de Prumo", "Falta Pintura / Verniz", "Porta Empenada", "Outros"] },
+            { id: "pintura", name: "9. Emassamento, Lixamento e Pintura", cleanName: "Pintura e Acabamento de Parede/Teto", options: ["Falta Emassamento", "Falta Lixamento / Imperfeição", "Falta 1ª Demão", "Falta 2ª Demão / Pintura Final", "Mancha / Desbotamento", "Recorte Mal Feito", "Fissura / Trinca", "Sujeira / Tinta Escorrida", "Outros"] }
+        ];
+
+        var pendingNCs = {};
+        let selectedFloorNum = null;
+        let selectedUnitNum = null;
+        let selectedCategory = "";
+        let selectedStage = "";
+        let inspectorName = "";
+        let dbUnitsCache = {};
+        let fullCalendarInstance = null;
+
+        window.onload = function() {
+            detectDevice();
+            loadAllUnitsData();
+        };
+
+        function detectDevice() {
+            let deviceId = localStorage.getItem('vistoria_device_id') || 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            localStorage.setItem('vistoria_device_id', deviceId);
+            const infoEl = document.getElementById('device-info-text');
+            if (infoEl) infoEl.innerHTML = "📱 Dispositivo: <strong>" + deviceId + "</strong>";
+
             const localName = localStorage.getItem('vistoria_inspector_name');
             const nameInput = document.getElementById('inspector-name');
             if (localName && nameInput) nameInput.value = localName;
-        } catch (e) {}
-    }
-
-    function confirmInspector() {
-        const inputEl = document.getElementById('inspector-name');
-        const nameInput = inputEl ? inputEl.value.trim() : '';
-        
-        if (!nameInput) { 
-            alert('Por favor, informe o nome do vistoriador.'); 
-            return; 
         }
 
-        inspectorName = nameInput;
-        try { localStorage.setItem('vistoria_inspector_name', nameInput); } catch (e) {}
+        function confirmInspector() {
+            const nameInput = document.getElementById('inspector-name').value.trim();
+            if (!nameInput) { alert('Informe o nome do vistoriador.'); return; }
 
-        const card = document.getElementById('inspector-card');
-        if (card) {
-            card.style.background = '#eef6ff';
-            card.innerHTML = `
+            inspectorName = nameInput;
+            localStorage.setItem('vistoria_inspector_name', nameInput);
+
+            document.getElementById('inspector-card').innerHTML = `
                 <h3>👤 Responsável Confirmado</h3>
-                <p style="font-size:0.9rem; margin-top:5px;"><strong>Vistoriador:</strong> ${inspectorName}</p>
+                <p style="margin-top:5px; color:#004a8f;"><strong>Vistoriador:</strong> ${inspectorName}</p>
             `;
+            document.getElementById('floor-card').style.display = 'block';
         }
 
-        const floorCard = document.getElementById('floor-card');
-        if (floorCard) {
-            floorCard.style.display = 'block';
-            floorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }
+        function loadAllUnitsData() {
+            try {
+                const localData = localStorage.getItem('vistorias_db');
+                if (localData) {
+                    dbUnitsCache = JSON.parse(localData);
+                    updateDashboardData();
+                }
+            } catch (e) {}
 
-    function loadAllUnitsData() {
-        try {
-            const localData = localStorage.getItem('vistorias_db');
-            if (localData) {
-                dbUnitsCache = JSON.parse(localData);
-                updateDashboardData();
-            }
-        } catch (e) {}
-
-        if (db && db.collection) {
-            db.collection('vistorias').get().then(snapshot => {
-                snapshot.forEach(doc => {
-                    dbUnitsCache[doc.id] = doc.data().history || [];
-                });
-                try { localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache)); } catch (e) {}
-                updateDashboardData();
-            }).catch(err => console.log("Carregando localmente"));
-        }
-    }
-
-    function addBusinessDays(dateStr, days) {
-        if (!dateStr || isNaN(days) || days <= 0) return null;
-        let date = new Date(dateStr + 'T00:00:00');
-        let added = 0;
-        while (added < days) {
-            date.setDate(date.getDate() + 1);
-            if (date.getDay() !== 0 && date.getDay() !== 6) {
-                added++;
+            if (db && db.collection) {
+                db.collection('vistorias').get().then(snapshot => {
+                    snapshot.forEach(doc => { dbUnitsCache[doc.id] = doc.data().history || []; });
+                    localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
+                    updateDashboardData();
+                }).catch(err => console.log("Carregado via LocalStorage"));
             }
         }
-        return date.toLocaleDateString('pt-BR');
-    }
 
-    function setFloor(f, el) {
-        selectedFloorNum = f;
-        document.querySelectorAll('#floors .btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-        
-        const u = document.getElementById('units');
-        if (!u) return;
-        u.innerHTML = '';
-        
-        for (let i = 1; i <= 19; i++) {
-            let num = (f * 100) + i;
-            const historyKey = `unit_${num}`;
-            const existingHistory = dbUnitsCache[historyKey] || [];
-            
-            let statusClass = '';
-            if (existingHistory.length > 0) {
-                const lastInsp = existingHistory[existingHistory.length - 1];
-                statusClass = (lastInsp.pendenciesCount === 0 || lastInsp.status === '100_ok') ? 'unit-ok' : 'unit-nok';
+        function addBusinessDays(dateStr, days) {
+            if (!dateStr || isNaN(days) || days <= 0) return null;
+            let date = new Date(dateStr + 'T00:00:00');
+            let added = 0;
+            while (added < days) {
+                date.setDate(date.getDate() + 1);
+                if (date.getDay() !== 0 && date.getDay() !== 6) added++;
+            }
+            return date.toLocaleDateString('pt-BR');
+        }
+
+        function setFloor(f, el) {
+            selectedFloorNum = f;
+            document.querySelectorAll('#floors .btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+
+            const u = document.getElementById('units');
+            u.innerHTML = '';
+
+            for (let i = 1; i <= 19; i++) {
+                let num = (f * 100) + i;
+                const historyKey = `unit_${num}`;
+                const existingHistory = dbUnitsCache[historyKey] || [];
+                let statusClass = '';
+
+                if (existingHistory.length > 0) {
+                    const lastInsp = existingHistory[existingHistory.length - 1];
+                    statusClass = (lastInsp.pendenciesCount === 0 || lastInsp.status === '100_ok') ? 'unit-ok' : 'unit-nok';
+                }
+                u.innerHTML += `<div class="btn ${statusClass}" onclick="selectUnit(${num}, this)">${num}</div>`;
             }
 
-            u.innerHTML += `<div class="btn ${statusClass}" onclick="selectUnit(${num}, this)">${num}</div>`;
+            document.getElementById('unit-card').style.display = 'block';
+            document.getElementById('type-card').style.display = 'none';
+            document.getElementById('inspection-area').style.display = 'none';
         }
 
-        const unitCard = document.getElementById('unit-card');
-        if (unitCard) unitCard.style.display = 'block';
-        const typeCard = document.getElementById('type-card');
-        if (typeCard) typeCard.style.display = 'none';
-        const inspArea = document.getElementById('inspection-area');
-        if (inspArea) inspArea.style.display = 'none';
-    }
+        function selectUnit(u, el) {
+            selectedUnitNum = u;
+            document.querySelectorAll('#units .btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
 
-    function selectUnit(u, el) {
-        selectedUnitNum = u;
-        document.querySelectorAll('#units .btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-        
-        const typeCard = document.getElementById('type-card');
-        if (typeCard) typeCard.style.display = 'block';
-        const inspArea = document.getElementById('inspection-area');
-        if (inspArea) inspArea.style.display = 'none';
-
-        if (selectedCategory) {
-            let catBtn = selectedCategory.includes('Reforma') ? document.getElementById('btn-cat-reforma') : document.getElementById('btn-cat-padrao');
-            if (catBtn) setCategory(selectedCategory, catBtn, true);
-        }
-    }
-
-    function setCategory(cat, el, isAuto = false) {
-        if (selectedCategory && selectedCategory !== cat && !isAuto) {
-            const confirmChange = confirm(`Mudar o tipo para ${cat}? Isso iniciará o ciclo a partir da 1ª Vistoria.`);
-            if (!confirmChange) return;
+            document.getElementById('type-card').style.display = 'block';
+            document.getElementById('inspection-area').style.display = 'none';
         }
 
-        selectedCategory = cat;
-        document.querySelectorAll('#category-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
+        function setCategory(cat, el) {
+            selectedCategory = cat;
+            document.querySelectorAll('#category-selection-container .btn-opt').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
 
-        calculateNextStage();
-    }
+            const historyKey = `unit_${selectedUnitNum}`;
+            const history = dbUnitsCache[historyKey] || [];
+            selectedStage = history.length === 0 ? "1ª Vistoria" : `${history.length}ª Revistoria`;
 
-    function calculateNextStage() {
-        const historyKey = `unit_${selectedUnitNum}`;
-        const history = dbUnitsCache[historyKey] || [];
-        const sameCatHistory = history.filter(h => h.category === selectedCategory);
+            document.getElementById('suggested-stage-box').innerHTML = `🔄 Etapa: <strong>${selectedStage}</strong>`;
+            document.getElementById('unit-title').innerText = `Unidade: Apto ${selectedUnitNum} (${selectedCategory} - ${selectedStage})`;
+            document.getElementById('inspection-area').style.display = 'block';
 
-        if (sameCatHistory.length === 0) {
-            selectedStage = "1ª Vistoria";
-        } else {
-            selectedStage = `${sameCatHistory.length}ª Revistoria`;
-        }
-
-        const stageBox = document.getElementById('suggested-stage-box');
-        if (stageBox) stageBox.innerHTML = `🔄 <strong>${selectedStage}</strong> (Calculado pelo Histórico)`;
-        checkAndShowInspection();
-    }
-
-    function checkAndShowInspection() {
-        if (selectedCategory && selectedStage) {
-            const titleEl = document.getElementById('unit-title');
-            if (titleEl) titleEl.innerText = `Unidade: Apto ${selectedUnitNum} (${selectedCategory} - ${selectedStage})`;
-            
-            const inspArea = document.getElementById('inspection-area');
-            if (inspArea) inspArea.style.display = 'block';
-            
             loadPreviousActivePendencies();
             buildInspectionForm();
         }
-    }
 
-    function loadPreviousActivePendencies() {
-        pendingNCs = {};
-        const historyKey = `unit_${selectedUnitNum}`;
-        const history = dbUnitsCache[historyKey] || [];
-        if (history.length === 0) return;
+        function loadPreviousActivePendencies() {
+            pendingNCs = {};
+            const historyKey = `unit_${selectedUnitNum}`;
+            const history = dbUnitsCache[historyKey] || [];
+            if (history.length === 0) return;
 
-        const lastInsp = history[history.length - 1];
-        if (!lastInsp.details || lastInsp.details.length === 0) return;
+            const lastInsp = history[history.length - 1];
+            if (!lastInsp.details || lastInsp.details.length === 0) return;
 
-        lastInsp.details.forEach(d => {
-            if (d.status !== 'Concluído') {
-                let roomKey = Object.keys(roomNames).find(k => roomNames[k] === d.room) || 'room-dorm';
-                let itemObj = checklist.find(i => i.cleanName === d.item || i.name === d.item) || checklist[0];
-                let key = `${roomKey}_${itemObj.id}`;
+            lastInsp.details.forEach(d => {
+                if (d.status !== 'Concluído') {
+                    let roomKey = Object.keys(roomNames).find(k => roomNames[k] === d.room) || 'room-dorm';
+                    let itemObj = checklist.find(i => i.cleanName === d.item || i.name === d.item) || checklist[0];
+                    let key = `${roomKey}_${itemObj.id}`;
 
-                if (!pendingNCs[key]) pendingNCs[key] = [];
+                    if (!pendingNCs[key]) pendingNCs[key] = [];
 
-                let opts = [];
-                let obsText = '';
+                    let opts = [];
+                    let obsText = '';
 
-                if (d.nonConformity) {
-                    let parts = d.nonConformity.split(' (');
-                    opts = parts[0] ? parts[0].split(', ').map(s => s.trim()) : [];
-                    if (parts[1]) obsText = parts[1].replace(')', '').trim();
+                    if (d.nonConformity) {
+                        let parts = d.nonConformity.split(' (');
+                        opts = parts[0] ? parts[0].split(', ').map(s => s.trim()) : [];
+                        if (parts[1]) obsText = parts[1].replace(')', '').trim();
+                    }
+
+                    pendingNCs[key].push({
+                        id: d.id || Date.now(),
+                        selectedOpts: opts,
+                        obs: obsText,
+                        resp: d.responsible || '',
+                        respOther: '',
+                        startDate: d.scheduledFor || '',
+                        businessDays: d.businessDays || '',
+                        status: d.status || 'Aguardando',
+                        severity: d.severity || 'Baixa',
+                        photos: d.photos || []
+                    });
                 }
-
-                pendingNCs[key].push({
-                    id: d.id || Date.now(),
-                    selectedOpts: opts,
-                    obs: obsText,
-                    resp: d.responsible || '',
-                    respOther: '',
-                    startDate: d.scheduledFor || '',
-                    businessDays: d.businessDays || '',
-                    status: d.status || 'Aguardando',
-                    severity: d.severity || 'Baixa',
-                    photos: d.photos || []
-                });
-            }
-        });
-    }
-
-    function buildInspectionForm() {
-        ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
-            const container = document.getElementById(roomId);
-            if (!container) return;
-            container.innerHTML = '';
-
-            checklist.forEach(item => {
-                if (item.id === 'ac' && (roomId === 'room-bath' || roomId === 'room-balcony')) return;
-
-                const key = `${roomId}_${item.id}`;
-                if (!pendingNCs[key]) pendingNCs[key] = [];
-
-                let hasPending = pendingNCs[key].length > 0;
-                let ncBoxesHTML = renderNCBoxes(key, item);
-
-                let btnOkClass = 'btn-neutral';
-                let btnNokClass = hasPending ? 'btn-nok-active' : 'btn-neutral';
-
-                container.innerHTML += `
-                    <div class="item-card" id="card_${key}">
-                        <div class="item-header">
-                            <span class="item-title">${item.name}</span>
-                            <div>
-                                <button class="btn-status ${btnOkClass}" id="btn_ok_${key}" onclick="setItemStatus('${key}', 'OK', '${item.id}')">Conforme ✓</button>
-                                <button class="btn-status ${btnNokClass}" id="btn_nok_${key}" onclick="setItemStatus('${key}', 'NOK', '${item.id}')">Não Conforme ✕</button>
-                            </div>
-                        </div>
-                        <div id="nc_container_${key}">${ncBoxesHTML}</div>
-                        <button class="btn-add-nc" id="btn_add_${key}" style="display:${hasPending ? 'block' : 'none'};" onclick="addNC('${key}', '${item.id}')">+ Adicionar Outra Pendência Neste Item</button>
-                    </div>
-                `;
             });
-        });
-
-        Object.keys(pendingNCs).forEach(key => restaurarValoresInputs(key));
-    }
-
-    function renderNCBoxes(key, itemObj) {
-        if (!pendingNCs[key] || pendingNCs[key].length === 0) return '';
-
-        if (!itemObj) {
-            const lastUnderscoreIndex = key.lastIndexOf('_');
-            const itemId = key.substring(lastUnderscoreIndex + 1);
-            itemObj = checklist.find(i => i.id === itemId);
         }
 
-        if (!itemObj || !itemObj.options) return '';
+        function buildInspectionForm() {
+            ['room-dorm', 'room-bath', 'room-balcony'].forEach(roomId => {
+                const container = document.getElementById(roomId);
+                if (!container) return;
+                container.innerHTML = '';
 
-        return pendingNCs[key].map((nc, index) => {
-            const chkBoxes = itemObj.options.map(opt => `
-                <label class="chk-label">
-                    <input type="checkbox" class="chk_${key}_${index}" value="${opt}" onchange="salvarEstadoAtualInput('${key}')"> ${opt}
-                </label>
-            `).join('');
+                checklist.forEach(item => {
+                    if (item.id === 'ac' && roomId !== 'room-dorm') return;
+                    const key = `${roomId}_${item.id}`;
+                    if (!pendingNCs[key]) pendingNCs[key] = [];
 
-            return `
-                <div class="nc-box">
-                    <div class="nc-header">
-                        <span>PENDÊNCIA #${index + 1}</span>
-                        <div>
-                            <button class="btn-sanar" onclick="sanarNC('${key}', ${index}, '${itemObj.id}')">✓ Sanar / Concluir</button>
-                            <button class="btn-remove" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
+                    let hasPending = pendingNCs[key].length > 0;
+                    let btnOkClass = 'btn-neutral';
+                    let btnNokClass = hasPending ? 'btn-nok-active' : 'btn-neutral';
+
+                    container.innerHTML += `
+                        <div class="item-card" id="card_${key}">
+                            <div class="item-header">
+                                <span class="item-title">${item.name}</span>
+                                <div>
+                                    <button class="btn-status ${btnOkClass}" id="btn_ok_${key}" onclick="setItemStatus('${key}', 'OK', '${item.id}')">Conforme ✓</button>
+                                    <button class="btn-status ${btnNokClass}" id="btn_nok_${key}" onclick="setItemStatus('${key}', 'NOK', '${item.id}')">Não Conforme ✕</button>
+                                </div>
+                            </div>
+                            <div id="nc_container_${key}"></div>
+                            <button class="btn-add-nc" id="btn_add_${key}" style="display:${hasPending ? 'block' : 'none'};" onclick="addNC('${key}', '${item.id}')">+ Adicionar Pendência Neste Item</button>
                         </div>
-                    </div>
-                    <div class="checklist-group">${chkBoxes}</div>
-                    
-                    <div class="grid-two" style="margin-top: 5px;">
-                        <div>
-                            <label>Responsável / Subempreiteiro: <span style="color:red;">*</span></label>
-                            <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
-                                <option value="" disabled selected>Escolha o Responsável...</option>
-                                <option value="Pintura / Emassamento">Pintura / Emassamento</option>
-                                <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
-                                <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
-                                <option value="Eletricista">Eletricista</option>
-                                <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
-                                <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
-                                <option value="Piso e Revestimento">Piso e Revestimento</option>
-                                <option value="Gesso / Sancas">Gesso / Sancas</option>
-                                <option value="Serralharia / Portões">Serralharia / Portões</option>
-                                <option value="Impermeabilização">Impermeabilização</option>
-                                <option value="Limpeza Pós-Obra">Limpeza Pós-Obra</option>
-                                <option value="Gás Encanado">Gás Encanado</option>
-                                <option value="Outro">Outro (Especifique)</option>
-                            </select>
-                            <input type="text" id="resp_other_${key}_${index}" placeholder="Digite o responsável..." style="display:none; margin-top:6px;" oninput="salvarEstadoAtualInput('${key}')">
+                    `;
+                });
+            });
+
+            Object.keys(pendingNCs).forEach(key => {
+                if (pendingNCs[key].length > 0) {
+                    const lastUnderscoreIndex = key.lastIndexOf('_');
+                    const itemId = key.substring(lastUnderscoreIndex + 1);
+                    const itemObj = checklist.find(i => i.id === itemId);
+                    const container = document.getElementById(`nc_container_${key}`);
+                    if (container) {
+                        container.innerHTML = renderNCBoxes(key, itemObj);
+                        restaurarValoresInputs(key);
+                    }
+                }
+            });
+        }
+
+        function renderNCBoxes(key, itemObj) {
+            if (!pendingNCs[key] || pendingNCs[key].length === 0) return '';
+
+            return pendingNCs[key].map((nc, index) => {
+                const chkBoxes = itemObj.options.map(opt => `
+                    <label class="chk-label">
+                        <input type="checkbox" class="chk_${key}_${index}" value="${opt}" onchange="salvarEstadoAtualInput('${key}')"> ${opt}
+                    </label>
+                `).join('');
+
+                return `
+                    <div class="nc-box">
+                        <div class="nc-header">
+                            <span>PENDÊNCIA #${index + 1}</span>
+                            <div>
+                                <button style="color:green; background:none; border:none; font-weight:bold; cursor:pointer; margin-right:8px;" onclick="sanarNC('${key}', ${index}, '${itemObj.id}')">✓ Sanar</button>
+                                <button style="color:red; background:none; border:none; font-weight:bold; cursor:pointer;" onclick="removeNC('${key}', ${index}, '${itemObj.id}')">Excluir ✕</button>
+                            </div>
                         </div>
+                        <div class="checklist-group">${chkBoxes}</div>
                         
                         <div class="grid-two">
                             <div>
-                                <label>Data Início:</label>
-                                <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                                <label>Responsável:</label>
+                                <select id="resp_${key}_${index}" onchange="toggleOutroResp('${key}', ${index})">
+                                    <option value="" disabled selected>Escolha...</option>
+                                    <option value="Pintura / Emassamento">Pintura / Emassamento</option>
+                                    <option value="Marmoraria / Graniteiro">Marmoraria / Graniteiro</option>
+                                    <option value="Instalações Hidráulicas">Instalações Hidráulicas</option>
+                                    <option value="Eletricista">Eletricista</option>
+                                    <option value="Marcenaria / Portas de Madeira">Marcenaria / Portas de Madeira</option>
+                                    <option value="Esquadrias de Alumínio / Vidros">Esquadrias de Alumínio / Vidros</option>
+                                    <option value="Piso e Revestimento">Piso e Revestimento</option>
+                                    <option value="Gesso / Sancas">Gesso / Sancas</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
+                                <input type="text" id="resp_other_${key}_${index}" placeholder="Especifique..." style="display:none; margin-top:4px;" oninput="salvarEstadoAtualInput('${key}')">
+                            </div>
+                            
+                            <div class="grid-two">
+                                <div>
+                                    <label>Data Início:</label>
+                                    <input type="date" id="date_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                                </div>
+                                <div>
+                                    <label>Prazo (Dias Úteis):</label>
+                                    <input type="number" id="days_${key}_${index}" min="1" placeholder="Dias" value="${nc.businessDays || ''}" oninput="salvarEstadoAtualInput('${key}')">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid-two" style="margin-top: 5px;">
+                            <div>
+                                <label>Status:</label>
+                                <select id="status_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                                    <option value="Aguardando">Aguardando Início</option>
+                                    <option value="Em Andamento">Em Andamento</option>
+                                    <option value="Concluído">Concluído</option>
+                                </select>
                             </div>
                             <div>
-                                <label>Prazo (Dias Úteis):</label>
-                                <input type="number" id="days_${key}_${index}" min="1" placeholder="A definir" value="${nc.businessDays || ''}" oninput="salvarEstadoAtualInput('${key}')">
+                                <label>Gravidade:</label>
+                                <select id="sev_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
+                                    <option value="Baixa">Baixa</option>
+                                    <option value="Média">Média</option>
+                                    <option value="Alta">Alta</option>
+                                </select>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="grid-two" style="margin-top: 5px;">
-                        <div>
-                            <label>Status do Reparo:</label>
-                            <select id="status_${key}_${index}" onchange="handleStatusChange('${key}', ${index}, '${itemObj.id}')">
-                                <option value="Aguardando">Aguardando Início</option>
-                                <option value="Em Andamento">Em Andamento</option>
-                                <option value="Concluído">Concluído / Sanado</option>
-                            </select>
+                        <div style="margin-top: 5px;">
+                            <label>Observação:</label>
+                            <input type="text" id="obs_${key}_${index}" placeholder="Detalhes..." oninput="salvarEstadoAtualInput('${key}')">
                         </div>
-                        <div>
-                            <label>Gravidade / Severidade:</label>
-                            <select id="sev_${key}_${index}" onchange="salvarEstadoAtualInput('${key}')">
-                                <option value="Baixa">Baixa (Estética / Limpeza)</option>
-                                <option value="Média">Média (Funcional)</option>
-                                <option value="Alta">Alta / Crítica (Urgente / Vazamento)</option>
-                            </select>
+
+                        <div class="photo-area">
+                            <label>📷 Fotos:</label>
+                            <input type="file" accept="image/*" multiple capture="environment" onchange="handleMultiplePhotos(this, '${key}', ${index})">
+                            <div class="photo-gallery" id="gallery_${key}_${index}"></div>
                         </div>
                     </div>
+                `;
+            }).join('');
+        }
 
-                    <div style="margin-top: 5px;">
-                        <label>Observação Técnica:</label>
-                        <input type="text" id="obs_${key}_${index}" placeholder="Descreva a pendência com precisão..." oninput="salvarEstadoAtualInput('${key}')">
-                    </div>
+        function toggleOutroResp(key, index) {
+            const select = document.getElementById(`resp_${key}_${index}`);
+            const otherInput = document.getElementById(`resp_other_${key}_${index}`);
+            if (select && otherInput) {
+                otherInput.style.display = select.value === 'Outro' ? 'block' : 'none';
+            }
+            salvarEstadoAtualInput(key);
+        }
 
-                    <div class="photo-area">
-                        <label style="margin:0 0 6px 0; color:#004a8f;">📷 Anexar Foto(s) da Pendência:</label>
-                        <input type="file" accept="image/*" multiple capture="environment" onchange="handleMultiplePhotos(this, '${key}', ${index})">
-                        <div class="photo-gallery" id="gallery_${key}_${index}"></div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
+        function sanarNC(key, index, itemId) {
+            if (confirm("Confirma que esta pendência foi SANADA?")) {
+                pendingNCs[key].splice(index, 1);
+                const itemObj = checklist.find(i => i.id === itemId);
+                const container = document.getElementById(`nc_container_${key}`);
+                if (container) {
+                    container.innerHTML = renderNCBoxes(key, itemObj);
+                    restaurarValoresInputs(key);
+                }
 
-    function toggleOutroResp(key, index) {
-        const select = document.getElementById(`resp_${key}_${index}`);
-        const otherInput = document.getElementById(`resp_other_${key}_${index}`);
-        if (select && otherInput) {
-            if (select.value === 'Outro') {
-                otherInput.style.display = 'block';
-            } else {
-                otherInput.style.display = 'none';
-                otherInput.value = '';
+                if (pendingNCs[key].length === 0) setItemStatus(key, 'OK', itemId);
             }
         }
-        salvarEstadoAtualInput(key);
-    }
 
-    function handleStatusChange(key, index, itemId) {
-        const statusEl = document.getElementById(`status_${key}_${index}`);
-        if (statusEl && statusEl.value === 'Concluído') {
-            sanarNC(key, index, itemId);
-            return;
+        function salvarEstadoAtualInput(key) {
+            if (!pendingNCs[key]) return;
+            pendingNCs[key].forEach((nc, index) => {
+                nc.obs = document.getElementById(`obs_${key}_${index}`)?.value || '';
+                nc.resp = document.getElementById(`resp_${key}_${index}`)?.value || '';
+                nc.respOther = document.getElementById(`resp_other_${key}_${index}`)?.value || '';
+                nc.startDate = document.getElementById(`date_${key}_${index}`)?.value || '';
+                nc.businessDays = document.getElementById(`days_${key}_${index}`)?.value || '';
+                nc.status = document.getElementById(`status_${key}_${index}`)?.value || 'Aguardando';
+                nc.severity = document.getElementById(`sev_${key}_${index}`)?.value || 'Baixa';
+
+                nc.selectedOpts = [];
+                document.querySelectorAll(`.chk_${key}_${index}:checked`).forEach(chk => {
+                    nc.selectedOpts.push(chk.value);
+                });
+            });
         }
-        salvarEstadoAtualInput(key);
-    }
 
-    function sanarNC(key, index, itemId) {
-        if (confirm("Confirma que esta pendência foi SANADA?")) {
-            pendingNCs[key].splice(index, 1);
+        function setItemStatus(key, status, itemId) {
+            const btnOk = document.getElementById(`btn_ok_${key}`);
+            const btnNok = document.getElementById(`btn_nok_${key}`);
+            const btnAdd = document.getElementById(`btn_add_${key}`);
+
+            if (status === 'OK') {
+                if (btnOk) btnOk.className = "btn-status btn-ok-active";
+                if (btnNok) btnNok.className = "btn-status btn-neutral";
+                pendingNCs[key] = [];
+                const ncContainer = document.getElementById(`nc_container_${key}`);
+                if (ncContainer) ncContainer.innerHTML = '';
+                if (btnAdd) btnAdd.style.display = 'none';
+            } else {
+                if (btnOk) btnOk.className = "btn-status btn-neutral";
+                if (btnNok) btnNok.className = "btn-status btn-nok-active";
+                if (btnAdd) btnAdd.style.display = 'block';
+
+                if (!pendingNCs[key] || pendingNCs[key].length === 0) {
+                    addNC(key, itemId);
+                }
+            }
+        }
+
+        function addNC(key, itemId) {
+            salvarEstadoAtualInput(key);
+            if (!pendingNCs[key]) pendingNCs[key] = [];
+
+            pendingNCs[key].push({
+                id: Date.now(),
+                selectedOpts: [],
+                obs: '',
+                resp: '',
+                respOther: '',
+                startDate: '',
+                businessDays: '',
+                status: 'Aguardando',
+                severity: 'Baixa',
+                photos: []
+            });
+
             const itemObj = checklist.find(i => i.id === itemId);
             const container = document.getElementById(`nc_container_${key}`);
             if (container) {
                 container.innerHTML = renderNCBoxes(key, itemObj);
                 restaurarValoresInputs(key);
             }
-
-            if (pendingNCs[key].length === 0) {
-                const btnOk = document.getElementById(`btn_ok_${key}`);
-                const btnNok = document.getElementById(`btn_nok_${key}`);
-                const btnAdd = document.getElementById(`btn_add_${key}`);
-                if (btnOk) btnOk.className = "btn-status btn-neutral";
-                if (btnNok) btnNok.className = "btn-status btn-neutral";
-                if (btnAdd) btnAdd.style.display = 'none';
-            }
-        }
-    }
-
-    function salvarEstadoAtualInput(key) {
-        if (!pendingNCs[key]) return;
-        pendingNCs[key].forEach((nc, index) => {
-            const obsEl = document.getElementById(`obs_${key}_${index}`);
-            const respEl = document.getElementById(`resp_${key}_${index}`);
-            const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
-            const dateEl = document.getElementById(`date_${key}_${index}`);
-            const daysEl = document.getElementById(`days_${key}_${index}`);
-            const statusEl = document.getElementById(`status_${key}_${index}`);
-            const sevEl = document.getElementById(`sev_${key}_${index}`);
-
-            if (obsEl) nc.obs = obsEl.value;
-            if (respEl) nc.resp = respEl.value;
-            if (respOtherEl) nc.respOther = respOtherEl.value;
-            if (dateEl) nc.startDate = dateEl.value;
-            if (daysEl) nc.businessDays = daysEl.value;
-            if (statusEl) nc.status = statusEl.value;
-            if (sevEl) nc.severity = sevEl.value;
-
-            nc.selectedOpts = [];
-            document.querySelectorAll(`.chk_${key}_${index}:checked`).forEach(chk => {
-                nc.selectedOpts.push(chk.value);
-            });
-        });
-    }
-
-    function setItemStatus(key, status, itemId) {
-        const btnOk = document.getElementById(`btn_ok_${key}`);
-        const btnNok = document.getElementById(`btn_nok_${key}`);
-        const btnAdd = document.getElementById(`btn_add_${key}`);
-
-        if (status === 'OK') {
-            if (btnOk) btnOk.className = "btn-status btn-ok-active";
-            if (btnNok) btnNok.className = "btn-status btn-neutral";
-            pendingNCs[key] = [];
-            const ncContainer = document.getElementById(`nc_container_${key}`);
-            if (ncContainer) ncContainer.innerHTML = '';
-            if (btnAdd) btnAdd.style.display = 'none';
-        } else {
-            if (btnOk) btnOk.className = "btn-status btn-neutral";
-            if (btnNok) btnNok.className = "btn-status btn-nok-active";
+            
+            const btnAdd = document.getElementById(`btn_add_${key}`);
             if (btnAdd) btnAdd.style.display = 'block';
+        }
 
-            if (!pendingNCs[key] || pendingNCs[key].length === 0) {
-                addNC(key, itemId);
-            } else {
-                salvarEstadoAtualInput(key);
-                const itemObj = checklist.find(i => i.id === itemId);
-                const ncContainer = document.getElementById(`nc_container_${key}`);
-                if (ncContainer) ncContainer.innerHTML = renderNCBoxes(key, itemObj);
+        function removeNC(key, index, itemId) {
+            salvarEstadoAtualInput(key);
+            pendingNCs[key].splice(index, 1);
+            const itemObj = checklist.find(i => i.id === itemId);
+            
+            const container = document.getElementById(`nc_container_${key}`);
+            if (container) {
+                container.innerHTML = renderNCBoxes(key, itemObj);
                 restaurarValoresInputs(key);
             }
-        }
-    }
 
-    function addNC(key, itemId) {
-        salvarEstadoAtualInput(key);
-        if (!pendingNCs[key]) pendingNCs[key] = [];
-
-        pendingNCs[key].push({
-            id: Date.now(),
-            selectedOpts: [],
-            obs: '',
-            resp: '',
-            respOther: '',
-            startDate: '',
-            businessDays: '',
-            status: 'Aguardando',
-            severity: 'Baixa',
-            photos: []
-        });
-
-        const itemObj = checklist.find(i => i.id === itemId);
-        const container = document.getElementById(`nc_container_${key}`);
-        if (container) {
-            container.innerHTML = renderNCBoxes(key, itemObj);
-            restaurarValoresInputs(key);
-        }
-        
-        const btnAdd = document.getElementById(`btn_add_${key}`);
-        if (btnAdd) btnAdd.style.display = 'block';
-    }
-
-    function removeNC(key, index, itemId) {
-        salvarEstadoAtualInput(key);
-        pendingNCs[key].splice(index, 1);
-        const itemObj = checklist.find(i => i.id === itemId);
-        
-        const container = document.getElementById(`nc_container_${key}`);
-        if (container) {
-            container.innerHTML = renderNCBoxes(key, itemObj);
-            restaurarValoresInputs(key);
+            if (pendingNCs[key].length === 0) setItemStatus(key, 'OK', itemId);
         }
 
-        if (pendingNCs[key].length === 0) {
-            const btnOk = document.getElementById(`btn_ok_${key}`);
-            const btnNok = document.getElementById(`btn_nok_${key}`);
-            const btnAdd = document.getElementById(`btn_add_${key}`);
-            if (btnOk) btnOk.className = "btn-status btn-neutral";
-            if (btnNok) btnNok.className = "btn-status btn-neutral";
-            if (btnAdd) btnAdd.style.display = 'none';
-        }
-    }
-
-    function handleMultiplePhotos(input, key, index) {
-        if (!input.files || input.files.length === 0) return;
-        salvarEstadoAtualInput(key);
-
-        if (!pendingNCs[key][index].photos) pendingNCs[key][index].photos = [];
-
-        const files = Array.from(input.files);
-        let loadedCount = 0;
-
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                pendingNCs[key][index].photos.push(e.target.result);
-                loadedCount++;
-                if (loadedCount === files.length) {
-                    renderGallery(key, index);
-                }
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    function removePhoto(key, ncIndex, photoIndex) {
-        salvarEstadoAtualInput(key);
-        if (pendingNCs[key] && pendingNCs[key][ncIndex] && pendingNCs[key][ncIndex].photos) {
-            pendingNCs[key][ncIndex].photos.splice(photoIndex, 1);
-            renderGallery(key, ncIndex);
-        }
-    }
-
-    function renderGallery(key, index) {
-        const galleryEl = document.getElementById(`gallery_${key}_${index}`);
-        if (!galleryEl) return;
-
-        const photos = (pendingNCs[key] && pendingNCs[key][index]) ? pendingNCs[key][index].photos || [] : [];
-        
-        galleryEl.innerHTML = photos.map((p, pIdx) => `
-            <div class="photo-container">
-                <img src="${p}" class="photo-thumb">
-                <button type="button" class="btn-remove-photo" onclick="removePhoto('${key}', ${index}, ${pIdx})">✕</button>
-            </div>
-        `).join('');
-    }
-
-    function restaurarValoresInputs(key) {
-        if (!pendingNCs[key]) return;
-        pendingNCs[key].forEach((nc, index) => {
-            const obsEl = document.getElementById(`obs_${key}_${index}`);
-            const respEl = document.getElementById(`resp_${key}_${index}`);
-            const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
-            const dateEl = document.getElementById(`date_${key}_${index}`);
-            const daysEl = document.getElementById(`days_${key}_${index}`);
-            const statusEl = document.getElementById(`status_${key}_${index}`);
-            const sevEl = document.getElementById(`sev_${key}_${index}`);
-
-            if (obsEl && nc.obs) obsEl.value = nc.obs;
-            if (respEl && nc.resp) {
-                let options = Array.from(respEl.options).map(o => o.value);
-                if (options.includes(nc.resp)) {
-                    respEl.value = nc.resp;
-                } else {
-                    respEl.value = 'Outro';
-                    if (respOtherEl) {
-                        respOtherEl.style.display = 'block';
-                        respOtherEl.value = nc.resp;
-                    }
-                }
-            }
-            if (dateEl && nc.startDate) dateEl.value = nc.startDate;
-            if (daysEl && nc.businessDays !== undefined) daysEl.value = nc.businessDays;
-            if (statusEl && nc.status) statusEl.value = nc.status;
-            if (sevEl && nc.severity) sevEl.value = nc.severity;
-
-            if (nc.selectedOpts) {
-                nc.selectedOpts.forEach(val => {
-                    const chk = document.querySelector(`.chk_${key}_${index}[value="${val}"]`);
-                    if (chk) chk.checked = true;
-                });
-            }
-
-            renderGallery(key, index);
-        });
-    }
-
-    function generateTechnicalPDF() {
-        let hasMissingResp = false;
-        Object.keys(pendingNCs).forEach(key => {
+        function handleMultiplePhotos(input, key, index) {
+            if (!input.files || input.files.length === 0) return;
             salvarEstadoAtualInput(key);
-            pendingNCs[key].forEach(nc => {
-                if (!nc.resp || nc.resp === "" || (nc.resp === "Outro" && (!nc.respOther || !nc.respOther.trim()))) {
-                    hasMissingResp = true;
-                }
-            });
-        });
 
-        if (hasMissingResp) {
-            alert("Por favor, escolha um Responsável para todas as pendências antes de finalizar!");
-            return;
+            if (!pendingNCs[key][index].photos) pendingNCs[key][index].photos = [];
+
+            const files = Array.from(input.files);
+            let loaded = 0;
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pendingNCs[key][index].photos.push(e.target.result);
+                    loaded++;
+                    if (loaded === files.length) renderGallery(key, index);
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
-        let totalPendencies = 0;
-        let ncList = [];
-        const nowIso = new Date().toLocaleString('pt-BR');
+        function renderGallery(key, index) {
+            const galleryEl = document.getElementById(`gallery_${key}_${index}`);
+            if (!galleryEl) return;
+            const photos = (pendingNCs[key] && pendingNCs[key][index]) ? pendingNCs[key][index].photos || [] : [];
+            
+            galleryEl.innerHTML = photos.map((p, pIdx) => `
+                <div class="photo-container">
+                    <img src="${p}" class="photo-thumb">
+                    <button type="button" class="btn-remove-photo" onclick="removePhoto('${key}', ${index}, ${pIdx})">✕</button>
+                </div>
+            `).join('');
+        }
 
-        Object.keys(pendingNCs).forEach(key => {
-            const lastUnderscoreIndex = key.lastIndexOf('_');
-            const roomKey = key.substring(0, lastUnderscoreIndex);
-            const itemId = key.substring(lastUnderscoreIndex + 1);
+        function removePhoto(key, ncIndex, photoIndex) {
+            salvarEstadoAtualInput(key);
+            if (pendingNCs[key]?.[ncIndex]?.photos) {
+                pendingNCs[key][ncIndex].photos.splice(photoIndex, 1);
+                renderGallery(key, ncIndex);
+            }
+        }
 
-            const itemObj = checklist.find(i => i.id === itemId);
+        function restaurarValoresInputs(key) {
+            if (!pendingNCs[key]) return;
+            pendingNCs[key].forEach((nc, index) => {
+                const obsEl = document.getElementById(`obs_${key}_${index}`);
+                const respEl = document.getElementById(`resp_${key}_${index}`);
+                const respOtherEl = document.getElementById(`resp_other_${key}_${index}`);
+                const dateEl = document.getElementById(`date_${key}_${index}`);
+                const daysEl = document.getElementById(`days_${key}_${index}`);
+                const statusEl = document.getElementById(`status_${key}_${index}`);
+                const sevEl = document.getElementById(`sev_${key}_${index}`);
 
-            pendingNCs[key].forEach(nc => {
-                totalPendencies++;
-                
-                let days = parseInt(nc.businessDays);
-                let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
+                if (obsEl && nc.obs) obsEl.value = nc.obs;
+                if (respEl && nc.resp) {
+                    let options = Array.from(respEl.options).map(o => o.value);
+                    if (options.includes(nc.resp)) {
+                        respEl.value = nc.resp;
+                    } else {
+                        respEl.value = 'Outro';
+                        if (respOtherEl) {
+                            respOtherEl.style.display = 'block';
+                            respOtherEl.value = nc.resp;
+                        }
+                    }
+                }
+                if (dateEl && nc.startDate) dateEl.value = nc.startDate;
+                if (daysEl && nc.businessDays !== undefined) daysEl.value = nc.businessDays;
+                if (statusEl && nc.status) statusEl.value = nc.status;
+                if (sevEl && nc.severity) sevEl.value = nc.severity;
 
-                let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
-                let obsText = nc.obs ? ` (${nc.obs})` : '';
+                if (nc.selectedOpts) {
+                    nc.selectedOpts.forEach(val => {
+                        const chk = document.querySelector(`.chk_${key}_${index}[value="${val}"]`);
+                        if (chk) chk.checked = true;
+                    });
+                }
 
-                ncList.push({
-                    id: nc.id || Date.now(),
-                    room: roomNames[roomKey] || 'Geral',
-                    item: itemObj ? itemObj.cleanName : 'Item',
-                    nonConformity: (optsText + obsText).trim() || 'Pendência mantida',
-                    responsible: nc.resp === 'Outro' ? nc.respOther : nc.resp,
-                    severity: nc.severity || 'Baixa',
-                    status: nc.status || 'Aguardando',
-                    inspectedAt: nowIso,
-                    scheduledFor: nc.startDate || null,
-                    businessDays: nc.businessDays || null,
-                    deadlineDate: deadlineDate || null,
-                    resolvedAt: nc.status === 'Concluído' ? nowIso : null,
-                    photos: nc.photos || []
+                renderGallery(key, index);
+            });
+        }
+
+        function generateTechnicalPDF() {
+            let totalNCs = 0;
+            let ncList = [];
+            const nowIso = new Date().toLocaleString('pt-BR');
+
+            Object.keys(pendingNCs).forEach(key => {
+                salvarEstadoAtualInput(key);
+                const lastUnderscoreIndex = key.lastIndexOf('_');
+                const roomKey = key.substring(0, lastUnderscoreIndex);
+                const itemId = key.substring(lastUnderscoreIndex + 1);
+                const itemObj = checklist.find(i => i.id === itemId);
+
+                pendingNCs[key].forEach(nc => {
+                    totalNCs++;
+                    let days = parseInt(nc.businessDays);
+                    let deadlineDate = (nc.startDate && !isNaN(days)) ? addBusinessDays(nc.startDate, days) : null;
+                    let optsText = nc.selectedOpts && nc.selectedOpts.length > 0 ? nc.selectedOpts.join(', ') : '';
+                    let obsText = nc.obs ? ` (${nc.obs})` : '';
+
+                    ncList.push({
+                        id: nc.id || Date.now(),
+                        room: roomNames[roomKey] || 'Geral',
+                        item: itemObj ? itemObj.cleanName : 'Item',
+                        nonConformity: (optsText + obsText).trim() || 'Pendência mantida',
+                        responsible: nc.resp === 'Outro' ? nc.respOther : nc.resp,
+                        severity: nc.severity || 'Baixa',
+                        status: nc.status || 'Aguardando',
+                        inspectedAt: nowIso,
+                        scheduledFor: nc.startDate || null,
+                        businessDays: nc.businessDays || null,
+                        deadlineDate: deadlineDate || null,
+                        photos: nc.photos || []
+                    });
                 });
             });
-        });
 
-        const inspectionRecord = {
-            date: new Date().toLocaleDateString('pt-BR'),
-            timestamp: Date.now(),
-            inspector: inspectorName,
-            category: selectedCategory,
-            stage: selectedStage,
-            pendenciesCount: totalPendencies,
-            status: totalPendencies === 0 ? '100_ok' : 'com_pendencia',
-            details: ncList
-        };
+            const record = {
+                date: new Date().toLocaleDateString('pt-BR'),
+                inspector: inspectorName,
+                category: selectedCategory,
+                stage: selectedStage,
+                pendenciesCount: totalNCs,
+                status: totalNCs === 0 ? '100_ok' : 'com_pendencia',
+                details: ncList
+            };
 
-        const historyKey = `unit_${selectedUnitNum}`;
-        if (!dbUnitsCache[historyKey]) dbUnitsCache[historyKey] = [];
-        dbUnitsCache[historyKey].push(inspectionRecord);
+            const historyKey = `unit_${selectedUnitNum}`;
+            if (!dbUnitsCache[historyKey]) dbUnitsCache[historyKey] = [];
+            dbUnitsCache[historyKey].push(record);
 
-        try { localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache)); } catch(e) {}
+            localStorage.setItem('vistorias_db', JSON.stringify(dbUnitsCache));
 
-        if (db && db.collection) {
-            db.collection('vistorias').doc(historyKey).set({
-                unit: selectedUnitNum,
-                history: dbUnitsCache[historyKey]
-            }, { merge: true }).then(() => {
-                alert(`Vistoria da Unidade ${selectedUnitNum} finalizada!`);
-                loadAllUnitsData();
-                const btnNext = document.getElementById('btn-next');
-                if (btnNext) btnNext.style.display = 'block';
-            }).catch(err => {
-                alert(`Vistoria salva localmente!`);
-                loadAllUnitsData();
-                const btnNext = document.getElementById('btn-next');
-                if (btnNext) btnNext.style.display = 'block';
-            });
-        } else {
-            alert(`Vistoria salva localmente no navegador!`);
-            loadAllUnitsData();
-            const btnNext = document.getElementById('btn-next');
-            if (btnNext) btnNext.style.display = 'block';
-        }
-    }
-
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        const tabBtn = document.getElementById("tab-" + tab + "-btn");
-        if (tabBtn) tabBtn.classList.add('active');
-
-        const tabVistorias = document.getElementById('tab-vistorias');
-        if (tabVistorias) tabVistorias.style.display = tab === 'vistorias' ? 'block' : 'none';
-        
-        const tabMapa = document.getElementById('tab-mapa');
-        if (tabMapa) tabMapa.style.display = tab === 'mapa' ? 'block' : 'none';
-        
-        const tabCronograma = document.getElementById('tab-cronograma');
-        if (tabCronograma) tabCronograma.style.display = tab === 'cronograma' ? 'block' : 'none';
-
-        if (tab === 'mapa' || tab === 'cronograma') {
-            loadAllUnitsData();
-            if (tab === 'mapa') setTimeout(updateDashboardData, 100);
-            if (tab === 'cronograma') setTimeout(renderInteractiveCalendar, 200);
-        }
-    }
-
-    function updateDashboardData() {
-        let totalVistoriadas = 0;
-        let totalAprovadas = 0;
-        let totalPendenciasAbertas = 0;
-
-        Object.keys(dbUnitsCache).forEach(key => {
-            const history = dbUnitsCache[key] || [];
-            if (history.length > 0) {
-                totalVistoriadas++;
-                const last = history[history.length - 1];
-
-                if (last.details && last.details.length > 0) {
-                    let activeNCs = last.details.filter(d => d.status !== 'Concluído');
-                    if (activeNCs.length === 0) {
-                        totalAprovadas++;
-                    } else {
-                        totalPendenciasAbertas += activeNCs.length;
-                    }
-                } else if (last.status === '100_ok' || last.pendenciesCount === 0) {
-                    totalAprovadas++;
-                }
+            if (db && db.collection) {
+                db.collection('vistorias').doc(historyKey).set({
+                    unit: selectedUnitNum,
+                    history: dbUnitsCache[historyKey]
+                }, { merge: true });
             }
-        });
 
-        const elVistoriadas = document.getElementById('unidades-vistoriadas');
-        const elAprovadas = document.getElementById('unidades-aprovadas');
-        const elPendencias = document.getElementById('pendencias-abertas');
+            alert(`Vistoria da Unidade ${selectedUnitNum} salva!`);
+            updateDashboardData();
+            document.getElementById('btn-next').style.display = 'block';
+        }
 
-        if (elVistoriadas) elVistoriadas.innerText = `${totalVistoriadas} / ${TOTAL_UNIDADES}`;
-        if (elAprovadas) elAprovadas.innerText = totalAprovadas;
-        if (elPendencias) elPendencias.innerText = totalPendenciasAbertas;
-    }
-</script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tab}-btn`).classList.add('active');
+
+            document.getElementById('tab-vistorias').style.display = tab === 'vistorias' ? 'block' : 'none';
+            document.getElementById('tab-mapa').style.display = tab === 'mapa' ? 'block' : 'none';
+            document.getElementById('tab-cronograma').style.display = tab === 'cronograma' ? 'block' : 'none';
+
+            if (tab === 'mapa' || tab === 'cronograma') {
+                loadAllUnitsData();
+                if (tab === 'mapa') updateDashboardData();
+                if (tab === 'cronograma') renderInteractiveCalendar();
+            }
+        }
+
+        function updateDashboardData() {
+            let totalVistoriadas = 0;
+            let totalAprovadas = 0;
+            let totalPendenciasAbertas = 0;
+            let ncCount = {};
+            let respQueue = {};
+
+            Object.keys(dbUnitsCache).forEach(key => {
+                const history = dbUnitsCache[key] || [];
+                if (history.length > 0) {
+                    totalVistoriadas++;
+                    const last = history[history.length - 1];
+
+                    if (last.details && last.details.length > 0) {
+                        let activeNCs = last.details.filter(d => d.status !== 'Concluído');
+                        if (activeNCs.length === 0) {
+                            totalAprovadas++;
+                        } else {
+                            totalPendenciasAbertas += activeNCs.length;
+                            activeNCs.forEach(d => {
+                                ncCount[d.nonConformity] = (ncCount[d.nonConformity] || 0) + 1;
+                                respQueue[d.responsible] = (respQueue[d.responsible] || 0) + 1;
+                            });
+                        }
+                    } else if (last.status === '100_ok' || last.pendenciesCount === 0) {
+                        totalAprovadas++;
+                    }
+                }
+            });
+
+            document.getElementById('unidades-vistoriadas').innerText = `${totalVistoriadas} / ${TOTAL_UNIDADES}`;
+            document.getElementById('unidades-aprovadas').innerText = totalAprovadas;
+            document.getElementById('pendencias-abertas').innerText = totalPendenciasAbertas;
+
+            // Top NCs
+            const topNcEl = document.getElementById('top-nc-list');
+            const sortedNCs = Object.keys(ncCount).sort((a,b) => ncCount[b] - ncCount[a]);
+            if (sortedNCs.length > 0) {
+                topNcEl.innerHTML = sortedNCs.slice(0, 5).map(nc => `
+                    <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; font-size:0.85rem;">
+                        <span>${nc}</span>
+                        <strong style="color:#dc2626;">${ncCount[nc]}x</strong>
+                    </div>
+                `).join('');
+            } else {
+                topNcEl.innerHTML = "Nenhuma pendência registrada ainda.";
+            }
+
+            // Fila Responsáveis
+            const queueEl = document.getElementById('resp-queue-list');
+            const sortedResps = Object.keys(respQueue).sort((a,b) => respQueue[b] - respQueue[a]);
+            if (sortedResps.length > 0) {
+                queueEl.innerHTML = sortedResps.map(r => `
+                    <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; font-size:0.85rem;">
+                        <span class="badge-resp" style="background:${respColors[r] || '#004a8f'}">${r}</span>
+                        <strong>${respQueue[r]} pendências</strong>
+                    </div>
+                `).join('');
+            } else {
+                queueEl.innerHTML = "Nenhuma pendência ativa para exibição.";
+            }
+        }
+
+        function renderInteractiveCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            const listEl = document.getElementById('scheduled-activities-list');
+            const filterResp = document.getElementById('calendar-resp-filter')?.value || 'TODOS';
+
+            if (!calendarEl) return;
+
+            let events = [];
+            let scheduledList = [];
+
+            Object.keys(dbUnitsCache).forEach(key => {
+                const unitNum = key.replace('unit_', '');
+                const history = dbUnitsCache[key] || [];
+
+                if (history.length > 0) {
+                    const last = history[history.length - 1];
+                    (last.details || []).forEach(d => {
+                        if (d.status !== 'Concluído' && d.scheduledFor) {
+                            if (filterResp === 'TODOS' || d.responsible === filterResp) {
+                                events.push({
+                                    title: `Apto ${unitNum}: ${d.responsible}`,
+                                    start: d.scheduledFor,
+                                    backgroundColor: respColors[d.responsible] || '#004a8f'
+                                });
+
+                                scheduledList.push(`
+                                    <div style="border-left: 3px solid ${respColors[d.responsible] || '#004a8f'}; padding-left:8px; margin-bottom:8px; font-size:0.82rem;">
+                                        <strong>Apto ${unitNum}</strong> - ${d.responsible}<br>
+                                        <small>Item: ${d.item} (${d.nonConformity})</small><br>
+                                        <small>Início: ${d.scheduledFor} | Prazo: ${d.deadlineDate || 'Não definido'}</small>
+                                    </div>
+                                `);
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (fullCalendarInstance) fullCalendarInstance.destroy();
+
+            fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'pt-br',
+                events: events,
+                headerToolbar: {
+                    left: 'prev,next',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                }
+            });
+
+            fullCalendarInstance.render();
+            if (listEl) listEl.innerHTML = scheduledList.join('') || 'Nenhuma atividade agendada.';
+        }
+
+        function exportToExcelXLSX() {
+            let exportData = [];
+            Object.keys(dbUnitsCache).forEach(key => {
+                const unitNum = key.replace('unit_', '');
+                (dbUnitsCache[key] || []).forEach(h => {
+                    (h.details || []).forEach(d => {
+                        exportData.push({
+                            Unidade: unitNum,
+                            Data: h.date,
+                            Vistoriador: h.inspector,
+                            Ambiente: d.room,
+                            Item: d.item,
+                            Pendencia: d.nonConformity,
+                            Responsavel: d.responsible,
+                            Severidade: d.severity,
+                            Status: d.status
+                        });
+                    });
+                });
+            });
+
+            if (exportData.length === 0) { alert('Sem dados para exportar.'); return; }
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Vistorias");
+            XLSX.writeFile(workbook, "Relatorio_Vistorias.xlsx");
+        }
+
+        function sendWhatsAppSummary() {
+            let text = `*VISTORIA REALIZADA - APTO ${selectedUnitNum}*\n`;
+            text += `Vistoriador: ${inspectorName}\n`;
+            text += `Status: Registrado no sistema.`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        }
+    </script>
 </body>
 </html>
- 
